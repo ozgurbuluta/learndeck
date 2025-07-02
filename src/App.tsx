@@ -21,6 +21,7 @@ import { StudyMethods } from './components/StudyMethods';
 import { SpacedRepetitionGuide } from './components/SpacedRepetitionGuide';
 import { LanguageTips } from './components/LanguageTips';
 import { SuccessStories } from './components/SuccessStories';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 type View =
   | 'dashboard'
@@ -42,6 +43,7 @@ function App() {
   const { user, loading: authLoading } = useAuth();
   const { words, loading: wordsLoading, addWord, updateWord, deleteWord } = useWords(user);
   const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [chatbotOpen, setChatbotOpen] = useState(false);
 
   // Scroll to top on view change to ensure expected UX
   useEffect(() => {
@@ -140,7 +142,14 @@ function App() {
       <Footer onNavigate={handleNavigate} />
       
       {/* Floating AI Chatbot */}
-      <FloatingChatbot onAddWords={handleAddWordsFromAI} />
+      <FloatingChatbot
+        onAddWords={handleAddWordsFromAI}
+        isOpen={chatbotOpen}
+        onClose={() => setChatbotOpen(false)}
+      />
+
+      {/* Vercel Speed Insights */}
+      <SpeedInsights />
     </div>
   );
 }
