@@ -450,7 +450,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ words, onNavigate, current
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => onNavigate('ai-chatbot')}
+                onClick={() => setChatbotOpen(true)}
                 className="bg-purple-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-purple-600 transition-all duration-200 inline-flex items-center justify-center"
               >
                 <MessageCircle className="h-5 w-5 mr-2" />
