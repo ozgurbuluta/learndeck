@@ -41,6 +41,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ words, onNavigate, current
   const newWords = words.filter(w => w.difficulty === 'new').length;
   const learningWords = words.filter(w => w.difficulty === 'learning').length;
   
+  // Calculate how many words were added in the last 7 days
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const wordsAddedThisWeek = words.filter((w) => w.created_at >= oneWeekAgo).length;
+
   // Include words that are due for review OR have never been reviewed (new words)
   const dueForReview = words.filter(w => 
     w.next_review <= new Date() || w.last_reviewed === null
@@ -69,7 +74,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ words, onNavigate, current
       value: totalWords, 
       icon: BookOpen, 
       color: 'bg-primary-navy', 
-      trend: '+12 this week',
+      trend: `${wordsAddedThisWeek > 0 ? '+' : ''}${wordsAddedThisWeek} this week`,
       onClick: () => onNavigate('word-list'),
       description: 'View all words',
       disabled: totalWords === 0
