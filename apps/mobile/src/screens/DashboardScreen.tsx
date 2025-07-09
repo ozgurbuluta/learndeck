@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, SafeAreaView } from 'react-native';
 import { BookOpen } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
 import { useFolders } from '../hooks/useFolders';
 import { useStudyOptions } from '../hooks/useStudyOptions';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import ScreenContainer from '../components/ScreenContainer';
 import { StudyOptionsModal } from '../components/StudyOptionsModal';
 import { StudyConfig } from '@shared/types';
@@ -13,10 +13,19 @@ import { Screen } from '../components/Screen';
 
 const DashboardScreen: React.FC = () => {
   const { user } = useAuth();
-  const { words, loading: wordsLoading } = useWords(user);
+  const { words, loading: wordsLoading, refetch: refetchWords } = useWords(user);
   const { folders, loading: foldersLoading } = useFolders(user);
   const { lastConfig, saveStudyConfig } = useStudyOptions();
   const navigation = useNavigation<any>();
+  const isFocused = useIsFocused();
+
+  // Refresh words when the dashboard regains focus (e.g., after adding words)
+  useEffect(() => {
+    if (isFocused) {
+      refetchWords();
+    }
+  }, [isFocused]);
+
   const [modalVisible, setModalVisible] = useState(false);
 
   const stats = useMemo(() => {
@@ -117,13 +126,13 @@ const DashboardScreen: React.FC = () => {
               title="Words to Review"
               value={stats.due}
               subtext="items due"
-              icon={<BookOpen color="#FCA311" size={20} />}
+              icon={<Text style={{ fontSize: 20, color: "#FCA311" }}>⏰</Text>}
             />
             <StatCard
               title="Words Mastered"
               value={stats.mastered}
               subtext="of your vocabulary"
-              icon={<BookOpen color="#16A34A" size={20} />}
+              icon={<Text style={{ fontSize: 20, color: "#16A34A" }}>🏆</Text>}
             />
           </View>
         </View>
@@ -133,12 +142,17 @@ const DashboardScreen: React.FC = () => {
           <ActionButton
             title="View Word List"
             screen="WordList"
-            icon={<BookOpen color="#3B82F6" size={24} />}
+            icon={<Text style={{ fontSize: 24, color: "#3B82F6" }}>📋</Text>}
           />
           <ActionButton
             title="Add a New Word"
             screen="AddWord"
-            icon={<BookOpen color="#16A34A" size={24} />}
+            icon={<Text style={{ fontSize: 24, color: "#16A34A" }}>➕</Text>}
+          />
+          <ActionButton
+            title="AI Assistant"
+            screen="AIChatbot"
+            icon={<Text style={{ fontSize: 24, color: "#FCA311" }}>🤖</Text>}
           />
         </View>
       </ScrollView>

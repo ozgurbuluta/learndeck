@@ -2,7 +2,8 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { BookOpen } from 'lucide-react-native';
+import { Text } from 'react-native';
+import AIChatbotScreen from '../screens/AIChatbotScreen';
 import { useAuth } from '../hooks/useAuth';
 import { Auth } from '../components/Auth';
 import SplashScreen from '../screens/SplashScreen';
@@ -22,6 +23,7 @@ export type RootStackParamList = {
   Main: undefined;
   AddWord: undefined;
   StudySession: { studyConfig: StudyConfig };
+  AIChatbot: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -35,13 +37,32 @@ function MainTabNavigator() {
         tabBarActiveTintColor: '#FCA311',
         tabBarInactiveTintColor: '#6B7280',
         tabBarIcon: ({ color, size }: { color: string; size: number }) => {
-          const iconProps = { color, size } as const;
-          return <BookOpen {...iconProps} />;
+          let iconEmoji;
+          
+          switch (route.name) {
+            case 'Dashboard':
+              iconEmoji = '🏠';
+              break;
+            case 'WordList':
+              iconEmoji = '📚';
+              break;
+            case 'Profile':
+              iconEmoji = '👤';
+              break;
+            case 'Assistant':
+              iconEmoji = '🤖';
+              break;
+            default:
+              iconEmoji = '📖';
+          }
+          
+          return <Text style={{ fontSize: size, color }}>{iconEmoji}</Text>;
         },
       })}
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="WordList" component={WordListScreen} />
+      <Tab.Screen name="Assistant" component={AIChatbotScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -52,6 +73,7 @@ const AppStack = () => (
     <Stack.Screen name="Main" component={MainTabNavigator} />
     <Stack.Screen name="AddWord" component={AddWordScreen} />
     <Stack.Screen name="StudySession" component={StudySessionScreen} />
+    <Stack.Screen name="AIChatbot" component={AIChatbotScreen} />
   </Stack.Navigator>
 );
 
