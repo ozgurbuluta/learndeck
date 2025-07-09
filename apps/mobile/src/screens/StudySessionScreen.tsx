@@ -1,8 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Dimensions, TouchableWithoutFeedback, Animated, Easing } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import ScreenContainer from '../components/ScreenContainer';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
@@ -37,7 +36,22 @@ const StudySessionScreen: React.FC = () => {
   const [sessionStats, setSessionStats] = useState({ correct: 0, total: 0 });
   const [isComplete, setIsComplete] = useState(false);
 
-  const translateX = useSharedValue(0);
+  const resetFlip = () => {
+    setIsFlipped(false);
+    flipAnim.setValue(0);
+  };
+
+  // Reset card position when moving to next word
+  useEffect(() => {
+    translateX.setValue(0);
+  }, [currentIndex]);
+
+  // Get screen dimensions
+  const { height, width } = Dimensions.get('window');
+
+  // Animation values for swipe
+  const translateX = useRef(new Animated.Value(0)).current;
+
   const currentWord = studyWords[currentIndex];
 
   const handleAnswer = async (isCorrect: boolean) => {
@@ -71,14 +85,56 @@ const StudySessionScreen: React.FC = () => {
     }
   };
 
-  const onSwipeComplete = (isCorrect: boolean) => {
-    handleAnswer(isCorrect);
+  const onGestureEvent = Animated.event(
+    [{ nativeEvent: { translationX: translateX } }],
+    { useNativeDriver: true }
+  );
+
+  const onHandlerStateChange = (event: any) => {
+    if (event.nativeEvent.state === State.END) {
+      const { translationX } = event.nativeEvent;
+      const swipeThreshold = width * 0.4;
+
+      if (translationX > swipeThreshold) {
+        // Swipe right - correct answer
+        Animated.timing(translateX, {
+          toValue: width,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => {
+          handleAnswer(true);
+        });
+      } else if (translationX < -swipeThreshold) {
+        // Swipe left - incorrect answer
+        Animated.timing(translateX, {
+          toValue: -width,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => {
+          handleAnswer(false);
+        });
+      } else {
+        // Snap back to center
+        Animated.spring(translateX, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      }
+    }
   };
 
-  useEffect(() => {
-    // Reset card position when the word changes
-    translateX.value = 0;
-  }, [currentIndex]);
+  const cardStyle = {
+    transform: [
+      { translateX },
+      {
+        rotate: translateX.interpolate({
+          inputRange: [-width, 0, width],
+          outputRange: ['-30deg', '0deg', '30deg'],
+          extrapolate: 'clamp',
+        }),
+      },
+    ],
+  };
 
   const calculateNextReview = (word: Word, isCorrect: boolean): Date => {
     const now = new Date();
@@ -129,67 +185,13 @@ const StudySessionScreen: React.FC = () => {
     }).start(() => setIsFlipped(false));
   };
 
-  const resetFlip = () => {
-    setIsFlipped(false);
-    flipAnim.setValue(0);
-  };
-
-  const { height, width } = Dimensions.get('window');
-
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      translateX.value = event.translationX;
-    })
-    .onEnd((event) => {
-      const swipeThreshold = width * 0.4;
-
-      if (event.translationX > swipeThreshold) {
-        translateX.value = withSpring(width, {}, () => {
-          runOnJS(onSwipeComplete)(true);
-        });
-      } else if (event.translationX < -swipeThreshold) {
-        translateX.value = withSpring(-width, {}, () => {
-          runOnJS(onSwipeComplete)(false);
-        });
-      } else {
-        translateX.value = withSpring(0);
-      }
-    });
-
-  const animatedCardStyle = useAnimatedStyle(() => {
-    const rotateZ = (translateX.value / (width / 2)) * 10;
-    return {
-      transform: [
-        { translateX: translateX.value },
-        { rotateZ: `${rotateZ}deg` },
-      ],
-    };
-  });
-
-  const frontInterpolate = flipAnim.interpolate({
-    inputRange: [0, 180],
-    outputRange: ['0deg', '180deg'],
-  });
-
-  const backInterpolate = flipAnim.interpolate({
-    inputRange: [0, 180],
-    outputRange: ['180deg', '360deg'],
-  });
-
-  const animatedFrontStyle = {
-    transform: [{ rotateY: frontInterpolate }, { perspective: 1000 }],
-  } as const;
-
-  const animatedBackStyle = {
-    transform: [{ rotateY: backInterpolate }, { perspective: 1000 }],
-  } as const;
-
   // ----------- RENDERERS -----------
   if (!isReady) {
     return (
       <ScreenContainer>
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#FCA311" />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#3B82F6" />
+          <Text style={styles.loadingText}>Loading study session...</Text>
         </View>
       </ScreenContainer>
     );
@@ -198,10 +200,13 @@ const StudySessionScreen: React.FC = () => {
   if (studyWords.length === 0) {
     return (
       <ScreenContainer>
-        <View style={styles.center}>
-          <Text style={styles.noWords}>No words to study right now.</Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.buttonText}>Back to Dashboard</Text>
+        <View style={styles.centered}>
+          <Text style={styles.emptyText}>No words available for study</Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
       </ScreenContainer>
@@ -209,122 +214,158 @@ const StudySessionScreen: React.FC = () => {
   }
 
   if (isComplete) {
+    const accuracy = sessionStats.total > 0 ? (sessionStats.correct / sessionStats.total * 100).toFixed(1) : '0';
+    
     return (
       <ScreenContainer>
-        <View style={styles.center}>
-          <Text style={styles.completeHeader}>Session Complete!</Text>
-          <Text style={styles.completeSub}>{`Accuracy: ${sessionStats.total > 0 ? Math.round((sessionStats.correct / sessionStats.total) * 100) : 0}%`}</Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.buttonText}>Back to Dashboard</Text>
+        <View style={styles.centered}>
+          <Text style={styles.completeTitle}>Session Complete!</Text>
+          <Text style={styles.statsText}>
+            {sessionStats.correct}/{sessionStats.total} correct ({accuracy}%)
+          </Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>Finish</Text>
           </TouchableOpacity>
         </View>
       </ScreenContainer>
     );
   }
 
+  const frontStyle = {
+    transform: [
+      { rotateY: flipAnim.interpolate({
+        inputRange: [0, 180],
+        outputRange: ['0deg', '180deg']
+      }) }
+    ],
+  };
+
+  const backStyle = {
+    transform: [
+      { rotateY: flipAnim.interpolate({
+        inputRange: [0, 180],
+        outputRange: ['180deg', '360deg']
+      }) }
+    ],
+  };
+
   return (
-    <ScreenContainer style={{ justifyContent: 'flex-start' }}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>‹</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{`${currentIndex + 1}/${studyWords.length}`}</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <ScreenContainer>
+      <View style={styles.container}>
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressText}>
+            {currentIndex + 1} / {studyWords.length}
+          </Text>
+          <View style={styles.progressBar}>
+            <View 
+              style={[
+                styles.progressFill, 
+                { width: `${((currentIndex + 1) / studyWords.length) * 100}%` }
+              ]} 
+            />
+          </View>
+        </View>
 
-      <View style={styles.contentContainer}>
-        <GestureDetector gesture={panGesture}>
-          <Reanimated.View style={animatedCardStyle}>
-            <TouchableWithoutFeedback onPress={() => (isFlipped ? flipToFront() : flipToBack())}>
-              <View style={styles.cardContainer}>
-                {/* Front Side */}
-                <Animated.View style={[styles.wordCard, animatedFrontStyle, { position: 'absolute', backfaceVisibility: 'hidden' }]}>
-                  <View style={styles.wordTopSection}>
-                    <Text style={styles.wordText}>
-                      {currentWord.article ? `${currentWord.article} ` : ''}
-                      {currentWord.word}
-                    </Text>
-                  </View>
-                  <Text style={styles.revealHint}>Tap to Reveal Definition</Text>
-                </Animated.View>
+        <View style={styles.contentContainer}>
+          <PanGestureHandler
+            onGestureEvent={onGestureEvent}
+            onHandlerStateChange={onHandlerStateChange}
+            minDist={10}
+          >
+            <Animated.View style={[styles.cardContainer, cardStyle]}>
+              <TouchableWithoutFeedback onPress={() => (isFlipped ? flipToFront() : flipToBack())}>
+                <View style={styles.card}>
+                  {!isFlipped ? (
+                    <Animated.View style={[styles.cardFace, frontStyle]}>
+                      <Text style={styles.wordText}>{currentWord.word}</Text>
+                      <Text style={styles.tapHint}>Tap to reveal definition</Text>
+                    </Animated.View>
+                  ) : (
+                    <Animated.View style={[styles.cardFace, styles.cardBack, backStyle]}>
+                      <Text style={styles.definitionText}>{currentWord.definition}</Text>
+                      <Text style={styles.swipeHint}>Swipe right if you know it, left if you don't</Text>
+                    </Animated.View>
+                  )}
+                </View>
+              </TouchableWithoutFeedback>
+            </Animated.View>
+          </PanGestureHandler>
+        </View>
 
-                {/* Back Side */}
-                <Animated.View style={[styles.wordCard, animatedBackStyle, { position: 'absolute', backfaceVisibility: 'hidden' }]}>
-                  <View style={styles.wordTopSection}>
-                    <Text style={styles.wordText}>{currentWord.definition}</Text>
-                    <Text style={styles.reminderWordText}>
-                      {currentWord.article ? `${currentWord.article} ` : ''}
-                      {currentWord.word}
-                    </Text>
-                  </View>
-                </Animated.View>
-              </View>
-            </TouchableWithoutFeedback>
-          </Reanimated.View>
-        </GestureDetector>
-      </View>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.answerButton, styles.incorrectButton]}
+            onPress={() => handleAnswer(false)}
+          >
+            <Text style={styles.buttonText}>Keep Learning</Text>
+          </TouchableOpacity>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={[styles.answerBtn, { backgroundColor: '#DC2626' }]} onPress={() => handleAnswer(false)}>
-          <Text style={styles.answerIcon}>✕</Text>
-          <Text style={styles.answerText}>Keep Learning</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.answerBtn, { backgroundColor: '#16A34A' }]} onPress={() => handleAnswer(true)}>
-          <Text style={styles.answerIcon}>✔</Text>
-          <Text style={styles.answerText}>I Know It</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.answerButton, styles.correctButton]}
+            onPress={() => handleAnswer(true)}
+          >
+            <Text style={styles.buttonText}>I Know It</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
-  center: {
+  centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  noWords: {
+  loadingText: {
+    fontSize: 18,
+    color: '#6B7280',
+    marginTop: 16,
+  },
+  emptyText: {
     fontSize: 18,
     color: '#6B7280',
     marginBottom: 16,
   },
-  completeHeader: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#14213D',
-    marginBottom: 8,
-  },
-  completeSub: {
-    fontSize: 18,
-    color: '#6B7280',
-    marginBottom: 24,
-  },
-  primaryButton: {
+  backButton: {
     backgroundColor: '#FCA311',
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 8,
   },
-  buttonText: {
+  backButtonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  headerRow: {
+  container: {
+    flex: 1,
+    justifyContent: 'flex-start',
+  },
+  progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 1,
-    paddingBottom: 15,
+    padding: 16,
   },
-  backBtn: {
-    padding: 8,
-  },
-  headerTitle: {
+  progressText: {
     fontSize: 18,
     fontWeight: '600',
     color: '#14213D',
+  },
+  progressBar: {
+    flex: 1,
+    height: 12,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 6,
+    marginLeft: 16,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#FCA311',
+    borderRadius: 6,
   },
   contentContainer: {
     flex: 1,
@@ -336,7 +377,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  wordCard: {
+  card: {
     width: '90%',
     height: '100%',
     backgroundColor: '#FFFFFF',
@@ -350,10 +391,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  wordTopSection: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  cardFace: {
+    position: 'absolute',
+    backfaceVisibility: 'hidden',
+  },
+  cardBack: {
+    position: 'absolute',
+    backfaceVisibility: 'hidden',
   },
   wordText: {
     fontSize: 32,
@@ -361,13 +405,7 @@ const styles = StyleSheet.create({
     color: '#14213D',
     textAlign: 'center',
   },
-  reminderWordText: {
-    fontSize: 18,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginTop: 16,
-  },
-  revealHint: {
+  tapHint: {
     fontSize: 16,
     color: '#9CA3AF',
     marginTop: 12,
@@ -379,14 +417,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
   },
-  footer: {
+  swipeHint: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    marginTop: 12,
+  },
+  buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 16,
     paddingBottom: 40,
   },
-  answerBtn: {
+  answerButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -395,21 +438,27 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 6,
   },
-  answerText: {
+  incorrectButton: {
+    backgroundColor: '#DC2626',
+  },
+  correctButton: {
+    backgroundColor: '#16A34A',
+  },
+  buttonText: {
     color: '#FFFFFF',
     marginLeft: 8,
     fontWeight: 'bold',
   },
-  backText: {
+  completeTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#14213D',
+    marginBottom: 8,
   },
-  answerIcon: {
+  statsText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginRight: 8,
+    color: '#6B7280',
+    marginBottom: 24,
   },
 });
 
