@@ -3,6 +3,31 @@ import { supabase } from '../lib/supabase';
 import { Word, StudyConfig } from '@shared/types';
 import { User } from '@supabase/supabase-js';
 
+// Safe date parsing helper function
+const safeParseDate = (dateString: string | null): Date | null => {
+  if (!dateString) return null;
+  
+  try {
+    const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn(`Invalid date string: ${dateString}`);
+      return null;
+    }
+    return date;
+  } catch (error) {
+    console.warn(`Error parsing date: ${dateString}`, error);
+    return null;
+  }
+};
+
+// Default date for next review if parsing fails
+const getDefaultNextReview = () => {
+  const date = new Date();
+  date.setDate(date.getDate() + 1); // Default to tomorrow
+  return date;
+};
+
 export const useWords = (user: User | null) => {
   const [words, setWords] = useState<Word[]>([]);
   const [loading, setLoading] = useState(true);
@@ -12,6 +37,7 @@ export const useWords = (user: User | null) => {
     if (!user) return;
 
     try {
+      setLoading(true);
       const { data, error: fetchError } = await supabase
         .from('words')
         .select(`*, word_folders ( folder_id, folders (*) )`)
@@ -20,21 +46,29 @@ export const useWords = (user: User | null) => {
 
       if (fetchError) throw fetchError;
 
-      const transformed: Word[] = (data || []).map((w: any) => ({
-        ...w,
-        created_at: new Date(w.created_at),
-        last_reviewed: w.last_reviewed ? new Date(w.last_reviewed) : null,
-        next_review: new Date(w.next_review),
-        folders: w.word_folders?.map((wf: any) => ({
-          ...wf.folders,
-          created_at: new Date(wf.folders.created_at),
-          updated_at: new Date(wf.folders.updated_at),
-        })) || [],
-      }));
+      const transformed: Word[] = (data || []).map((w: any) => {
+        // Safely parse all dates
+        const createdAt = safeParseDate(w.created_at) || new Date();
+        const lastReviewed = safeParseDate(w.last_reviewed);
+        const nextReview = safeParseDate(w.next_review) || getDefaultNextReview();
+        
+        return {
+          ...w,
+          created_at: createdAt,
+          last_reviewed: lastReviewed,
+          next_review: nextReview,
+          folders: w.word_folders?.map((wf: any) => ({
+            ...wf.folders,
+            created_at: safeParseDate(wf.folders.created_at) || new Date(),
+            updated_at: safeParseDate(wf.folders.updated_at) || new Date(),
+          })) || [],
+        };
+      });
 
       setWords(transformed);
     } catch (e: any) {
       setError(e.message);
+      console.error('Error fetching words:', e);
     } finally {
       setLoading(false);
     }
@@ -55,11 +89,11 @@ export const useWords = (user: User | null) => {
   ) => {
     if (!user) return;
 
-    const now = new Date();
-    const nextReview = new Date();
-    nextReview.setDate(now.getDate() + 1);
-
     try {
+      const now = new Date();
+      const nextReview = new Date();
+      nextReview.setDate(now.getDate() + 1);
+
       const { data, error: insertError } = await supabase
         .from('words')
         .insert({
@@ -87,6 +121,7 @@ export const useWords = (user: User | null) => {
       return data;
     } catch (e: any) {
       setError(e.message);
+      console.error('Error adding word:', e);
       return null;
     }
   };
@@ -95,16 +130,17 @@ export const useWords = (user: User | null) => {
     if (!user) return;
 
     try {
+      // Ensure we're sending valid date formats to the API
       const { error: updateError } = await supabase
         .from('words')
         .update({
           word: updated.word,
           definition: updated.definition,
-          last_reviewed: updated.last_reviewed?.toISOString() || null,
+          last_reviewed: updated.last_reviewed instanceof Date ? updated.last_reviewed.toISOString() : null,
           review_count: updated.review_count,
           correct_count: updated.correct_count,
           difficulty: updated.difficulty,
-          next_review: updated.next_review.toISOString(),
+          next_review: updated.next_review instanceof Date ? updated.next_review.toISOString() : getDefaultNextReview().toISOString(),
         })
         .eq('id', updated.id)
         .eq('user_id', user.id);
@@ -115,6 +151,7 @@ export const useWords = (user: User | null) => {
       setWords((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
     } catch (e: any) {
       setError(e.message);
+      console.error('Error updating word:', e);
       return null;
     }
   };
@@ -127,6 +164,7 @@ export const useWords = (user: User | null) => {
       await fetchWords();
     } catch (e: any) {
       setError(e.message);
+      console.error('Error deleting word:', e);
     }
   };
 
@@ -151,7 +189,10 @@ export const useWords = (user: User | null) => {
           // No additional filtering needed
           break;
         case 'review':
-          filteredWords = filteredWords.filter((w) => new Date(w.next_review) <= now);
+          filteredWords = filteredWords.filter((w) => {
+            if (!(w.next_review instanceof Date)) return false;
+            return w.next_review <= now;
+          });
           break;
         case 'new':
           filteredWords = filteredWords.filter((w) => w.difficulty === 'new');
@@ -165,9 +206,11 @@ export const useWords = (user: User | null) => {
       }
 
       // 3. Sort and Limit
-      const sorted = filteredWords.sort(
-        (a, b) => new Date(a.next_review).getTime() - new Date(b.next_review).getTime()
-      );
+      const sorted = filteredWords.sort((a, b) => {
+        const dateA = a.next_review instanceof Date ? a.next_review.getTime() : Infinity;
+        const dateB = b.next_review instanceof Date ? b.next_review.getTime() : Infinity;
+        return dateA - dateB;
+      });
 
       return sorted.slice(0, limit);
     },

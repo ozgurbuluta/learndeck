@@ -27,6 +27,12 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@react-native-async-storage/async-storage':
+        specifier: ^2.2.0
+        version: 2.2.0(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))
+      '@react-native-community/netinfo':
+        specifier: ^11.4.1
+        version: 11.4.1(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))
       '@react-navigation/bottom-tabs':
         specifier: ^7.4.2
         version: 7.4.2(@react-navigation/native@7.1.14(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))(react@18.2.0))(react-native-safe-area-context@5.5.1(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))(react@18.2.0))(react-native-screens@4.11.1(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))(react@18.2.0))(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))(react@18.2.0)
@@ -67,8 +73,8 @@ importers:
         specifier: 0.79.5
         version: 0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0)
       react-native-gesture-handler:
-        specifier: ~2.12.1
-        version: 2.12.1(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))(react@18.2.0)
+        specifier: ~2.27.1
+        version: 2.27.1(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))(react@18.2.0)
       react-native-get-random-values:
         specifier: ^1.11.0
         version: 1.11.0(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))
@@ -1287,6 +1293,11 @@ packages:
     resolution: {integrity: sha512-0lRdgLNaXixWY4BfFRl1J6Ao9Lapo2z+++iE7TD4GAbuxOWJSyFi+KUA8XNfSDyML4jFO02MZgyBPxAWdaminQ==}
     engines: {node: '>=18'}
     hasBin: true
+
+  '@react-native-community/netinfo@11.4.1':
+    resolution: {integrity: sha512-B0BYAkghz3Q2V09BF88RA601XursIEA111tnc2JOaN7axJWmNefmfjZqw/KdSxKZp7CZUuPpjBmz/WCR9uaHYg==}
+    peerDependencies:
+      react-native: '>=0.59'
 
   '@react-native/assets-registry@0.79.5':
     resolution: {integrity: sha512-N4Kt1cKxO5zgM/BLiyzuuDNquZPiIgfktEQ6TqJ/4nKA8zr4e8KJgU6Tb2eleihDO4E24HmkvGc73naybKRz/w==}
@@ -3097,9 +3108,6 @@ packages:
   lodash.throttle@4.1.1:
     resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
 
-  lodash@4.17.21:
-    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
-
   log-symbols@2.2.0:
     resolution: {integrity: sha512-VeIAFslyIerEJLXHziedo2basKbMKtTw3vfn5IzG0XTjhAVEJyNHnL2p7vc+wBDSdQuUpNw3M2u6xb9QsAY5Eg==}
     engines: {node: '>=4'}
@@ -3652,9 +3660,6 @@ packages:
     resolution: {integrity: sha512-NxNv/kLguCA7p3jE8oL2aEBsrJWgAakBpgmgK6lpPWV+WuOmY6r2/zbAVnP+T8bQlA0nzHXSJSJW0Hq7ylaD2Q==}
     engines: {node: '>= 6'}
 
-  prop-types@15.8.1:
-    resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
-
   pump@3.0.3:
     resolution: {integrity: sha512-todwxLMY7/heScKmntwQG8CXVkWUOdYxIvY2s0VWAAMh/nd8SoYiRaKjlr7+iCs984f2P8zvrfWcDDYVb73NfA==}
 
@@ -3720,8 +3725,8 @@ packages:
       react: '*'
       react-native: '*'
 
-  react-native-gesture-handler@2.12.1:
-    resolution: {integrity: sha512-deqh36bw82CFUV9EC4tTo2PP1i9HfCOORGS3Zmv71UYhEZEHkzZv18IZNPB+2Awzj45vLIidZxGYGFxHlDSQ5A==}
+  react-native-gesture-handler@2.27.1:
+    resolution: {integrity: sha512-57TUWerhdz589OcDD21e/YlL923Ma4OIpyWsP0hy7gItBCPm5d7qIUW7Yo/cS2wo1qDdOhJaNlvlBD1lDou1fA==}
     peerDependencies:
       react: '*'
       react-native: '*'
@@ -5818,6 +5823,11 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
+  '@react-native-async-storage/async-storage@2.2.0(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))':
+    dependencies:
+      merge-options: 3.0.4
+      react-native: 0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0)
+
   '@react-native-async-storage/async-storage@2.2.0(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@19.0.14)(react@19.0.0))':
     dependencies:
       merge-options: 3.0.4
@@ -5981,6 +5991,10 @@ snapshots:
       - supports-color
       - utf-8-validate
     optional: true
+
+  '@react-native-community/netinfo@11.4.1(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))':
+    dependencies:
+      react-native: 0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0)
 
   '@react-native/assets-registry@0.79.5': {}
 
@@ -8016,8 +8030,6 @@ snapshots:
 
   lodash.throttle@4.1.1: {}
 
-  lodash@4.17.21: {}
-
   log-symbols@2.2.0:
     dependencies:
       chalk: 2.4.2
@@ -8645,12 +8657,6 @@ snapshots:
       kleur: 3.0.3
       sisteransi: 1.0.5
 
-  prop-types@15.8.1:
-    dependencies:
-      loose-envify: 1.4.0
-      object-assign: 4.1.1
-      react-is: 16.13.1
-
   pump@3.0.3:
     dependencies:
       end-of-stream: 1.4.5
@@ -8722,13 +8728,11 @@ snapshots:
       react: 18.2.0
       react-native: 0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0)
 
-  react-native-gesture-handler@2.12.1(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))(react@18.2.0):
+  react-native-gesture-handler@2.27.1(react-native@0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0))(react@18.2.0):
     dependencies:
       '@egjs/hammerjs': 2.0.17
       hoist-non-react-statics: 3.3.2
       invariant: 2.2.4
-      lodash: 4.17.21
-      prop-types: 15.8.1
       react: 18.2.0
       react-native: 0.79.5(@babel/core@7.28.0)(@react-native-community/cli@13.6.8)(@types/react@18.2.79)(react@18.2.0)
 
