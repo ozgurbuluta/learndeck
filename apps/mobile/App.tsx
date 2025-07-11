@@ -1,19 +1,19 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import AppNavigator from './src/navigation/AppNavigator';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import ErrorBoundary from './src/components/ErrorBoundary';
+import SafeGestureWrapper from './src/components/SafeGestureWrapper';
 
 export default function App() {
   return (
     <ErrorBoundary>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeGestureWrapper>
         <SafeAreaProvider initialMetrics={initialWindowMetrics}>
           <AppNavigator />
           <StatusBar style="auto" />
         </SafeAreaProvider>
-      </GestureHandlerRootView>
+      </SafeGestureWrapper>
     </ErrorBoundary>
   );
 }
