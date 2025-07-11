@@ -1,6 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 
 interface Props {
   children: ReactNode;
@@ -50,6 +49,8 @@ class ErrorBoundary extends Component<Props, State> {
 
   render(): ReactNode {
     if (this.state.hasError) {
+      // Using React Native's SafeAreaView instead of the one from react-native-safe-area-context
+      // This doesn't require a provider and works as a fallback
       return (
         <SafeAreaView style={styles.container}>
           <View style={styles.content}>
