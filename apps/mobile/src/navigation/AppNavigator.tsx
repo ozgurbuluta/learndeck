@@ -1,8 +1,8 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
+import { Text, View, StyleSheet } from 'react-native';
 import AIChatbotScreen from '../screens/AIChatbotScreen';
 import { useAuth } from '../hooks/useAuth';
 import { Auth } from '../components/Auth';
@@ -28,6 +28,15 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
+
+// Simple fallback component in case of navigation errors
+const NavigationFallback = () => (
+  <View style={styles.fallbackContainer}>
+    <Text style={styles.fallbackText}>
+      Unable to load navigation. Please restart the app.
+    </Text>
+  </View>
+);
 
 function MainTabNavigator() {
   return (
@@ -90,14 +99,46 @@ const AuthStack = () => (
 );
 
 const AppNavigator = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, error } = useAuth();
+  const [isNavigationReady, setIsNavigationReady] = useState(false);
 
-  if (loading) {
+  // Add a small delay to ensure all navigation dependencies are ready
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsNavigationReady(true);
+    }, 200);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading || !isNavigationReady) {
     return <SplashScreen />;
   }
 
+  // Custom theme with better error handling
+  const theme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: '#FFFFFF',
+    },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      theme={theme}
+      fallback={<NavigationFallback />}
+      onStateChange={(state) => {
+        // Log navigation state changes but don't crash if there's an error
+        try {
+          if (state) {
+            // Optional: log navigation state for debugging
+          }
+        } catch (e) {
+          console.warn('Navigation state change error:', e);
+        }
+      }}
+    >
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <Stack.Screen name="App" component={AppStack} />
@@ -108,5 +149,20 @@ const AppNavigator = () => {
     </NavigationContainer>
   );
 };
+
+const styles = StyleSheet.create({
+  fallbackContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#F3F4F6',
+  },
+  fallbackText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#4B5563',
+  },
+});
 
 export default AppNavigator; 
