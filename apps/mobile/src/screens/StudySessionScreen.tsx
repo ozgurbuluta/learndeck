@@ -41,16 +41,25 @@ const StudySessionScreen: React.FC = () => {
     flipAnim.setValue(0);
   };
 
-  // Reset card position when moving to next word
-  useEffect(() => {
-    translateX.setValue(0);
-  }, [currentIndex]);
-
   // Get screen dimensions
   const { height, width } = Dimensions.get('window');
 
   // Animation values for swipe
   const translateX = useRef(new Animated.Value(0)).current;
+
+  // Reset card position when moving to next word
+  useEffect(() => {
+    translateX.setValue(0);
+  }, [currentIndex, translateX]);
+
+  // Clean up animations when component unmounts
+  useEffect(() => {
+    return () => {
+      // Release animation resources
+      flipAnim.stopAnimation();
+      translateX.stopAnimation();
+    };
+  }, [flipAnim, translateX]);
 
   const currentWord = studyWords[currentIndex];
 
