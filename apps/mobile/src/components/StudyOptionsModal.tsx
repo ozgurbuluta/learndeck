@@ -7,7 +7,7 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
-import { Folder as FolderType, StudyConfig } from '@shared/types';
+import { Folder as FolderType, StudyConfig } from '../types';
 
 interface StudyOptionsModalProps {
   visible: boolean;

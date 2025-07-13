@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StudyConfig } from '@shared/types';
+import { StudyConfig } from '../types';
 
 const STUDY_CONFIG_KEY = 'study_config';
 
