@@ -5,6 +5,23 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'https://3f276e98867caa69720535f8ec310dae@o4509660066152448.ingest.de.sentry.io/4509660069429328',
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // Configure Session Replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
 
 // Simple loading component that doesn't rely on any external dependencies
 const SimpleLoadingScreen = () => (
@@ -13,7 +30,7 @@ const SimpleLoadingScreen = () => (
   </View>
 );
 
-export default function App() {
+export default Sentry.wrap(function App() {
   const [isReady, setIsReady] = useState(false);
 
   // Delay rendering of the full app to ensure all native modules are initialized
@@ -48,7 +65,7 @@ export default function App() {
       </GestureHandlerRootView>
     </ErrorBoundary>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
