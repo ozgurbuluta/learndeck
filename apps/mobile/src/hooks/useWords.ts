@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Word, StudyConfig } from '@shared/types';
+import { Word, StudyConfig } from '../types';
 import { User } from '@supabase/supabase-js';
 
 // Safe date parsing helper function

@@ -13,7 +13,7 @@ import WordListScreen from '../screens/WordListScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import StudySessionScreen from '../screens/StudySessionScreen';
-import { StudyConfig } from '@shared/types';
+import { StudyConfig } from '../types';
 
 export type RootStackParamList = {
   Splash: undefined;

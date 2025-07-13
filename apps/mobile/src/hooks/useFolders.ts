@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Folder } from '@shared/types';
+import { Folder } from '../types';
 import { User } from '@supabase/supabase-js';
 
 export const useFolders = (user: User | null) => {

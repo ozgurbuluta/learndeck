@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Profile } from '@shared/types';
+import { Profile } from '../types';
 import { User } from '@supabase/supabase-js';
 
 export const useProfile = (user: User | null) => {

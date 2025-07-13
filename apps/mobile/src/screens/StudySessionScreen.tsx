@@ -5,7 +5,7 @@ import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import ScreenContainer from '../components/ScreenContainer';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
-import { Word, StudyConfig } from '@shared/types';
+import { Word, StudyConfig } from '../types';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
 const MAX_SESSION_WORDS = 20;

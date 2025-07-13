@@ -8,7 +8,7 @@ import { useStudyOptions } from '../hooks/useStudyOptions';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import ScreenContainer from '../components/ScreenContainer';
 import { StudyOptionsModal } from '../components/StudyOptionsModal';
-import { StudyConfig } from '@shared/types';
+import { StudyConfig } from '../types';
 import { Screen } from '../components/Screen';
 
 const DashboardScreen: React.FC = () => {
