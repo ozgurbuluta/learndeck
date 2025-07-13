@@ -81,7 +81,7 @@ export const useWords = (user: User | null) => {
       setWords([]);
       setLoading(false);
     }
-  }, [fetchWords, user]);
+  }, [user]); // Remove fetchWords dependency to prevent infinite loops
 
   const addWord = async (
     wordData: Pick<Word, 'word' | 'definition'>,
@@ -148,7 +148,6 @@ export const useWords = (user: User | null) => {
       if (updateError) throw updateError;
 
       await fetchWords();
-      setWords((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
     } catch (e: any) {
       setError(e.message);
       console.error('Error updating word:', e);

@@ -20,7 +20,9 @@ const createStorageAdapter = () => {
         // Try to use SecureStore first
         return await SecureStore.getItemAsync(key);
       } catch (error) {
-        console.warn('SecureStore.getItemAsync failed, using memory fallback', error);
+        if (__DEV__) {
+          console.warn('SecureStore.getItemAsync failed, using memory fallback', error);
+        }
         return memoryStorage[key] || null;
       }
     },
@@ -29,7 +31,9 @@ const createStorageAdapter = () => {
         // Try to use SecureStore first
         await SecureStore.setItemAsync(key, value);
       } catch (error) {
-        console.warn('SecureStore.setItemAsync failed, using memory fallback', error);
+        if (__DEV__) {
+          console.warn('SecureStore.setItemAsync failed, using memory fallback', error);
+        }
         memoryStorage[key] = value;
       }
     },
@@ -38,7 +42,9 @@ const createStorageAdapter = () => {
         // Try to use SecureStore first
         await SecureStore.deleteItemAsync(key);
       } catch (error) {
-        console.warn('SecureStore.deleteItemAsync failed, using memory fallback', error);
+        if (__DEV__) {
+          console.warn('SecureStore.deleteItemAsync failed, using memory fallback', error);
+        }
         delete memoryStorage[key];
       }
     }
@@ -57,7 +63,9 @@ const getEnvVar = (varName: string, fallback: string): string => {
       
     return value;
   } catch (error) {
-    console.warn(`Error accessing ${varName}, using fallback value`, error);
+    if (__DEV__) {
+      console.warn(`Error accessing ${varName}, using fallback value`, error);
+    }
     return fallback;
   }
 };
