@@ -18,4 +18,16 @@ config.resolver = {
   disableHierarchicalLookup: true,
 };
 
+// Enable bundle optimization for production builds
+config.transformer = {
+  ...config.transformer,
+  minifierConfig: {
+    ...config.transformer.minifierConfig,
+    keep_fnames: true,
+    mangle: {
+      keep_fnames: true,
+    },
+  },
+};
+
 module.exports = config;
