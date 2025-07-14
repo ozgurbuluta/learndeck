@@ -20,7 +20,7 @@ export const StudySessionScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { studyType = 'due' } = (route.params as RouteParams) || {};
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const {
     currentWord,
     isFlipped,
@@ -37,8 +37,10 @@ export const StudySessionScreen = () => {
   const flipAnimation = new Animated.Value(0);
 
   useEffect(() => {
-    initializeSession();
-  }, []);
+    if (user?.id) {
+      initializeSession();
+    }
+  }, [user?.id]);
 
   const initializeSession = async () => {
     const result = await startStudySession(studyType);
@@ -87,11 +89,24 @@ export const StudySessionScreen = () => {
     );
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Starting study session...</Text>
+        <Text style={styles.loadingText}>
+          {authLoading ? 'Loading...' : 'Starting study session...'}
+        </Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.emptyText}>Authentication required</Text>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+          <Text style={styles.buttonText}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
