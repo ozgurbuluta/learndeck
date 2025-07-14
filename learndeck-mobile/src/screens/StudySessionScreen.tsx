@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Animated,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '../hooks/useAuth';
@@ -34,8 +33,6 @@ export const StudySessionScreen = () => {
     resetSession,
   } = useStudySession(user?.id);
 
-  const flipAnimation = new Animated.Value(0);
-
   useEffect(() => {
     if (user?.id) {
       initializeSession();
@@ -54,11 +51,6 @@ export const StudySessionScreen = () => {
   };
 
   const handleFlip = () => {
-    Animated.timing(flipAnimation, {
-      toValue: isFlipped ? 0 : 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
     flipCard();
   };
 
@@ -122,16 +114,6 @@ export const StudySessionScreen = () => {
     );
   }
 
-  const frontInterpolate = flipAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
-  });
-
-  const backInterpolate = flipAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['180deg', '360deg'],
-  });
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -161,43 +143,37 @@ export const StudySessionScreen = () => {
           <View style={styles.card}>
             {!isFlipped ? (
               // Front - Word
-              <Animated.View style={[styles.cardFace, { transform: [{ rotateY: frontInterpolate }] }]}>
-                <Text style={styles.cardTitle}>Word</Text>
+              <View style={styles.cardFace}>
                 <Text style={styles.cardWord}>{currentWord.word}</Text>
                 <Text style={styles.tapHint}>Tap to reveal definition</Text>
-              </Animated.View>
+              </View>
             ) : (
               // Back - Definition
-              <Animated.View style={[styles.cardFace, { transform: [{ rotateY: backInterpolate }] }]}>
-                <Text style={styles.cardTitle}>Definition</Text>
+              <View style={styles.cardFace}>
                 <Text style={styles.cardDefinition}>{currentWord.definition}</Text>
-                <Text style={styles.difficultyBadge}>{currentWord.difficulty}</Text>
-              </Animated.View>
+                <Text style={styles.tapHint}>Tap to see word again</Text>
+              </View>
             )}
           </View>
         </TouchableOpacity>
       </View>
 
-      {/* Action Buttons */}
-      {isFlipped && (
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.incorrectButton]}
-            onPress={() => handleAnswer(false)}
-          >
-            <Text style={styles.actionButtonText}>Incorrect</Text>
-            <Text style={styles.actionButtonSubtext}>Need more practice</Text>
-          </TouchableOpacity>
+      {/* Action Buttons - Always visible */}
+      <View style={styles.actionsContainer}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.keepLearningButton]}
+          onPress={() => handleAnswer(false)}
+        >
+          <Text style={styles.actionButtonText}>Keep learning!</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionButton, styles.correctButton]}
-            onPress={() => handleAnswer(true)}
-          >
-            <Text style={styles.actionButtonText}>Correct</Text>
-            <Text style={styles.actionButtonSubtext}>I knew it!</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        <TouchableOpacity
+          style={[styles.actionButton, styles.knowItButton]}
+          onPress={() => handleAnswer(true)}
+        >
+          <Text style={styles.actionButtonText}>I know it!</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -304,44 +280,26 @@ const styles = StyleSheet.create({
     padding: 32,
     borderRadius: 16,
     backgroundColor: '#fff',
-    backfaceVisibility: 'hidden',
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 16,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
   },
   cardWord: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#000',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 32,
   },
   cardDefinition: {
-    fontSize: 20,
-    color: '#333',
+    fontSize: 22,
+    color: '#000',
     textAlign: 'center',
-    lineHeight: 28,
-    marginBottom: 24,
+    lineHeight: 32,
+    marginBottom: 32,
   },
   tapHint: {
     fontSize: 14,
-    color: '#999',
+    color: '#666',
     fontStyle: 'italic',
-  },
-  difficultyBadge: {
-    fontSize: 12,
-    color: '#007AFF',
-    backgroundColor: '#E3F2FD',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    textTransform: 'capitalize',
-    fontWeight: '600',
+    textAlign: 'center',
   },
   actionsContainer: {
     flexDirection: 'row',
@@ -355,21 +313,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
-  incorrectButton: {
-    backgroundColor: '#FF3B30',
+  keepLearningButton: {
+    backgroundColor: '#FF6B35',
   },
-  correctButton: {
+  knowItButton: {
     backgroundColor: '#34C759',
   },
   actionButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
-  },
-  actionButtonSubtext: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 12,
   },
   button: {
     backgroundColor: '#007AFF',
