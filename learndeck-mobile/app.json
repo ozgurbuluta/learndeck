@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "online.learndeck"
+      "bundleIdentifier": "online.learndeck",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -26,6 +29,11 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {}
+    "extra": {
+      "eas": {
+        "projectId": "1974c6f8-e38c-40af-8a29-dc95e4ec0bb6"
+      }
+    },
+    "owner": "ozgurbulut"
   }
 }
