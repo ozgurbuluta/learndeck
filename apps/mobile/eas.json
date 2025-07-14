@@ -1,7 +1,6 @@
 {
   "cli": {
-    "version": ">= 16.14.1",
-    "appVersionSource": "remote"
+    "version": ">= 16.14.1"
   },
   "build": {
     "development": {
@@ -12,18 +11,8 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true,
-      "env": {
-        "EXPO_USE_HERMES": "1"
-      },
       "ios": {
-        "resourceClass": "m-medium",
-        "buildConfiguration": "Release",
-        "credentialsSource": "remote"
-      },
-      "android": {
-        "buildType": "app-bundle",
-        "gradleCommand": ":app:bundleRelease"
+        "resourceClass": "m-medium"
       }
     }
   },
