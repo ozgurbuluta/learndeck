@@ -1,55 +1,82 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { useAuth } from '../hooks/useAuth';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { WordsScreen } from './WordsScreen';
+import { ProfileScreen } from './ProfileScreen';
 
-const HomeScreen: React.FC = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { user } = useAuth();
+const Tab = createBottomTabNavigator();
 
+export const HomeScreen = () => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to LearnDeck</Text>
-      <Text style={styles.subtitle}>Hello, {user?.email}</Text>
-
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Profile')}>
-        <Text style={styles.buttonText}>Go to Profile</Text>
-      </TouchableOpacity>
-    </View>
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#fff',
+          borderTopColor: '#e1e1e1',
+        },
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: '#666',
+      }}
+    >
+      <Tab.Screen 
+        name="Words" 
+        component={WordsScreen}
+        options={{
+          tabBarLabel: 'Words',
+        }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: 'Profile',
+        }}
+      />
+    </Tab.Navigator>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 24,
+    backgroundColor: '#f5f5f5',
+    padding: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#14213D',
+    color: '#333',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#6B7280',
-    marginBottom: 24,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  message: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 40,
+    lineHeight: 24,
   },
   button: {
-    backgroundColor: '#FCA311',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    backgroundColor: '#FF3B30',
     borderRadius: 8,
+    padding: 16,
+    minWidth: 120,
+    alignItems: 'center',
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
-
-export default HomeScreen; 
