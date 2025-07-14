@@ -11,13 +11,15 @@ import {
   Modal,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NavigationProp, RouteProp } from '@react-navigation/native';
+import type { RootStackParamList, TabParamList } from '../types/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
 import { Word } from '../types/database';
 
 export const WordsScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<TabParamList, 'Words'>>();
   const { user } = useAuth();
   const { words, loading, addWord, deleteWord } = useWords(user?.id);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -91,7 +93,7 @@ export const WordsScreen = () => {
       return;
     }
     
-    navigation.navigate('StudySession' as never, { studyType } as never);
+    navigation.navigate('StudySession', { studyType });
   };
 
   const dueWordsCount = words.filter(word => 

@@ -7,23 +7,25 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NavigationProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
 
 export const DashboardScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { user } = useAuth();
   const { words, loading } = useWords(user?.id);
 
   const handleStartStudy = (studyType: 'all' | 'due' | 'new' = 'due') => {
-    navigation.navigate('StudySession' as never, { studyType } as never);
+    navigation.navigate('StudySession', { studyType });
   };
 
   const handleAddWord = () => {
-    navigation.navigate('Home' as never, { 
+    navigation.navigate('Home', { 
       screen: 'Words',
       params: { openAddModal: true }
-    } as never);
+    });
   };
 
   // Calculate stats
@@ -149,7 +151,7 @@ export const DashboardScreen = () => {
 
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => navigation.navigate('Home' as never, { screen: 'Words' } as never)}
+            onPress={() => navigation.navigate('Home', { screen: 'Words' })}
           >
             <Text style={styles.actionButtonText}>📚</Text>
             <Text style={styles.actionButtonLabel}>Browse Words</Text>
@@ -157,7 +159,7 @@ export const DashboardScreen = () => {
 
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => navigation.navigate('Home' as never, { screen: 'Profile' } as never)}
+            onPress={() => navigation.navigate('Home', { screen: 'Profile' })}
           >
             <Text style={styles.actionButtonText}>👤</Text>
             <Text style={styles.actionButtonLabel}>Profile</Text>

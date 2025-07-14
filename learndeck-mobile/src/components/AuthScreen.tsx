@@ -29,7 +29,7 @@ export const AuthScreen = () => {
       : await signUp(email, password);
 
     if (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', (error as any).message || 'An error occurred');
     } else if (!isLogin) {
       Alert.alert('Success', 'Account created! Please check your email to verify your account.');
     }
