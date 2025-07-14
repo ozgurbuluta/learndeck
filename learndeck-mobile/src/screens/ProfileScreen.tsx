@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
 
 export const ProfileScreen = () => {
+  const navigation = useNavigation();
   const { user, signOut } = useAuth();
   const { words } = useWords(user?.id);
 
@@ -38,12 +40,20 @@ export const ProfileScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Profile</Text>
+        <TouchableOpacity 
+          style={styles.editButton}
+          onPress={() => navigation.navigate('ProfileEdit' as never)}
+        >
+          <Text style={styles.editButtonText}>Edit</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
         <View style={styles.userInfo}>
           <Text style={styles.email}>{user?.email}</Text>
-          <Text style={styles.userIdText}>User ID: {user?.id}</Text>
+          <Text style={styles.displayName}>
+            {user?.user_metadata?.display_name || 'No display name set'}
+          </Text>
         </View>
 
         <View style={styles.stats}>
@@ -108,6 +118,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 20,
     paddingTop: 60,
     backgroundColor: '#fff',
@@ -118,6 +131,17 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+  },
+  editButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   content: {
     flex: 1,
@@ -134,6 +158,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 8,
+  },
+  displayName: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 4,
   },
   userIdText: {
     fontSize: 12,
