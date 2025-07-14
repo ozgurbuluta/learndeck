@@ -10,11 +10,13 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
 import { Word } from '../types/database';
 
 export const WordsScreen = () => {
+  const navigation = useNavigation();
   const { user } = useAuth();
   const { words, loading, addWord, deleteWord } = useWords(user?.id);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -74,6 +76,21 @@ export const WordsScreen = () => {
     </View>
   );
 
+  const handleStartStudy = (studyType: 'all' | 'due' | 'new' = 'due') => {
+    if (words.length === 0) {
+      Alert.alert('No Words', 'Add some words first to start studying!');
+      return;
+    }
+    
+    navigation.navigate('StudySession' as never, { studyType } as never);
+  };
+
+  const dueWordsCount = words.filter(word => 
+    new Date(word.next_review) <= new Date()
+  ).length;
+
+  const newWordsCount = words.filter(word => word.difficulty === 'new').length;
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -102,12 +119,46 @@ export const WordsScreen = () => {
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={words}
-          keyExtractor={(item) => item.id}
-          renderItem={renderWord}
-          contentContainerStyle={styles.listContainer}
-        />
+        <>
+          {/* Study Options */}
+          <View style={styles.studySection}>
+            <Text style={styles.studySectionTitle}>Study</Text>
+            <View style={styles.studyOptions}>
+              <TouchableOpacity
+                style={[styles.studyCard, styles.primaryStudyCard]}
+                onPress={() => handleStartStudy('due')}
+              >
+                <Text style={[styles.studyCardNumber, styles.primaryStudyCardText]}>{dueWordsCount}</Text>
+                <Text style={[styles.studyCardLabel, styles.primaryStudyCardText]}>Due for Review</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.studyCard}
+                onPress={() => handleStartStudy('new')}
+              >
+                <Text style={styles.studyCardNumber}>{newWordsCount}</Text>
+                <Text style={styles.studyCardLabel}>New Words</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.studyCard}
+                onPress={() => handleStartStudy('all')}
+              >
+                <Text style={styles.studyCardNumber}>{words.length}</Text>
+                <Text style={styles.studyCardLabel}>All Words</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Words List */}
+          <FlatList
+            data={words}
+            keyExtractor={(item) => item.id}
+            renderItem={renderWord}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+          />
+        </>
       )}
 
       <Modal
@@ -208,6 +259,50 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  studySection: {
+    padding: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e1e1e1',
+  },
+  studySectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+  },
+  studyOptions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  studyCard: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e1e1e1',
+  },
+  primaryStudyCard: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  studyCardNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  studyCardLabel: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  primaryStudyCardText: {
+    color: '#fff',
   },
   listContainer: {
     padding: 20,

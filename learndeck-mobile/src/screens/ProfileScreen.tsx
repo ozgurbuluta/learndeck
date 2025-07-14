@@ -27,6 +27,12 @@ export const ProfileScreen = () => {
   const learningWords = words.filter(word => word.difficulty === 'learning').length;
   const reviewWords = words.filter(word => word.difficulty === 'review').length;
   const masteredWords = words.filter(word => word.difficulty === 'mastered').length;
+  const dueWords = words.filter(word => new Date(word.next_review) <= new Date()).length;
+  
+  // Calculate study progress
+  const totalReviews = words.reduce((sum, word) => sum + word.review_count, 0);
+  const correctAnswers = words.reduce((sum, word) => sum + word.correct_count, 0);
+  const accuracy = totalReviews > 0 ? Math.round((correctAnswers / totalReviews) * 100) : 0;
 
   return (
     <View style={styles.container}>
@@ -49,8 +55,27 @@ export const ProfileScreen = () => {
           </View>
 
           <View style={styles.statItem}>
-            <Text style={styles.statLabel}>New Words</Text>
-            <Text style={styles.statValue}>{newWords}</Text>
+            <Text style={styles.statLabel}>Due for Review</Text>
+            <Text style={[styles.statValue, dueWords > 0 && styles.dueStatValue]}>{dueWords}</Text>
+          </View>
+
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Mastered</Text>
+            <Text style={styles.statValue}>{masteredWords}</Text>
+          </View>
+        </View>
+
+        <View style={styles.stats}>
+          <Text style={styles.statsTitle}>Study Progress</Text>
+          
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Total Reviews</Text>
+            <Text style={styles.statValue}>{totalReviews}</Text>
+          </View>
+
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Accuracy</Text>
+            <Text style={styles.statValue}>{accuracy}%</Text>
           </View>
 
           <View style={styles.statItem}>
@@ -59,13 +84,13 @@ export const ProfileScreen = () => {
           </View>
 
           <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Review</Text>
+            <Text style={styles.statLabel}>In Review</Text>
             <Text style={styles.statValue}>{reviewWords}</Text>
           </View>
 
           <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Mastered</Text>
-            <Text style={styles.statValue}>{masteredWords}</Text>
+            <Text style={styles.statLabel}>New Words</Text>
+            <Text style={styles.statValue}>{newWords}</Text>
           </View>
         </View>
 
@@ -143,6 +168,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+  },
+  dueStatValue: {
+    color: '#FF6B35',
+    fontWeight: 'bold',
   },
   signOutButton: {
     backgroundColor: '#FF3B30',

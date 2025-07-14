@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthScreen } from './src/components/AuthScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
+import { StudySessionScreen } from './src/screens/StudySessionScreen';
 import { useAuth } from './src/hooks/useAuth';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
@@ -27,7 +28,10 @@ export default function App() {
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {session ? (
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <>
+              <Stack.Screen name="Home" component={HomeScreen} />
+              <Stack.Screen name="StudySession" component={StudySessionScreen} />
+            </>
           ) : (
             <Stack.Screen name="Auth" component={AuthScreen} />
           )}
