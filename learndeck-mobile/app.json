@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "online.learndeck",
-      "buildNumber": "1.1.0",
+      "buildNumber": "1.1.1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
