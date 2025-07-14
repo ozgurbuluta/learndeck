@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { DashboardScreen } from './DashboardScreen';
 import { WordsScreen } from './WordsScreen';
 import { ProfileScreen } from './ProfileScreen';
 
@@ -19,10 +20,17 @@ export const HomeScreen = () => {
       }}
     >
       <Tab.Screen 
+        name="Dashboard" 
+        component={DashboardScreen}
+        options={{
+          tabBarLabel: 'Home',
+        }}
+      />
+      <Tab.Screen 
         name="Words" 
         component={WordsScreen}
         options={{
-          tabBarLabel: 'Words',
+          tabBarLabel: 'Library',
         }}
       />
       <Tab.Screen 

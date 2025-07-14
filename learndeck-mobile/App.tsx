@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthScreen } from './src/components/AuthScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { StudySessionScreen } from './src/screens/StudySessionScreen';
+import { ProfileEditScreen } from './src/screens/ProfileEditScreen';
 import { useAuth } from './src/hooks/useAuth';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
@@ -31,6 +32,7 @@ export default function App() {
             <>
               <Stack.Screen name="Home" component={HomeScreen} />
               <Stack.Screen name="StudySession" component={StudySessionScreen} />
+              <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
             </>
           ) : (
             <Stack.Screen name="Auth" component={AuthScreen} />

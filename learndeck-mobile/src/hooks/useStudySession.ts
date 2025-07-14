@@ -19,7 +19,7 @@ export const useStudySession = (userId: string | undefined) => {
   const [loading, setLoading] = useState(false);
 
   const startStudySession = useCallback(async (studyType: 'all' | 'due' | 'new' = 'due') => {
-    if (!userId) return;
+    if (!userId) return { success: false, message: 'User not authenticated' };
 
     setLoading(true);
     try {
@@ -30,14 +30,26 @@ export const useStudySession = (userId: string | undefined) => {
 
       // Filter based on study type
       if (studyType === 'due') {
-        query = query.lte('next_review', new Date().toISOString());
+        // Include words due for review OR new words that have never been reviewed
+        const now = new Date().toISOString();
+        query = query.or(`next_review.lte.${now},and(difficulty.eq.new,last_reviewed.is.null)`);
       } else if (studyType === 'new') {
         query = query.eq('difficulty', 'new');
       }
+      // 'all' type doesn't add any filters
 
-      const { data, error } = await query.order('next_review', { ascending: true }).limit(20);
+      const { data, error } = await query.order('created_at', { ascending: true }).limit(20);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase query error:', error);
+        throw error;
+      }
+
+      console.log(`Study session query for ${studyType}:`, {
+        userId,
+        wordsFound: data?.length || 0,
+        studyType
+      });
 
       if (data && data.length > 0) {
         setStudyWords(data);
@@ -46,11 +58,11 @@ export const useStudySession = (userId: string | undefined) => {
         setSessionStats({ correct: 0, incorrect: 0, total: data.length });
         return { success: true, count: data.length };
       } else {
-        return { success: false, message: 'No words available for study' };
+        return { success: false, message: `No ${studyType === 'all' ? '' : studyType + ' '}words available for study` };
       }
     } catch (error) {
       console.error('Error starting study session:', error);
-      return { success: false, message: 'Failed to start study session' };
+      return { success: false, message: 'Failed to start study session. Please try again.' };
     } finally {
       setLoading(false);
     }

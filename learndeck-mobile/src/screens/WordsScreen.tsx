@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,19 +10,28 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
 import { Word } from '../types/database';
 
 export const WordsScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
   const { user } = useAuth();
   const { words, loading, addWord, deleteWord } = useWords(user?.id);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newWord, setNewWord] = useState('');
   const [newDefinition, setNewDefinition] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Handle navigation params
+  useEffect(() => {
+    if (route.params?.openAddModal) {
+      setShowAddModal(true);
+    }
+  }, [route.params]);
 
   const handleAddWord = async () => {
     if (!newWord.trim() || !newDefinition.trim()) {
@@ -91,6 +100,12 @@ export const WordsScreen = () => {
 
   const newWordsCount = words.filter(word => word.difficulty === 'new').length;
 
+  // Filter words based on search query
+  const filteredWords = words.filter(word => 
+    word.word.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    word.definition.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -102,7 +117,7 @@ export const WordsScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Words</Text>
+        <Text style={styles.title}>Library</Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setShowAddModal(true)}
@@ -110,6 +125,19 @@ export const WordsScreen = () => {
           <Text style={styles.addButtonText}>Add Word</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Search Bar */}
+      {words.length > 0 && (
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search words..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor="#999"
+          />
+        </View>
+      )}
 
       {words.length === 0 ? (
         <View style={styles.emptyState}>
@@ -152,11 +180,21 @@ export const WordsScreen = () => {
 
           {/* Words List */}
           <FlatList
-            data={words}
+            data={filteredWords}
             keyExtractor={(item) => item.id}
             renderItem={renderWord}
             contentContainerStyle={styles.listContainer}
             showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              searchQuery ? (
+                <View style={styles.emptySearchState}>
+                  <Text style={styles.emptyTitle}>No words found</Text>
+                  <Text style={styles.emptySubtitle}>
+                    Try searching for a different word or definition
+                  </Text>
+                </View>
+              ) : null
+            }
           />
         </>
       )}
@@ -242,6 +280,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  searchContainer: {
+    padding: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e1e1e1',
+  },
+  searchInput: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#e1e1e1',
+  },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
@@ -259,6 +311,10 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  emptySearchState: {
+    alignItems: 'center',
+    padding: 40,
   },
   studySection: {
     padding: 20,
