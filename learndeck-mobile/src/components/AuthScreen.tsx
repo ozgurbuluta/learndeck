@@ -7,7 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
+  ScrollView,
   Platform,
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
@@ -36,38 +36,49 @@ export const AuthScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <View style={styles.content}>
-        <Text style={styles.title}>LearnDeck</Text>
-        <Text style={styles.subtitle}>Master Your Vocabulary</Text>
+    <View style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>LearnDeck</Text>
+          <Text style={styles.subtitle}>Master Your Vocabulary</Text>
+        </View>
         
         <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholderTextColor="#999"
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="emailAddress"
+              placeholderTextColor="#999"
+            />
+          </View>
           
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor="#999"
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              textContentType="password"
+              placeholderTextColor="#999"
+            />
+          </View>
           
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleAuth}
             disabled={loading}
+            activeOpacity={0.8}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
@@ -81,14 +92,15 @@ export const AuthScreen = () => {
           <TouchableOpacity
             style={styles.toggleButton}
             onPress={() => setIsLogin(!isLogin)}
+            activeOpacity={0.7}
           >
             <Text style={styles.toggleText}>
               {isLogin ? 'Need an account? Sign Up' : 'Have an account? Sign In'}
             </Text>
           </TouchableOpacity>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -97,35 +109,44 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  content: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+  },
+  header: {
     alignItems: 'center',
-    padding: 20,
+    marginBottom: 40,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 40,
+    textAlign: 'center',
   },
   form: {
     width: '100%',
     maxWidth: 300,
+    alignSelf: 'center',
+  },
+  inputContainer: {
+    marginBottom: 16,
   },
   input: {
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 16,
-    marginBottom: 16,
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#ddd',
+    minHeight: 52,
   },
   button: {
     backgroundColor: '#007AFF',
@@ -133,6 +154,11 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     marginBottom: 16,
+    minHeight: 52,
+    justifyContent: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: '#fff',
@@ -141,6 +167,7 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     alignItems: 'center',
+    paddingVertical: 12,
   },
   toggleText: {
     color: '#007AFF',
