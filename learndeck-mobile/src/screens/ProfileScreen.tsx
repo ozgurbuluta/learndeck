@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NavigationProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
 
 export const ProfileScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { user, signOut } = useAuth();
   const { words } = useWords(user?.id);
 
@@ -42,7 +44,7 @@ export const ProfileScreen = () => {
         <Text style={styles.title}>Profile</Text>
         <TouchableOpacity 
           style={styles.editButton}
-          onPress={() => navigation.navigate('ProfileEdit' as never)}
+          onPress={() => navigation.navigate('ProfileEdit')}
         >
           <Text style={styles.editButtonText}>Edit</Text>
         </TouchableOpacity>
