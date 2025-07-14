@@ -4,6 +4,16 @@ module.exports = function (api) {
     presets: ['babel-preset-expo'],
     plugins: [
       'nativewind/babel',
+      [
+        'module-resolver',
+        {
+          root: ['./'],
+          extensions: ['.ios.js', '.android.js', '.js', '.ts', '.tsx', '.json'],
+          alias: {
+            '@shared': '../../packages/shared/src',
+          },
+        },
+      ],
     ],
   };
 }; 
