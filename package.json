@@ -9,8 +9,6 @@
     "lint": "turbo run lint"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
     "babel-plugin-module-resolver": "^5.0.2",
     "turbo": "^1.12.0"
   },
