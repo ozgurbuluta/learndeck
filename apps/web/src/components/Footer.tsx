@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Mail, Github, Twitter, Heart } from 'lucide-react';
+import { Mail, Github, Twitter, Heart } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (view: string) => void;
@@ -15,14 +15,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         <div className="py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="md:col-span-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="bg-primary-highlight p-2 rounded-lg">
-                <BookOpen className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold">LearnDeck</h3>
-                <p className="text-sm text-white/70">Vocabulary Mastery</p>
-              </div>
+            <div className="flex flex-col space-y-3 mb-4">
+              <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-12 w-auto" />
+              <p className="text-sm text-white/70">Vocabulary Mastery</p>
             </div>
             <p className="text-white/80 text-sm leading-relaxed mb-4">
               Master vocabulary with intelligent spaced repetition. Build your language skills efficiently with our scientifically-backed learning system.
