@@ -80,15 +80,9 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'dashb
             <div className="flex items-center">
               <button
                 onClick={() => onNavigate('dashboard')}
-                className="flex items-center space-x-3 hover:opacity-80 transition-opacity duration-200"
+                className="flex items-center hover:opacity-80 transition-opacity duration-200"
               >
-                <div className="bg-primary-highlight p-2 rounded-lg">
-                  <BookOpen className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-primary-navy">LearnDeck</h1>
-                  <p className="text-xs text-primary-text/60 -mt-1">Vocabulary Mastery</p>
-                </div>
+                <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-20" />
               </button>
             </div>
 

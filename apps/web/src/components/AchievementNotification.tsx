@@ -28,7 +28,8 @@ export const AchievementNotification: React.FC<AchievementNotificationProps> = (
   }, [onClose]);
 
   const details = achievementDetails[achievement.achievement_type];
-  const Icon = iconMap[details.icon as keyof typeof iconMap];
+  // Fallback to Trophy if icon not found in map
+  const Icon = iconMap[details.icon as keyof typeof iconMap] || Trophy;
 
   return (
     <div className="fixed bottom-4 right-4 w-80 bg-white rounded-lg shadow-lg border border-primary-bg overflow-hidden animate-slide-up">
