@@ -157,9 +157,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ words, onNavigate, current
                   spaced repetition
                 </span>
                 <div className="invisible group-hover/sr:visible absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 p-3 bg-white rounded-lg shadow-lg border border-primary-bg text-sm text-left z-10">
-                  <p className="text-primary-text mb-2">
+                  <div className="text-primary-text mb-2">
                     Spaced repetition is a scientifically-proven learning technique that presents words for review at optimal intervals based on your performance, ensuring long-term retention with minimal effort.
-                  </p>
+                  </div>
                   <div className="absolute left-1/2 -top-2 -translate-x-1/2 w-4 h-4 bg-white border-t border-l border-primary-bg rotate-45"></div>
                 </div>
               </span>{' '}
@@ -247,14 +247,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ words, onNavigate, current
                           {option.folder ? option.folder.name : 'All Words'}
                         </h4>
                       </div>
-                      <button onClick={(e) => {
+                      <div onClick={(e) => {
                           e.stopPropagation();
                           handleStartStudy(option.folder_id || null, 'all');
                         }}
-                        className="p-2 rounded-full -m-2 hover:bg-primary-highlight/10"
+                        className="p-2 rounded-full -m-2 hover:bg-primary-highlight/10 cursor-pointer"
                       >
                         <Play className="h-4 w-4 text-primary-text/30 group-hover:text-primary-highlight transition-colors duration-200" />
-                      </button>
+                      </div>
                     </div>
                     <p className="text-sm text-primary-text/70 mb-2">
                       {folderWords.length} words
@@ -286,14 +286,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ words, onNavigate, current
                     <div className="w-3 h-3 rounded-full bg-primary-navy" />
                     <h4 className="font-semibold text-primary-navy">All Words</h4>
                   </div>
-                  <button onClick={(e) => {
+                  <div onClick={(e) => {
                       e.stopPropagation();
                       handleStartStudy(null, 'all');
                     }}
-                    className="p-2 rounded-full -m-2 hover:bg-primary-highlight/10"
+                    className="p-2 rounded-full -m-2 hover:bg-primary-highlight/10 cursor-pointer"
                   >
                     <Play className="h-4 w-4 text-primary-text/30 group-hover:text-primary-highlight transition-colors duration-200" />
-                  </button>
+                  </div>
                 </div>
                 <p className="text-sm text-primary-text/70">
                   {words.length} total words
@@ -318,14 +318,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ words, onNavigate, current
                           {folder.name}
                         </h4>
                       </div>
-                      <button onClick={(e) => {
+                      <div onClick={(e) => {
                           e.stopPropagation();
                           handleStartStudy(folder.id, 'all');
                         }}
-                        className="p-2 rounded-full -m-2 hover:bg-primary-highlight/10"
+                        className="p-2 rounded-full -m-2 hover:bg-primary-highlight/10 cursor-pointer"
                       >
                         <Play className="h-4 w-4 text-primary-text/30 group-hover:text-primary-highlight transition-colors duration-200" />
-                      </button>
+                      </div>
                     </div>
                     <p className="text-sm text-primary-text/70">
                       {folder.word_count} words

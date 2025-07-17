@@ -16,7 +16,9 @@ export const Profile: React.FC<ProfileProps> = ({ words, onNavigate, currentView
   const { user } = useAuth();
   const { profile, loading, updateProfile } = useProfile(user);
   const { achievements, newAchievements, checkAchievements, markAchievementsSeen } = useAchievements();
+  
   const [isEditing, setIsEditing] = useState(false);
+  const [showAllAchievements, setShowAllAchievements] = useState(false);
   const [editForm, setEditForm] = useState({
     username: '',
     bio: '',
@@ -32,7 +34,64 @@ export const Profile: React.FC<ProfileProps> = ({ words, onNavigate, currentView
     }
   }, [profile, words, checkAchievements]);
 
-  React.useEffect(() => {
+  // Log achievement progress when achievements change
+  useEffect(() => {
+    if (profile && achievements.length >= 0) {
+      console.log('=== ACHIEVEMENT PROGRESS ===');
+      // Define achievementsList locally to avoid dependency issues
+      const achievementsList = [
+        {
+          title: 'First Word',
+          description: 'Added your first word to the collection',
+          earned: achievements.some(a => a.achievement_type === 'first_word'),
+          progress: `${words.length} words added`,
+          target: 1
+        },
+        {
+          title: 'Study Time: 2 Hours',
+          description: 'Spent 2 hours studying in total',
+          earned: achievements.some(a => a.achievement_type === 'study_time_120' || a.achievement_type === 'dedicated_learner_60'),
+          progress: `${profile.total_study_time} minutes studied`,
+          target: 120
+        },
+        {
+          title: 'Word Master',
+          description: 'Mastered 10 words',
+          earned: achievements.some(a => a.achievement_type === 'word_master_10'),
+          progress: `${words.filter(w => w.difficulty === 'mastered').length} words mastered`,
+          target: 10
+        },
+        {
+          title: 'Study Streak',
+          description: 'Studied for 7 consecutive days',
+          earned: achievements.some(a => a.achievement_type === 'study_streak_7'),
+          progress: `${profile.study_streak} day streak`,
+          target: 7
+        },
+        {
+          title: 'Word Collection',
+          description: 'Added 50 words to your collection',
+          earned: achievements.some(a => a.achievement_type === 'word_collection_50'),
+          progress: `${words.length} words added`,
+          target: 50
+        },
+        {
+          title: 'Review Champion',
+          description: 'Completed 100 word reviews',
+          earned: achievements.some(a => a.achievement_type === 'review_champion_100'),
+          progress: `${words.reduce((sum, word) => sum + word.review_count, 0)} reviews completed`,
+          target: 100
+        }
+      ];
+      
+      achievementsList.forEach(achievement => {
+        console.log(`${achievement.title}: ${achievement.progress} (${achievement.earned ? 'EARNED' : 'Not earned'})`);
+      });
+      console.log('=============================');
+    }
+  }, [achievements, profile, words]);
+
+  useEffect(() => {
     if (profile) {
       setEditForm({
         username: profile.username || '',
@@ -118,37 +177,79 @@ export const Profile: React.FC<ProfileProps> = ({ words, onNavigate, currentView
     day: 'numeric'
   });
 
-  // Map achievements to display format
+  // Create trackable achievement list with progress logging
   const achievementsList = [
     {
-      title: achievementDetails.first_word.title,
-      description: achievementDetails.first_word.description,
+      title: 'First Word',
+      description: 'Added your first word to the collection',
       earned: achievements.some(a => a.achievement_type === 'first_word'),
       icon: BookOpen,
-      color: achievementDetails.first_word.color
+      color: 'bg-blue-500',
+      progress: `${totalWords} words added`,
+      target: 1
     },
     {
-      title: achievementDetails.study_streak_7.title,
-      description: achievementDetails.study_streak_7.description,
-      earned: achievements.some(a => a.achievement_type === 'study_streak_7'),
-      icon: Zap,
-      color: achievementDetails.study_streak_7.color
+      title: 'Study Time: 2 Hours',
+      description: 'Spent 2 hours studying in total',
+      earned: achievements.some(a => a.achievement_type === 'study_time_120' || a.achievement_type === 'dedicated_learner_60'),
+      icon: Clock,
+      color: 'bg-purple-500',
+      progress: `${profile.total_study_time} minutes studied`,
+      target: 120
     },
     {
-      title: achievementDetails.word_master_10.title,
-      description: achievementDetails.word_master_10.description,
+      title: 'Word Master',
+      description: 'Mastered 10 words',
       earned: achievements.some(a => a.achievement_type === 'word_master_10'),
       icon: Trophy,
-      color: achievementDetails.word_master_10.color
+      color: 'bg-green-500',
+      progress: `${masteredWords} words mastered`,
+      target: 10
     },
     {
-      title: achievementDetails.dedicated_learner_60.title,
-      description: achievementDetails.dedicated_learner_60.description,
-      earned: achievements.some(a => a.achievement_type === 'dedicated_learner_60'),
-      icon: Clock,
-      color: achievementDetails.dedicated_learner_60.color
+      title: 'Study Streak',
+      description: 'Studied for 7 consecutive days',
+      earned: achievements.some(a => a.achievement_type === 'study_streak_7'),
+      icon: Zap,
+      color: 'bg-yellow-500',
+      progress: `${profile.study_streak} day streak`,
+      target: 7
+    },
+    {
+      title: 'Word Collection',
+      description: 'Added 50 words to your collection',
+      earned: achievements.some(a => a.achievement_type === 'word_collection_50'),
+      icon: BookOpen,
+      color: 'bg-blue-600',
+      progress: `${totalWords} words added`,
+      target: 50
+    },
+    {
+      title: 'Review Champion',
+      description: 'Completed 100 word reviews',
+      earned: achievements.some(a => a.achievement_type === 'review_champion_100'),
+      icon: Target,
+      color: 'bg-green-600',
+      progress: `${totalReviews} reviews completed`,
+      target: 100
     }
   ];
+
+
+  // Show earned achievements first
+  const sortedAchievements = [...achievementsList].sort((a, b) => {
+    if (a.earned && !b.earned) return -1;
+    if (!a.earned && b.earned) return 1;
+    return 0;
+  });
+
+  const INITIAL_ACHIEVEMENT_COUNT = 6;
+  const displayedAchievements = showAllAchievements 
+    ? sortedAchievements 
+    : sortedAchievements.slice(0, INITIAL_ACHIEVEMENT_COUNT);
+
+  const earnedCount = achievementsList.filter(a => a.earned).length;
+  const totalCount = achievementsList.length;
 
   return (
     <div className="min-h-screen bg-primary-bg">
@@ -395,38 +496,71 @@ export const Profile: React.FC<ProfileProps> = ({ words, onNavigate, currentView
 
             {/* Achievements */}
             <div className="bg-white rounded-xl shadow-lg p-6 border border-primary-bg">
-              <h3 className="text-xl font-semibold text-primary-navy mb-6 flex items-center">
-                <Trophy className="h-5 w-5 mr-2" />
-                Achievements
-              </h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-primary-navy flex items-center">
+                  <Trophy className="h-5 w-5 mr-2" />
+                  Achievements
+                </h3>
+              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {achievementsList.map((achievement, index) => (
+              {/* Progress bar */}
+              <div className="mb-6">
+                <div className="flex justify-between text-sm text-primary-text/70 mb-2">
+                  <span>Progress</span>
+                  <span>{Math.round((earnedCount / totalCount) * 100)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-primary-highlight h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(earnedCount / totalCount) * 100}%` }}
+                  />
+                </div>
+              </div>
+              
+              {/* Achievements grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {displayedAchievements.map((achievement, index) => (
                   <div
                     key={index}
-                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 hover:shadow-md ${
                       achievement.earned
-                        ? 'border-green-200 bg-green-50'
+                        ? 'border-green-200 bg-green-50 shadow-sm'
                         : 'border-gray-200 bg-gray-50 opacity-60'
                     }`}
                   >
                     <div className="flex items-center mb-2">
-                      <div className={`p-2 rounded-lg ${achievement.color} mr-3`}>
+                      <div className={`p-2 rounded-lg ${achievement.color} mr-3 ${
+                        achievement.earned ? '' : 'opacity-50'
+                      }`}>
                         <achievement.icon className="h-4 w-4 text-white" />
                       </div>
-                      <h4 className="font-semibold text-primary-text">{achievement.title}</h4>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-primary-text text-sm">{achievement.title}</h4>
+                      </div>
                       {achievement.earned && (
-                        <div className="ml-auto">
+                        <div className="ml-2">
                           <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                             <Trophy className="h-3 w-3 text-white" />
                           </div>
                         </div>
                       )}
                     </div>
-                    <p className="text-sm text-primary-text/70">{achievement.description}</p>
+                    <p className="text-xs text-primary-text/70 leading-relaxed">{achievement.description}</p>
                   </div>
                 ))}
               </div>
+
+              {/* Show More Button */}
+              {totalCount > INITIAL_ACHIEVEMENT_COUNT && (
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => setShowAllAchievements(!showAllAchievements)}
+                    className="bg-primary-highlight text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-highlight/90 transition-all duration-200"
+                  >
+                    {showAllAchievements ? 'Show Less' : `Show More (${totalCount - INITIAL_ACHIEVEMENT_COUNT} more)`}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
