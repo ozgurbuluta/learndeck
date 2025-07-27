@@ -1,4 +1,5 @@
 import { Auth } from './components/Auth';
+import { LandingPage } from './components/LandingPage';
 import { ResetPassword } from './components/ResetPassword';
 import { Dashboard } from './components/Dashboard';
 import { AddWord } from './components/AddWord';
@@ -45,6 +46,7 @@ function App() {
   const { words, loading: wordsLoading, addWord, updateWord, deleteWord } = useWords(user);
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [chatbotOpen, setChatbotOpen] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
 
   // Scroll to top on view change to ensure expected UX
   useEffect(() => {
@@ -84,7 +86,15 @@ function App() {
   }
 
   if (!user) {
-    return <Auth />;
+    if (showAuth) {
+      return <Auth />;
+    }
+    return (
+      <LandingPage 
+        onNavigate={handleNavigate} 
+        onSignUp={() => setShowAuth(true)} 
+      />
+    );
   }
 
   if (wordsLoading) {
