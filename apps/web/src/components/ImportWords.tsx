@@ -42,6 +42,8 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderColor, setNewFolderColor] = useState('#fca311');
+  const [selectedWordIndices, setSelectedWordIndices] = useState<Set<number>>(new Set());
+  const [isSelectMode, setIsSelectMode] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -177,7 +179,17 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
     setProcessingStep('processing');
     
     try {
-      const result = await confirmImportWords(previewWords, selectedFolderIds);
+      // If in select mode, only import selected words, otherwise import all
+      const wordsToImport = isSelectMode 
+        ? previewWords.filter((_, index) => selectedWordIndices.has(index))
+        : previewWords;
+        
+      if (wordsToImport.length === 0) {
+        setProcessingStep('complete');
+        return;
+      }
+      
+      const result = await confirmImportWords(wordsToImport, selectedFolderIds);
       
       if (result.success) {
         // Successfully imported words, navigate to word list
@@ -224,6 +236,39 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
     setSelectedFolderIds(prev => prev.filter(id => id !== folderId));
   };
 
+  const toggleWordSelection = (index: number) => {
+    setSelectedWordIndices(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedWordIndices.size === previewWords.length) {
+      // Deselect all
+      setSelectedWordIndices(new Set());
+    } else {
+      // Select all
+      setSelectedWordIndices(new Set(previewWords.map((_, index) => index)));
+    }
+  };
+
+  const enterSelectMode = () => {
+    setIsSelectMode(true);
+    // Start with all words selected
+    setSelectedWordIndices(new Set(previewWords.map((_, index) => index)));
+  };
+
+  const exitSelectMode = () => {
+    setIsSelectMode(false);
+    setSelectedWordIndices(new Set());
+  };
+
   const resetForm = () => {
     setSelectedFile(null);
     setFileContent('');
@@ -231,6 +276,8 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
     setPreviewWords([]);
     setShowPreview(false);
     setProcessingStep('idle');
+    setIsSelectMode(false);
+    setSelectedWordIndices(new Set());
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -577,13 +624,43 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
               <h2 className="text-xl font-semibold text-primary-navy flex items-center">
                 <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
                 Extracted Words ({previewWords.length})
+                {isSelectMode && (
+                  <span className="ml-2 text-sm text-primary-highlight">
+                    ({selectedWordIndices.size} selected)
+                  </span>
+                )}
               </h2>
-              <button
-                onClick={resetForm}
-                className="text-sm text-primary-text hover:text-primary-highlight transition-colors duration-200"
-              >
-                Process Another File
-              </button>
+              <div className="flex items-center gap-3">
+                {!isSelectMode ? (
+                  <button
+                    onClick={enterSelectMode}
+                    className="text-sm text-primary-highlight hover:text-primary-highlight/80 transition-colors duration-200 px-3 py-1 border border-primary-highlight rounded-md"
+                  >
+                    Select
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={toggleSelectAll}
+                      className="text-sm text-primary-highlight hover:text-primary-highlight/80 transition-colors duration-200"
+                    >
+                      {selectedWordIndices.size === previewWords.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                    <button
+                      onClick={exitSelectMode}
+                      className="text-sm text-primary-text hover:text-primary-highlight transition-colors duration-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+                <button
+                  onClick={resetForm}
+                  className="text-sm text-primary-text hover:text-primary-highlight transition-colors duration-200"
+                >
+                  Process Another File
+                </button>
+              </div>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -596,12 +673,36 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
             {/* Words Preview Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 max-h-96 overflow-y-auto">
               {previewWords.map((item, index) => (
-                <div key={index} className="bg-primary-cream/40 p-4 rounded-lg border border-primary-bg">
-                  <h3 className="font-semibold text-primary-navy">
-                    {item.article && <span className="text-primary-highlight mr-2">{item.article}</span>}
-                    {item.word}
-                  </h3>
-                  <p className="text-sm text-primary-text">{item.definition}</p>
+                <div 
+                  key={index} 
+                  className={`p-4 rounded-lg border transition-all duration-200 ${
+                    isSelectMode
+                      ? selectedWordIndices.has(index)
+                        ? 'bg-primary-highlight/10 border-primary-highlight cursor-pointer'
+                        : 'bg-primary-cream/40 border-primary-bg cursor-pointer hover:border-primary-highlight/50'
+                      : 'bg-primary-cream/40 border-primary-bg'
+                  }`}
+                  onClick={isSelectMode ? () => toggleWordSelection(index) : undefined}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-primary-navy">
+                        {item.article && <span className="text-primary-highlight mr-2">{item.article}</span>}
+                        {item.word}
+                      </h3>
+                      <p className="text-sm text-primary-text">{item.definition}</p>
+                    </div>
+                    {isSelectMode && (
+                      <div className="ml-3 flex-shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={selectedWordIndices.has(index)}
+                          onChange={() => toggleWordSelection(index)}
+                          className="w-4 h-4 text-primary-highlight bg-gray-100 border-gray-300 rounded focus:ring-primary-highlight focus:ring-2"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -626,7 +727,7 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
               </button>
               <button
                 onClick={handleConfirmImport}
-                disabled={loading || processingStep === 'processing'}
+                disabled={loading || processingStep === 'processing' || (isSelectMode && selectedWordIndices.size === 0)}
                 className="w-full sm:w-auto flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-highlight hover:bg-primary-highlight/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 {processingStep === 'processing' ? (
@@ -634,8 +735,14 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
                     <Loader2 className="animate-spin h-5 w-5 mr-2" />
                     Adding to Library...
                   </>
+                ) : isSelectMode ? (
+                  selectedWordIndices.size === 0 
+                    ? 'Select Words to Add'
+                    : selectedWordIndices.size === 1
+                    ? 'Add Selected Word'
+                    : `Add ${selectedWordIndices.size} Selected Words`
                 ) : (
-                  'Add to My Words'
+                  'Add All Words'
                 )}
               </button>
             </div>
