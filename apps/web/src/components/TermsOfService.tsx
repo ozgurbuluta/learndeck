@@ -222,8 +222,8 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onNavigate }) =>
                 If you have questions about these Terms of Service, please contact us:
               </p>
               <div className="bg-primary-cream/50 rounded-lg p-4">
-                                  <p className="text-primary-text mb-2"><strong>Email:</strong> legal@learndeck.com</p>
-                  <p className="text-primary-text mb-2"><strong>Support:</strong> support@learndeck.com</p>
+                                  <p className="text-primary-text mb-2"><strong>Email:</strong> legal@learndeck.online</p>
+                  <p className="text-primary-text mb-2"><strong>Support:</strong> support@learndeck.online</p>
                 <p className="text-primary-text"><strong>Response Time:</strong> We aim to respond within 48 hours</p>
               </div>
             </section>

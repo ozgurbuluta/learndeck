@@ -16,7 +16,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           {/* Brand Section */}
           <div className="md:col-span-1">
             <div className="flex flex-col space-y-3 mb-4">
-              <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-12 w-auto" />
+              <button
+                onClick={() => onNavigate('dashboard')}
+                className="flex items-center hover:opacity-80 transition-opacity duration-200 self-start"
+              >
+                <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-8 w-auto" />
+              </button>
               <p className="text-sm text-white/70">Vocabulary Mastery</p>
             </div>
             <p className="text-white/80 text-sm leading-relaxed mb-4">
@@ -40,7 +45,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <Twitter className="h-5 w-5" />
               </a>
               <a
-                href="mailto:support@learndeck.com"
+                href="mailto:support@learndeck.online"
                 className="text-white/60 hover:text-primary-highlight transition-colors duration-200"
               >
                 <Mail className="h-5 w-5" />
@@ -126,10 +131,18 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </ul>
           </div>
 
-          {/* Legal & Support */}
+          {/* Company & Support */}
           <div>
-            <h4 className="font-semibold text-white mb-4">Legal & Support</h4>
+            <h4 className="font-semibold text-white mb-4">Company</h4>
             <ul className="space-y-2">
+              <li>
+                <button
+                  onClick={() => onNavigate('about')}
+                  className="text-white/70 hover:text-primary-highlight transition-colors duration-200 text-sm"
+                >
+                  About Us
+                </button>
+              </li>
               <li>
                 <button
                   onClick={() => onNavigate('privacy-policy')}
@@ -147,16 +160,8 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 </button>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('cookie-policy')}
-                  className="text-white/70 hover:text-primary-highlight transition-colors duration-200 text-sm"
-                >
-                  Cookie Policy
-                </button>
-              </li>
-              <li>
                 <a
-                  href="mailto:support@learndeck.com"
+                  href="mailto:support@learndeck.online"
                   className="text-white/70 hover:text-primary-highlight transition-colors duration-200 text-sm"
                 >
                   Contact Support

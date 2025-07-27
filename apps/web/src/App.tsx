@@ -7,6 +7,7 @@ import { StudySession } from './components/StudySession';
 import { WordList } from './components/WordList';
 import { Progress } from './components/Progress';
 import { Profile } from './components/Profile';
+import { About } from './components/About';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { TermsOfService } from './components/TermsOfService';
 import { CookiePolicy } from './components/CookiePolicy';
@@ -30,6 +31,7 @@ type View =
   | 'progress'
   | 'word-list'
   | 'profile'
+  | 'about'
   | 'privacy-policy'
   | 'terms-of-service'
   | 'cookie-policy'
@@ -113,6 +115,8 @@ function App() {
         return <Progress words={words} onNavigate={handleNavigate} currentView={currentView} />;
       case 'profile':
         return <Profile words={words} onNavigate={handleNavigate} currentView={currentView} />;
+      case 'about':
+        return <About onNavigate={handleNavigate} />;
       case 'privacy-policy':
         return <PrivacyPolicy onNavigate={handleNavigate} />;
       case 'terms-of-service':
