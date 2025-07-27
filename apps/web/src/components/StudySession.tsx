@@ -157,6 +157,7 @@ export const StudySession: React.FC<StudySessionProps> = ({ words, onUpdateWord,
         setIsComplete(true);
       } else {
         setCurrentIndex(currentIndex + 1);
+        setShowDefinition(false); // Reset to not-revealed state for next word
       }
     } catch (error) {
       console.error('Error handling answer:', error);
@@ -352,44 +353,55 @@ export const StudySession: React.FC<StudySessionProps> = ({ words, onUpdateWord,
                   {currentWord.word}
                 </h2>
                 
-                {!showDefinition ? (
-                  <button
-                    onClick={() => setShowDefinition(true)}
-                    className="bg-primary-navy text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-navy/90 transition-all duration-200"
-                  >
-                    Reveal Definition
-                  </button>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="bg-primary-cream rounded-lg p-6">
-                      <p className="text-lg text-primary-text leading-relaxed">{currentWord.definition}</p>
-                    </div>
-                    
+                {/* Definition area with fixed height */}
+                <div className="min-h-[120px] mb-6">
+                  {!showDefinition ? (
+                    <button
+                      onClick={() => setShowDefinition(true)}
+                      className="bg-primary-navy text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-navy/90 transition-all duration-200"
+                    >
+                      Reveal Definition
+                    </button>
+                  ) : (
                     <div className="space-y-4">
-                      <div className="text-sm text-primary-text/70 text-center">
-                        Swipe left to keep learning or right if you know it
+                      <div className="bg-primary-cream rounded-lg p-6">
+                        <p className="text-lg text-primary-text leading-relaxed">{currentWord.definition}</p>
                       </div>
                       
-                      <div className="flex gap-4 justify-center">
-                        <button
-                          onClick={() => handleAnswer(false)}
-                          className="flex items-center px-6 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors duration-200"
-                        >
-                          <X className="h-5 w-5 mr-2" />
-                          Keep Learning
-                        </button>
-                        
-                        <button
-                          onClick={() => handleAnswer(true)}
-                          className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors duration-200"
-                        >
-                          <Check className="h-5 w-5 mr-2" />
-                          I Know It
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => setShowDefinition(false)}
+                        className="bg-primary-text/20 text-primary-text px-4 py-2 rounded-lg font-medium hover:bg-primary-text/30 transition-all duration-200"
+                      >
+                        Hide Definition
+                      </button>
                     </div>
+                  )}
+                </div>
+                
+                {/* Action buttons always visible */}
+                <div className="space-y-4">
+                  <div className="text-sm text-primary-text/70 text-center">
+                    Swipe left to keep learning or right if you know it
                   </div>
-                )}
+                  
+                  <div className="flex gap-4 justify-center">
+                    <button
+                      onClick={() => handleAnswer(false)}
+                      className="flex items-center px-6 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors duration-200"
+                    >
+                      <X className="h-5 w-5 mr-2" />
+                      Keep Learning
+                    </button>
+                    
+                    <button
+                      onClick={() => handleAnswer(true)}
+                      className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors duration-200"
+                    >
+                      <Check className="h-5 w-5 mr-2" />
+                      I Know It
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

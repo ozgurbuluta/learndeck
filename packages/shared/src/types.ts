@@ -105,4 +105,5 @@ export interface ImportResult {
   words?: ExtractedWord[];
   savedCount?: number;
   error?: string;
+  isPreview?: boolean;
 } 

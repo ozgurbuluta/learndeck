@@ -31,7 +31,7 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
 
   const { user } = useAuth();
   const { folders, addFolder } = useFolders(user);
-  const { importWordsFromFile, loading, error } = useImportWords();
+  const { importWordsFromFile, confirmImportWords, loading, error } = useImportWords();
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileContent, setFileContent] = useState<string>('');
@@ -151,7 +151,8 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
 
     try {
       const existingWords = isContinuation ? previewWords.map(w => w.word) : [];
-      const result = await importWordsFromFile(fileContent, selectedFile.type, selectedFolderIds, existingWords);
+      // Use preview mode to extract words without saving to database
+      const result = await importWordsFromFile(fileContent, selectedFile.type, selectedFolderIds, existingWords, true);
       
       if (result.success && result.words) {
         const newWords = result.words || [];
@@ -170,9 +171,24 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
     }
   };
 
-  const handleConfirmImport = () => {
-    // Words are already imported, just navigate away
-    onNavigate('word-list');
+  const handleConfirmImport = async () => {
+    if (!previewWords.length) return;
+    
+    setProcessingStep('processing');
+    
+    try {
+      const result = await confirmImportWords(previewWords, selectedFolderIds);
+      
+      if (result.success) {
+        // Successfully imported words, navigate to word list
+        onNavigate('word-list');
+      } else {
+        throw new Error(result.error || 'Failed to confirm import');
+      }
+    } catch (err) {
+      console.error('Error confirming import:', err);
+      setProcessingStep('complete'); // Return to preview state
+    }
   };
 
   const handleAddNewFolder = async () => {
@@ -570,10 +586,10 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
               </button>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <p className="text-green-800 text-sm">
-                <strong>Success!</strong> AI has successfully extracted {previewWords.length} vocabulary words from your document. 
-                These words have been added to your collection.
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-blue-800 text-sm">
+                <strong>Preview Ready!</strong> AI has successfully extracted {previewWords.length} vocabulary words from your document. 
+                Review them below and click "Add to My Words" to save them to your collection.
               </p>
             </div>
 
@@ -610,9 +626,17 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
               </button>
               <button
                 onClick={handleConfirmImport}
-                className="w-full sm:w-auto flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-highlight hover:bg-primary-highlight/90 transition-colors duration-200"
+                disabled={loading || processingStep === 'processing'}
+                className="w-full sm:w-auto flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-highlight hover:bg-primary-highlight/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
-                Done, Add to My Words
+                {processingStep === 'processing' ? (
+                  <>
+                    <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                    Adding to Library...
+                  </>
+                ) : (
+                  'Add to My Words'
+                )}
               </button>
             </div>
           </div>

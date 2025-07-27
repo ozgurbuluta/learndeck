@@ -12,6 +12,7 @@ interface RequestBody {
   userId: string
   folderIds: string[]
   existingWords?: string[]
+  previewMode?: boolean // If true, only extract words without saving to database
 }
 
 /* -------------------------------------------------------------------------- */
@@ -43,7 +44,7 @@ serve(async (req) => {
   }
 
   try {
-    const { content, fileType, userId, folderIds, existingWords }: RequestBody = await req.json()
+    const { content, fileType, userId, folderIds, existingWords, previewMode }: RequestBody = await req.json()
 
     if (!content || !userId) {
       return json({ success: false, error: 'Missing required fields' }, 400)
@@ -82,6 +83,12 @@ serve(async (req) => {
 
     /* -------------------------- STEP 4 – PERSIST DATA ------------------------- */
 
+    // If in preview mode, return words without saving to database
+    if (previewMode) {
+      return json({ success: true, savedCount: 0, words, isPreview: true })
+    }
+
+    // Otherwise, save to database as before
     const saved = await saveWordsToDatabase(getSupabase(), words, userId, folderIds)
 
     return json({ success: true, savedCount: saved.length, words })
@@ -103,11 +110,22 @@ serve(async (req) => {
 
 async function normaliseContent(content: string, fileType: string): Promise<string> {
   if (fileType.includes('csv')) return extractTextFromCSV(content)
+  if (fileType.includes('json')) return content // JSON content for confirmed words
   // For PDF and TXT, content is already plain text from the client
   return content
 }
 
 async function extractWords(content: string, existingWords?: string[]): Promise<ExtractedWord[]> {
+  // If content is already JSON (confirmed words), parse and return
+  try {
+    const parsed = JSON.parse(content)
+    if (Array.isArray(parsed) && parsed.every(item => item.word && item.definition)) {
+      return parsed as ExtractedWord[]
+    }
+  } catch {
+    // Not JSON, continue with normal extraction
+  }
+
   const apiKey = Deno.env.get('CLAUDE_API_KEY')
   if (!apiKey) throw new Error('CLAUDE_API_KEY is not set.')
 
