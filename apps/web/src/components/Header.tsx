@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, LogOut, User, ChevronDown, Play, Clock, Folder, Brain } from 'lucide-react';
+import { LogOut, User, ChevronDown, Play, Clock, Folder, Brain } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useStudySessions } from '../hooks/useStudySessions';
 import { useFolders } from '../hooks/useFolders';
@@ -76,14 +76,13 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'dashb
       <header className="bg-white border-b border-primary-bg shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Brand */}
+            {/* Logo and Brand */}
             <div className="flex items-center">
               <button
                 onClick={() => onNavigate('dashboard')}
                 className="flex items-center hover:opacity-80 transition-opacity duration-200"
               >
-                <BookOpen className="h-8 w-8 text-primary-highlight mr-2" />
-                <span className="text-xl font-bold text-primary-navy">LearnDeck</span>
+                <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-8" />
               </button>
             </div>
 
