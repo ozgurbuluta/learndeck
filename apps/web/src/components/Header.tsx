@@ -82,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'dashb
                 onClick={() => onNavigate('dashboard')}
                 className="flex items-center hover:opacity-80 transition-opacity duration-200"
               >
-                <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-8" />
+                <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-16" />
               </button>
             </div>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Github, Twitter, Heart } from 'lucide-react';
+import { Mail, Github, Twitter, Heart, Linkedin } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (view: string) => void;
@@ -20,7 +20,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 onClick={() => onNavigate('dashboard')}
                 className="flex items-center hover:opacity-80 transition-opacity duration-200 self-start"
               >
-                <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-8 w-auto" />
+                <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-16 w-auto" />
               </button>
               <p className="text-sm text-white/70">Vocabulary Mastery</p>
             </div>
@@ -29,7 +29,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </p>
             <div className="flex space-x-3">
               <a
-                href="https://github.com"
+                href="https://github.com/ozgurbuluta"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/60 hover:text-primary-highlight transition-colors duration-200"
@@ -37,12 +37,20 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <Github className="h-5 w-5" />
               </a>
               <a
-                href="https://twitter.com"
+                href="https://x.com/ozgurbulutttt"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/60 hover:text-primary-highlight transition-colors duration-200"
               >
                 <Twitter className="h-5 w-5" />
+              </a>
+              <a
+                href="https://www.linkedin.com/in/ozgurakanay/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-primary-highlight transition-colors duration-200"
+              >
+                <Linkedin className="h-5 w-5" />
               </a>
               <a
                 href="mailto:support@learndeck.online"

@@ -56,6 +56,20 @@ function App() {
   // Unified navigation handler to satisfy component prop types
   const handleNavigate = (view: string) => {
     setCurrentView(view as View);
+    // If navigating to a page from auth, close auth
+    if (showAuth && view !== 'dashboard') {
+      setShowAuth(false);
+    }
+  };
+
+  // Handle navigation back to home (landing page if logged out, dashboard if logged in)
+  const handleNavigateHome = () => {
+    if (user) {
+      setCurrentView('dashboard');
+    } else {
+      setCurrentView('dashboard'); // This will show landing page for logged out users
+      setShowAuth(false);
+    }
   };
 
   // Check if this is a password reset page
@@ -87,8 +101,35 @@ function App() {
 
   if (!user) {
     if (showAuth) {
-      return <Auth />;
+      return <Auth onNavigate={handleNavigate} onBack={handleNavigateHome} />;
     }
+    
+    // Handle navigation for logged-out users
+    if (currentView === 'about') {
+      return <About onNavigate={handleNavigate} />;
+    }
+    if (currentView === 'privacy-policy') {
+      return <PrivacyPolicy onNavigate={handleNavigate} />;
+    }
+    if (currentView === 'terms-of-service') {
+      return <TermsOfService onNavigate={handleNavigate} />;
+    }
+    if (currentView === 'cookie-policy') {
+      return <CookiePolicy onNavigate={handleNavigate} />;
+    }
+    if (currentView === 'study-methods') {
+      return <StudyMethods onNavigate={handleNavigate} />;
+    }
+    if (currentView === 'spaced-repetition-guide') {
+      return <SpacedRepetitionGuide onNavigate={handleNavigate} />;
+    }
+    if (currentView === 'language-tips') {
+      return <LanguageTips onNavigate={handleNavigate} />;
+    }
+    if (currentView === 'success-stories') {
+      return <SuccessStories onNavigate={handleNavigate} />;
+    }
+    
     return (
       <LandingPage 
         onNavigate={handleNavigate} 

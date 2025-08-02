@@ -4,7 +4,12 @@ import { useAuth } from '../hooks/useAuth';
 
 type AuthView = 'signin' | 'signup' | 'forgot-password' | 'reset-sent';
 
-export const Auth: React.FC = () => {
+interface AuthProps {
+  onNavigate: (view: string) => void;
+  onBack: () => void;
+}
+
+export const Auth: React.FC<AuthProps> = ({ onNavigate, onBack }) => {
   const [currentView, setCurrentView] = useState<AuthView>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -257,23 +262,52 @@ export const Auth: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-primary-bg flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-navy rounded-full mb-4">
-            <BookOpen className="h-8 w-8 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Header */}
+      <header className="relative z-50 bg-white/80 backdrop-blur-lg border-b border-white/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={onBack}
+                className="flex items-center text-gray-600 hover:text-primary-highlight transition-colors duration-200 p-2 rounded-lg hover:bg-white/50"
+                title="Back to Landing Page"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={onBack}
+                className="flex items-center hover:opacity-80 transition-opacity duration-200"
+              >
+                <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-16" />
+              </button>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => onNavigate('about')}
+                className="text-gray-600 hover:text-primary-highlight transition-colors duration-200"
+              >
+                About
+              </button>
+            </div>
           </div>
-          <h1 className="text-4xl font-bold text-primary-navy mb-2">
-            LearnDeck
-          </h1>
-          <p className="text-primary-text">
-            Master vocabulary with intelligent spaced repetition
-          </p>
         </div>
+      </header>
 
-        {currentView === 'forgot-password' && renderForgotPassword()}
-        {currentView === 'reset-sent' && renderResetSent()}
-        {(currentView === 'signin' || currentView === 'signup') && renderMainAuth()}
+      {/* Auth Content */}
+      <div className="flex items-center justify-center px-4 py-12">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
+            <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-20 mx-auto mb-6" />
+            <p className="text-primary-text">
+              Master vocabulary with intelligent spaced repetition
+            </p>
+          </div>
+
+          {currentView === 'forgot-password' && renderForgotPassword()}
+          {currentView === 'reset-sent' && renderResetSent()}
+          {(currentView === 'signin' || currentView === 'signup') && renderMainAuth()}
+        </div>
       </div>
     </div>
   );

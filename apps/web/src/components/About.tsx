@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, BookOpen, Brain, Target, Users, Sparkles, Trophy, Heart, Mail } from 'lucide-react';
+import { ArrowLeft, BookOpen, Brain, Target, Users, Sparkles, Trophy, Heart, Mail, Github, Twitter, Linkedin } from 'lucide-react';
 
 interface AboutProps {
   onNavigate: (view: string) => void;
@@ -211,7 +211,7 @@ export const About: React.FC<AboutProps> = ({ onNavigate }) => {
               Have questions, feedback, or just want to say hello? We'd love to hear from you. 
               Our team is always here to help make your learning journey even better.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-6">
               <a
                 href="mailto:support@learndeck.online"
                 className="bg-white text-primary-highlight px-6 py-3 rounded-lg font-medium hover:bg-white/90 transition-colors duration-200"
@@ -224,6 +224,34 @@ export const About: React.FC<AboutProps> = ({ onNavigate }) => {
               >
                 Start Learning
               </button>
+            </div>
+            
+            {/* Social Media Links */}
+            <div className="flex justify-center space-x-4">
+              <a
+                href="https://github.com/ozgurbuluta"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/70 hover:text-white transition-colors duration-200"
+              >
+                <Github className="h-6 w-6" />
+              </a>
+              <a
+                href="https://x.com/ozgurbulutttt"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/70 hover:text-white transition-colors duration-200"
+              >
+                <Twitter className="h-6 w-6" />
+              </a>
+              <a
+                href="https://www.linkedin.com/in/ozgurakanay/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/70 hover:text-white transition-colors duration-200"
+              >
+                <Linkedin className="h-6 w-6" />
+              </a>
             </div>
           </div>
         </section>

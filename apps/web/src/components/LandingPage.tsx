@@ -19,6 +19,7 @@ import {
   Target,
   ArrowRight
 } from 'lucide-react';
+import { Footer } from './Footer';
 
 interface LandingPageProps {
   onNavigate: (view: string) => void;
@@ -26,15 +27,10 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onSignUp }) => {
-  const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
-    const interval = setInterval(() => {
-      setCurrentTestimonial(prev => (prev + 1) % testimonials.length);
-    }, 4000);
-    return () => clearInterval(interval);
   }, []);
 
   const features = [
@@ -76,36 +72,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onSignUp }
     }
   ];
 
-  const testimonials = [
-    {
-      name: "Sarah Chen",
-      role: "Medical Student",
-      content: "Increased my German vocabulary by 2000+ words in just 3 months. The spaced repetition is game-changing!",
-      rating: 5,
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-    },
-    {
-      name: "Miguel Rodriguez",
-      role: "Software Engineer",
-      content: "Finally found a vocabulary app that actually works. The AI features are incredibly smart and helpful.",
-      rating: 5,
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-    },
-    {
-      name: "Emma Thompson",
-      role: "Language Teacher",
-      content: "I recommend LearnDeck to all my students. The progress tracking keeps them motivated and engaged.",
-      rating: 5,
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-    }
-  ];
-
-  const stats = [
-    { number: "50K+", label: "Active Learners" },
-    { number: "2M+", label: "Words Mastered" },
-    { number: "15+", label: "Languages" },
-    { number: "98%", label: "Success Rate" }
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
@@ -114,7 +80,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onSignUp }
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-8" />
+              <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-16" />
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -127,7 +93,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onSignUp }
                 onClick={onSignUp}
                 className="bg-gradient-to-r from-primary-highlight to-orange-500 text-white px-6 py-2 rounded-full font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200"
               >
-                Get Started Free
+                Sign Up / Login
               </button>
             </div>
           </div>
@@ -164,8 +130,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onSignUp }
                 </h1>
                 
                 <p className="text-xl text-gray-600 leading-relaxed max-w-lg">
-                  Supercharge your language learning with AI-powered spaced repetition. 
-                  Join 50,000+ learners mastering vocabulary effortlessly.
+                  The best free alternative to premium flashcard apps. 
+                  Supercharge your language learning with AI-powered spaced repetition.
                 </p>
               </div>
 
@@ -177,11 +143,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onSignUp }
                 >
                   Start Learning Free
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                </button>
-                
-                <button className="group bg-white/80 backdrop-blur text-gray-800 px-8 py-4 rounded-2xl font-semibold text-lg border border-gray-200 hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center">
-                  <Play className="mr-2 h-5 w-5" />
-                  Watch Demo
                 </button>
               </div>
 
@@ -254,21 +215,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onSignUp }
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 bg-white/50 backdrop-blur-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-primary-highlight to-orange-500 bg-clip-text text-transparent">
-                  {stat.number}
-                </div>
-                <div className="text-gray-600 font-medium mt-2">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Features Section */}
       <section className="py-24 relative">
@@ -301,64 +247,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onSignUp }
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-24 bg-gradient-to-r from-blue-50 to-indigo-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-              Loved by Learners Worldwide
-            </span>
-          </h2>
-          <p className="text-xl text-gray-600 mb-16">See what our community has to say</p>
-
-          <div className="relative">
-            {testimonials.map((testimonial, index) => (
-              <div
-                key={index}
-                className={`transition-all duration-500 ${
-                  index === currentTestimonial
-                    ? 'opacity-100 transform translate-x-0'
-                    : 'opacity-0 transform translate-x-full absolute inset-0'
-                }`}
-              >
-                <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-xl border border-white/20">
-                  <div className="flex justify-center mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <blockquote className="text-xl text-gray-700 mb-6 italic">
-                    "{testimonial.content}"
-                  </blockquote>
-                  <div className="flex items-center justify-center space-x-4">
-                    <img
-                      src={testimonial.avatar}
-                      alt={testimonial.name}
-                      className="w-12 h-12 rounded-full"
-                    />
-                    <div>
-                      <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                      <div className="text-gray-600 text-sm">{testimonial.role}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-center space-x-2 mt-8">
-            {testimonials.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentTestimonial(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                  index === currentTestimonial ? 'bg-primary-highlight' : 'bg-gray-300'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* iOS App Section */}
       <section className="py-24">
@@ -426,48 +314,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onSignUp }
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <img src="/logo-horizontal.png" alt="LearnDeck Logo" className="h-8 mb-4" />
-              <p className="text-gray-400 text-sm">
-                The smartest way to master vocabulary with AI-powered spaced repetition.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><button onClick={() => onNavigate('about')} className="hover:text-white transition-colors">About</button></li>
-                <li><button className="hover:text-white transition-colors">Features</button></li>
-                <li><button className="hover:text-white transition-colors">Pricing</button></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="mailto:support@learndeck.online" className="hover:text-white transition-colors">Contact</a></li>
-                <li><button className="hover:text-white transition-colors">Help Center</button></li>
-                <li><button onClick={() => onNavigate('privacy-policy')} className="hover:text-white transition-colors">Privacy</button></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Connect</h4>
-              <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  <Globe className="h-5 w-5" />
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  <Heart className="h-5 w-5" />
-                </a>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 LearnDeck. Made with ❤️ for language learners worldwide.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer onNavigate={onNavigate} />
 
     </div>
   );
