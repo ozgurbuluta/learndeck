@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, BookOpen, TrendingUp, Brain, Target, Trophy, ArrowRight, Zap, Play, MessageCircle, Info } from 'lucide-react';
+import { Plus, BookOpen, TrendingUp, Brain, Target, Trophy, ArrowRight, Zap, Play, MessageCircle, Info, HelpCircle } from 'lucide-react';
 import { Word } from '@shared/types';
 import { StudyOptionsModal } from './StudyOptionsModal';
 import { useStudySessions } from '../hooks/useStudySessions';
@@ -110,6 +110,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ words, onNavigate, current
       disabled: false,
       badge: "New",
       cta: "Open chat"
+    },
+    {
+      title: "Quick Quiz",
+      description: "Multiple-choice practice",
+      icon: HelpCircle,
+      color: "bg-gradient-to-r from-indigo-500 to-blue-600",
+      onClick: () => onNavigate('quiz'),
+      disabled: totalWords < 4,
+      badge: totalWords >= 4 ? null : 'Add words',
+      cta: "Start quiz"
     },
     {
       title: "Quick Study",

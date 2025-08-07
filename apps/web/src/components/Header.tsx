@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, User, ChevronDown, Play, Clock, Folder, Brain } from 'lucide-react';
+import { LogOut, User, ChevronDown, Play, Clock, Folder, Brain, HelpCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useStudySessions } from '../hooks/useStudySessions';
 import { useFolders } from '../hooks/useFolders';
@@ -248,6 +248,12 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'dashb
                 className={getNavItemClasses('progress')}
               >
                 Progress
+              </button>
+              <button
+                onClick={() => onNavigate('quiz')}
+                className={getNavItemClasses('quiz')}
+              >
+                <span className="inline-flex items-center"><HelpCircle className="h-4 w-4 mr-1" /> Quiz</span>
               </button>
               <button
                 onClick={() => onNavigate('word-list')}

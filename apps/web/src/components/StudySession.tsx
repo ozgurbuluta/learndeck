@@ -3,9 +3,11 @@ import { ArrowLeft, Check, X, Trophy, Folder } from 'lucide-react';
 import { useSwipeable } from 'react-swipeable';
 import { Word } from '@shared/types';
 import { getWordsForStudyType, getStudyTypeDescription } from '../utils/studyFilters';
+import { shuffleWordsForStudy } from '../utils/studyAlgorithm';
 import { useStudySessions } from '../hooks/useStudySessions';
 import { useAuth } from '../hooks/useAuth';
 import { useAchievements } from '../hooks/useAchievements';
+import { calculateNextReview, updateWordDifficulty } from '../utils/reviewScheduling';
 import { supabase } from '../lib/supabase';
 import { useProfile } from '../hooks/useProfile';
 
@@ -79,7 +81,10 @@ export const StudySession: React.FC<StudySessionProps> = ({ words, onUpdateWord,
     if (currentSession) {
       // Get words based on the current session configuration
       const wordsToStudy = getWordsForStudyType(words, currentSession.study_type, currentSession.folder_id);
-      setStudyWords(wordsToStudy.slice(0, 20)); // Limit to 20 words per session
+      const limitedWords = wordsToStudy.slice(0, 20); // Limit to 20 words per session
+      // Apply intelligent randomization for optimal learning
+      const shuffledWords = shuffleWordsForStudy(limitedWords);
+      setStudyWords(shuffledWords);
       setStartTime(new Date());
       
       if (wordsToStudy.length === 0) {
@@ -88,7 +93,10 @@ export const StudySession: React.FC<StudySessionProps> = ({ words, onUpdateWord,
     } else {
       // Fallback to default behavior if no session
       const dueWords = words.filter(w => w.next_review <= new Date() || w.last_reviewed === null);
-      setStudyWords(dueWords.slice(0, 20));
+      const limitedWords = dueWords.slice(0, 20);
+      // Apply intelligent randomization for optimal learning
+      const shuffledWords = shuffleWordsForStudy(limitedWords);
+      setStudyWords(shuffledWords);
       
       if (dueWords.length === 0) {
         setIsComplete(true);
@@ -164,45 +172,7 @@ export const StudySession: React.FC<StudySessionProps> = ({ words, onUpdateWord,
     }
   };
 
-  const calculateNextReview = (word: Word, isCorrect: boolean): Date => {
-    const now = new Date();
-    let intervalDays = 1;
-
-    if (word.difficulty === 'new') {
-      intervalDays = isCorrect ? 1 : 0.5;
-    } else if (word.difficulty === 'learning') {
-      intervalDays = isCorrect ? 3 : 1;
-    } else if (word.difficulty === 'review') {
-      intervalDays = isCorrect ? 7 : 2;
-    } else if (word.difficulty === 'mastered') {
-      intervalDays = isCorrect ? 30 : 7;
-    }
-
-    const nextReview = new Date(now);
-    nextReview.setDate(nextReview.getDate() + intervalDays);
-    return nextReview;
-  };
-
-  const updateWordDifficulty = (word: Word, isCorrect: boolean, newCorrectCount: number): Word['difficulty'] => {
-    if (isCorrect) {
-      // Progress through difficulty levels based on correct answers
-      if (word.difficulty === 'new') {
-        return 'learning'; // First correct answer moves from new to learning
-      }
-      if (word.difficulty === 'learning' && newCorrectCount >= 3) {
-        return 'review'; // After 3 total correct answers, move to review
-      }
-      if (word.difficulty === 'review' && newCorrectCount >= 10) {
-        return 'mastered'; // After 10 total correct answers, move to mastered
-      }
-    } else {
-      // Demote on incorrect answers
-      if (word.difficulty === 'mastered') return 'review';
-      if (word.difficulty === 'review') return 'learning';
-      // Learning and new words stay at their current level on incorrect answers
-    }
-    return word.difficulty;
-  };
+  // scheduling/level utilities moved to shared util
 
   if (studyWords.length === 0 && !isComplete) {
     return (

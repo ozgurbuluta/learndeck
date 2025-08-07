@@ -5,6 +5,7 @@ import { Dashboard } from './components/Dashboard';
 import { AddWord } from './components/AddWord';
 import { ImportWords } from './components/ImportWords';
 import { StudySession } from './components/StudySession';
+import { Quiz } from './components/Quiz';
 import { WordList } from './components/WordList';
 import { Progress } from './components/Progress';
 import { Profile } from './components/Profile';
@@ -29,6 +30,7 @@ type View =
   | 'add-word'
   | 'import-words'
   | 'study'
+  | 'quiz'
   | 'progress'
   | 'word-list'
   | 'profile'
@@ -160,6 +162,8 @@ function App() {
         return <ImportWords onNavigate={handleNavigate} currentView={currentView} />;
       case 'study':
         return <StudySession words={words} onUpdateWord={updateWord} onNavigate={handleNavigate} currentView={currentView} />;
+      case 'quiz':
+        return <Quiz words={words} onUpdateWord={updateWord} onNavigate={handleNavigate} currentView={currentView} />;
       case 'word-list':
         return <WordList words={words} onNavigate={handleNavigate} onDeleteWord={deleteWord} onUpdateWord={updateWord} currentView={currentView} />;
       case 'progress':
