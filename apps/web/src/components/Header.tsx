@@ -87,16 +87,18 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'dashb
             </div>
 
             {/* Navigation */}
-            <nav className="hidden md:flex items-center space-x-2">
-              <button
+             <nav className="hidden md:flex items-center space-x-2" role="navigation" aria-label="Primary">
+                <button
                 onClick={() => onNavigate('dashboard')}
                 className={getNavItemClasses('dashboard')}
+                  aria-current={currentView === 'dashboard' ? 'page' : undefined}
               >
                 Dashboard
               </button>
-              <button
+                <button
                 onClick={() => onNavigate('add-word')}
                 className={getNavItemClasses('add-word')}
+                  aria-current={currentView === 'add-word' ? 'page' : undefined}
               >
                 Add Words
               </button>
@@ -106,6 +108,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'dashb
                 <button
                   onClick={() => setShowStudyDropdown(!showStudyDropdown)}
                   className={`${getNavItemClasses('study')} flex items-center`}
+                  aria-expanded={showStudyDropdown}
                 >
                   Study
                   <ChevronDown className="h-4 w-4 ml-1" />
@@ -243,21 +246,24 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'dashb
                 )}
               </div>
 
-              <button
+                <button
                 onClick={() => onNavigate('progress')}
                 className={getNavItemClasses('progress')}
+                  aria-current={currentView === 'progress' ? 'page' : undefined}
               >
                 Progress
               </button>
               <button
                 onClick={() => onNavigate('quiz')}
                 className={getNavItemClasses('quiz')}
+                aria-current={currentView === 'quiz' ? 'page' : undefined}
               >
                 <span className="inline-flex items-center"><HelpCircle className="h-4 w-4 mr-1" /> Quiz</span>
               </button>
               <button
                 onClick={() => onNavigate('word-list')}
                 className={getNavItemClasses('word-list')}
+                aria-current={currentView === 'word-list' ? 'page' : undefined}
               >
                 Library
               </button>

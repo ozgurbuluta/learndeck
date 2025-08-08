@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, CheckCircle2, XCircle, Shuffle, Award } from 'lucide-react';
 import { Word } from '@shared/types';
-import { shuffleWordsForStudy } from '../utils/studyAlgorithm';
+// Local sampling helpers are defined at the bottom of this file for performance
 import { calculateNextReview, updateWordDifficulty } from '../utils/reviewScheduling';
 
 interface QuizProps {
@@ -28,18 +28,23 @@ export const Quiz: React.FC<QuizProps> = ({ words, onUpdateWord, onNavigate }) =
   const [numQuestions, setNumQuestions] = useState(NUM_QUESTIONS_DEFAULT);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const eligibleWords = useMemo(() => words.filter(w => w.definition && w.definition.trim().length > 0), [words]);
+  const eligibleWords = useMemo(() => {
+    // Avoid creating new arrays unnecessarily when words is large
+    return words.filter(w => !!w.definition && w.definition.trim().length > 0);
+  }, [words]);
 
   const regenerateQuiz = () => {
     setIsGenerating(true);
     const count = Math.min(numQuestions, Math.max(0, eligibleWords.length));
-    const base = shuffleWordsForStudy(eligibleWords).slice(0, count);
+    const base = sampleWithoutReplacement(eligibleWords, count);
 
-    const allDefinitions = eligibleWords.map(w => w.definition);
     const qs: QuizQuestion[] = base.map(w => {
-      // pick 3 random incorrect definitions
-      const incorrectPool = allDefinitions.filter(d => d !== w.definition);
-      const incorrect = shuffleArray(incorrectPool).slice(0, 3);
+      // Build a capped distractor pool for performance on large datasets
+      const allDefs = (eligibleWords.length > 500
+        ? eligibleWords.slice(0, 500)
+        : eligibleWords).map(x => x.definition);
+      const pool = allDefs.filter(d => d !== w.definition);
+      const incorrect = sampleWithoutReplacement(pool, 3);
       const choices = shuffleArray([w.definition, ...incorrect]);
       return {
         word: w,
@@ -61,7 +66,7 @@ export const Quiz: React.FC<QuizProps> = ({ words, onUpdateWord, onNavigate }) =
       regenerateQuiz();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eligibleWords.length]);
+  }, [eligibleWords.length, numQuestions]);
 
   const current = questions[currentIndex];
 

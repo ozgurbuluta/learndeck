@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Plus, BookOpen, TrendingUp, Brain, Target, Trophy, ArrowRight, Zap, Play, MessageCircle, Info, HelpCircle } from 'lucide-react';
 import { Word } from '@shared/types';
 import { StudyOptionsModal } from './StudyOptionsModal';
@@ -25,24 +25,52 @@ export const Dashboard: React.FC<DashboardProps> = ({ words, onNavigate, current
     setShowStudyModal(true);
   };
 
-  const totalWords = words.length;
-  const masteredWords = words.filter(w => w.difficulty === 'mastered').length;
-  const newWords = words.filter(w => w.difficulty === 'new').length;
-  const learningWords = words.filter(w => w.difficulty === 'learning').length;
-  
-  // Calculate how many words were added in the last 7 days
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const wordsAddedThisWeek = words.filter((w) => w.created_at >= oneWeekAgo).length;
+  const now = useMemo(() => new Date(), []);
+  const {
+    totalWords,
+    masteredWords,
+    newWords,
+    learningWords,
+    wordsAddedThisWeek,
+    dueForReview,
+    totalReviews,
+    totalCorrect,
+    overallAccuracy,
+  } = useMemo(() => {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    let mastered = 0;
+    let newly = 0;
+    let learning = 0;
+    let addedThisWeek = 0;
+    let due = 0;
+    let reviews = 0;
+    let correct = 0;
 
-  // Include words that are due for review OR have never been reviewed (new words)
-  const dueForReview = words.filter(w => 
-    w.next_review <= new Date() || w.last_reviewed === null
-  ).length;
+    for (const w of words) {
+      if (w.difficulty === 'mastered') mastered++;
+      else if (w.difficulty === 'new') newly++;
+      else if (w.difficulty === 'learning') learning++;
 
-  const totalReviews = words.reduce((sum, word) => sum + word.review_count, 0);
-  const totalCorrect = words.reduce((sum, word) => sum + word.correct_count, 0);
-  const overallAccuracy = totalReviews > 0 ? Math.round((totalCorrect / totalReviews) * 100) : 0;
+      if (w.created_at >= oneWeekAgo) addedThisWeek++;
+      if (w.last_reviewed === null || w.next_review <= now) due++;
+
+      reviews += w.review_count;
+      correct += w.correct_count;
+    }
+    const accuracy = reviews > 0 ? Math.round((correct / reviews) * 100) : 0;
+    return {
+      totalWords: words.length,
+      masteredWords: mastered,
+      newWords: newly,
+      learningWords: learning,
+      wordsAddedThisWeek: addedThisWeek,
+      dueForReview: due,
+      totalReviews: reviews,
+      totalCorrect: correct,
+      overallAccuracy: accuracy,
+    };
+  }, [words, now]);
 
   const handleRecentStudyOption = (option: any) => {
     setSelectedFolder(option.folder || null);
