@@ -15,6 +15,8 @@ export const calculateNextReview = (word: Word, isCorrect: boolean): Date => {
     intervalDays = isCorrect ? 7 : 2;
   } else if (word.difficulty === 'mastered') {
     intervalDays = isCorrect ? 30 : 7;
+  } else if (word.difficulty === 'failed') {
+    intervalDays = isCorrect ? 1 : 0.25; // aggressive retry for failed words
   }
 
   const nextReview = new Date(now);
@@ -31,7 +33,14 @@ export const updateWordDifficulty = (
   isCorrect: boolean,
   newCorrectCount: number
 ): Word['difficulty'] => {
+  // Calculate accuracy for failed word detection
+  const accuracy = word.review_count > 0 ? newCorrectCount / (word.review_count + 1) : (isCorrect ? 1 : 0);
+  
   if (isCorrect) {
+    // Correct answer - potentially promote
+    if (word.difficulty === 'failed') {
+      return 'learning'; // failed words go back to learning when correct
+    }
     if (word.difficulty === 'new') {
       return 'learning';
     }
@@ -42,6 +51,10 @@ export const updateWordDifficulty = (
       return 'mastered';
     }
   } else {
+    // Incorrect answer - potentially demote or mark as failed
+    if (word.review_count >= 3 && accuracy < 0.3) {
+      return 'failed'; // mark as failed if consistently wrong
+    }
     if (word.difficulty === 'mastered') return 'review';
     if (word.difficulty === 'review') return 'learning';
   }

@@ -11,7 +11,7 @@ export interface Word {
   last_reviewed: Date | null;
   review_count: number;
   correct_count: number;
-  difficulty: 'new' | 'learning' | 'review' | 'mastered';
+  difficulty: 'new' | 'learning' | 'review' | 'mastered' | 'failed';
   next_review: Date;
   folders?: Folder[];
 }
@@ -40,7 +40,7 @@ export interface Profile {
   avatar_url: string | null;
   bio: string | null;
   learning_goal: number;
-  preferred_difficulty: 'new' | 'learning' | 'review' | 'mastered';
+  preferred_difficulty: 'new' | 'learning' | 'review' | 'mastered' | 'failed';
   study_streak: number;
   total_study_time: number;
   favorite_categories: string[];

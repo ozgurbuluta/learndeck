@@ -82,32 +82,48 @@ export const useStudySession = (userId: string | undefined) => {
       let newDifficulty = currentWord.difficulty;
       let nextReview = new Date();
       
+      const newCorrectCount = correct ? currentWord.correct_count + 1 : currentWord.correct_count;
+      const accuracy = currentWord.review_count > 0 ? newCorrectCount / (currentWord.review_count + 1) : (correct ? 1 : 0);
+      
       if (correct) {
-        // Progress the word
-        switch (currentWord.difficulty) {
-          case 'new':
-            newDifficulty = 'learning';
-            nextReview.setDate(now.getDate() + 1); // 1 day
-            break;
-          case 'learning':
-            newDifficulty = 'review';
-            nextReview.setDate(now.getDate() + 3); // 3 days
-            break;
-          case 'review':
-            newDifficulty = 'mastered';
-            nextReview.setDate(now.getDate() + 7); // 1 week
-            break;
-          case 'mastered':
-            nextReview.setDate(now.getDate() + 14); // 2 weeks
-            break;
+        // Progress using consistent algorithm
+        if (currentWord.difficulty === 'failed') {
+          newDifficulty = 'learning';
+          nextReview.setDate(now.getDate() + 1);
+        } else if (currentWord.difficulty === 'new') {
+          newDifficulty = 'learning';
+          nextReview.setDate(now.getDate() + 1);
+        } else if (currentWord.difficulty === 'learning' && newCorrectCount >= 3) {
+          newDifficulty = 'review';
+          nextReview.setDate(now.getDate() + 3);
+        } else if (currentWord.difficulty === 'review' && newCorrectCount >= 10) {
+          newDifficulty = 'mastered';
+          nextReview.setDate(now.getDate() + 7);
+        } else if (currentWord.difficulty === 'mastered') {
+          nextReview.setDate(now.getDate() + 30);
+        } else {
+          // Stay at current level but extend interval
+          if (currentWord.difficulty === 'learning') {
+            nextReview.setDate(now.getDate() + 3);
+          } else if (currentWord.difficulty === 'review') {
+            nextReview.setDate(now.getDate() + 7);
+          }
         }
         setSessionStats(prev => ({ ...prev, correct: prev.correct + 1 }));
       } else {
-        // Reset to learning if incorrect
-        if (currentWord.difficulty !== 'new') {
+        // Demote on incorrect answers, consistent with web
+        if (currentWord.review_count >= 3 && accuracy < 0.3) {
+          newDifficulty = 'failed';
+          nextReview.setTime(now.getTime() + 6 * 60 * 60 * 1000); // 6 hours for failed words
+        } else if (currentWord.difficulty === 'mastered') {
+          newDifficulty = 'review';
+          nextReview.setDate(now.getDate() + 7);
+        } else if (currentWord.difficulty === 'review') {
           newDifficulty = 'learning';
+          nextReview.setDate(now.getDate() + 1);
+        } else {
+          nextReview.setDate(now.getDate() + 1);
         }
-        nextReview.setDate(now.getDate() + 1); // Try again tomorrow
         setSessionStats(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
       }
 
@@ -118,7 +134,7 @@ export const useStudySession = (userId: string | undefined) => {
           difficulty: newDifficulty,
           next_review: nextReview.toISOString(),
           review_count: currentWord.review_count + 1,
-          correct_count: correct ? currentWord.correct_count + 1 : currentWord.correct_count,
+          correct_count: newCorrectCount,
           last_reviewed: now.toISOString(),
         })
         .eq('id', currentWord.id);

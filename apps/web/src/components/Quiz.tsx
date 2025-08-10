@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, CheckCircle2, XCircle, Shuffle, Award } from 'lucide-react';
 import { Word } from '@shared/types';
 // Local sampling helpers are defined at the bottom of this file for performance
@@ -33,7 +33,7 @@ export const Quiz: React.FC<QuizProps> = ({ words, onUpdateWord, onNavigate }) =
     return words.filter(w => !!w.definition && w.definition.trim().length > 0);
   }, [words]);
 
-  const regenerateQuiz = () => {
+  const regenerateQuiz = useCallback(() => {
     setIsGenerating(true);
     const count = Math.min(numQuestions, Math.max(0, eligibleWords.length));
     const base = sampleWithoutReplacement(eligibleWords, count);
@@ -59,14 +59,13 @@ export const Quiz: React.FC<QuizProps> = ({ words, onUpdateWord, onNavigate }) =
     setScore(0);
     setCompleted(false);
     setIsGenerating(false);
-  };
+  }, [eligibleWords, numQuestions]);
 
   useEffect(() => {
     if (eligibleWords.length >= 4) {
       regenerateQuiz();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eligibleWords.length, numQuestions]);
+  }, [eligibleWords.length, numQuestions, regenerateQuiz]);
 
   const current = questions[currentIndex];
 
