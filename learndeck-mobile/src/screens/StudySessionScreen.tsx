@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF8C00',
     borderRadius: 2,
   },
   stats: {
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   keepLearningButton: {
-    backgroundColor: '#FF6B35',
+    backgroundColor: '#DC3545',
   },
   knowItButton: {
     backgroundColor: '#34C759',

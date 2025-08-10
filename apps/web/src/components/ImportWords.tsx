@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Upload, FileText, File, AlertCircle, CheckCircle, Loader2, Brain, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, Upload, FileText, File, AlertCircle, CheckCircle, Loader2, Brain, Sparkles, X, Settings } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useFolders } from '../hooks/useFolders';
 import { useImportWords } from '../hooks/useImportWords';
+import { useCustomImportWords } from '../hooks/useCustomImportWords';
 import * as pdfjs from 'pdfjs-dist';
 
 interface ImportWordsProps {
@@ -32,6 +33,7 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
   const { user } = useAuth();
   const { folders, addFolder } = useFolders(user);
   const { importWordsFromFile, confirmImportWords, loading, error } = useImportWords();
+  const { customImportWordsFromFile, confirmCustomImportWords, loading: customLoading, error: customError } = useCustomImportWords();
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileContent, setFileContent] = useState<string>('');
@@ -44,6 +46,10 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
   const [newFolderColor, setNewFolderColor] = useState('#fca311');
   const [selectedWordIndices, setSelectedWordIndices] = useState<Set<number>>(new Set());
   const [isSelectMode, setIsSelectMode] = useState(false);
+  
+  // Custom import states
+  const [useCustomImport, setUseCustomImport] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState('');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -153,8 +159,18 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
 
     try {
       const existingWords = isContinuation ? previewWords.map(w => w.word) : [];
-      // Use preview mode to extract words without saving to database
-      const result = await importWordsFromFile(fileContent, selectedFile.type, selectedFolderIds, existingWords, true);
+      
+      // Use custom import if toggle is enabled
+      const result = useCustomImport 
+        ? await customImportWordsFromFile(
+            fileContent, 
+            selectedFile.type, 
+            selectedFolderIds, 
+            existingWords, 
+            true, // preview mode
+            customPrompt
+          )
+        : await importWordsFromFile(fileContent, selectedFile.type, selectedFolderIds, existingWords, true);
       
       if (result.success && result.words) {
         const newWords = result.words || [];
@@ -189,7 +205,10 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
         return;
       }
       
-      const result = await confirmImportWords(wordsToImport, selectedFolderIds);
+      // Use custom import confirmation if custom import was used
+      const result = useCustomImport
+        ? await confirmCustomImportWords(wordsToImport, selectedFolderIds)
+        : await confirmImportWords(wordsToImport, selectedFolderIds);
       
       if (result.success) {
         // Successfully imported words, navigate to word list
@@ -278,6 +297,8 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
     setProcessingStep('idle');
     setIsSelectMode(false);
     setSelectedWordIndices(new Set());
+    setUseCustomImport(false);
+    setCustomPrompt('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -523,10 +544,51 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
         {/* Processing Section */}
         {selectedFile && !showPreview && (
           <div className="bg-white rounded-xl shadow-lg p-8 border border-primary-bg mb-6">
-            <h2 className="text-xl font-semibold text-primary-navy mb-6 flex items-center">
-              <Sparkles className="h-5 w-5 mr-2" />
-              AI Processing
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-primary-navy flex items-center">
+                <Sparkles className="h-5 w-5 mr-2" />
+                AI Processing
+              </h2>
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-primary-text">Custom Extraction</span>
+                <button
+                  onClick={() => setUseCustomImport(!useCustomImport)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    useCustomImport ? 'bg-primary-highlight' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      useCustomImport ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <Settings className="h-4 w-4 text-primary-text" />
+              </div>
+            </div>
+
+            {/* Custom Import Controls */}
+            {useCustomImport && (
+              <div className="bg-primary-cream/30 rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-medium text-primary-navy mb-3 flex items-center">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Custom Extraction Requirements
+                </h3>
+                <p className="text-sm text-primary-text mb-4">
+                  Specify what type of words you want to extract. For example: "verbs", "German nouns", "technical terms", etc.
+                </p>
+                <textarea
+                  value={customPrompt}
+                  onChange={(e) => setCustomPrompt(e.target.value)}
+                  placeholder="Example: 'Extract only verbs' or 'Focus on German nouns with articles' or 'Technical vocabulary only'"
+                  className="w-full px-3 py-3 border border-primary-bg rounded-lg focus:ring-2 focus:ring-primary-highlight focus:border-primary-highlight transition-colors duration-200 bg-white text-primary-text resize-none"
+                  rows={3}
+                />
+                <p className="text-xs text-primary-text/70 mt-2">
+                  Leave empty to use standard vocabulary extraction
+                </p>
+              </div>
+            )}
 
             {/* Processing Steps */}
             <div className="space-y-4 mb-6">
@@ -576,13 +638,13 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
             </div>
 
             {/* Error Display */}
-            {error && (
+            {(error || customError) && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                 <div className="flex items-center">
                   <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
                   <span className="text-red-700 font-medium">Processing Error</span>
                 </div>
-                <p className="text-red-600 text-sm mt-1">{error}</p>
+                <p className="text-red-600 text-sm mt-1">{error || customError}</p>
               </div>
             )}
 
@@ -590,25 +652,25 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
             <div className="flex gap-4">
               <button
                 onClick={() => handleProcessFile()}
-                disabled={!fileContent.trim() || loading || processingStep !== 'idle'}
+                disabled={!fileContent.trim() || loading || customLoading || processingStep !== 'idle'}
                 className="flex-1 bg-primary-highlight text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-highlight/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
               >
                 {processingStep === 'processing' ? (
                   <>
                     <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Processing with AI...
+                    {useCustomImport ? 'Custom Processing...' : 'Processing with AI...'}
                   </>
                 ) : (
                   <>
-                    <Brain className="h-5 w-5 mr-2" />
-                    Extract Words with AI
+                    {useCustomImport ? <Settings className="h-5 w-5 mr-2" /> : <Brain className="h-5 w-5 mr-2" />}
+                    {useCustomImport ? 'Extract with Custom Criteria' : 'Extract Words with AI'}
                   </>
                 )}
               </button>
               
               <button
                 onClick={resetForm}
-                disabled={loading || processingStep === 'processing'}
+                disabled={loading || customLoading || processingStep === 'processing'}
                 className="px-6 py-3 border border-primary-bg text-primary-text rounded-lg font-medium hover:bg-primary-cream/50 disabled:opacity-50 transition-colors duration-200"
               >
                 Reset
@@ -687,7 +749,9 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="font-semibold text-primary-navy">
-                        {item.article && <span className="text-primary-highlight mr-2">{item.article}</span>}
+                        {item.article && !item.word.toLowerCase().includes(item.article.toLowerCase()) && (
+                          <span className="text-primary-highlight mr-2">{item.article}</span>
+                        )}
                         {item.word}
                       </h3>
                       <p className="text-sm text-primary-text">{item.definition}</p>
@@ -710,10 +774,10 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
             <div className="flex flex-col sm:flex-row justify-end items-center gap-4 mt-8">
               <button
                 onClick={() => handleProcessFile(true)}
-                disabled={loading}
+                disabled={loading || customLoading}
                 className="w-full sm:w-auto flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-primary-highlight bg-primary-highlight/10 hover:bg-primary-highlight/20 disabled:bg-gray-100 disabled:text-gray-500 transition-colors duration-200"
               >
-                {loading ? (
+                {(loading || customLoading) ? (
                   <>
                     <Loader2 className="animate-spin h-5 w-5 mr-2" />
                     Generating...
@@ -727,7 +791,7 @@ export const ImportWords: React.FC<ImportWordsProps> = ({ onNavigate, currentVie
               </button>
               <button
                 onClick={handleConfirmImport}
-                disabled={loading || processingStep === 'processing' || (isSelectMode && selectedWordIndices.size === 0)}
+                disabled={loading || customLoading || processingStep === 'processing' || (isSelectMode && selectedWordIndices.size === 0)}
                 className="w-full sm:w-auto flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-highlight hover:bg-primary-highlight/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 {processingStep === 'processing' ? (

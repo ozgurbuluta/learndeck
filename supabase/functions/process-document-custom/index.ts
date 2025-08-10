@@ -13,6 +13,7 @@ interface RequestBody {
   folderIds: string[]
   existingWords?: string[]
   previewMode?: boolean // If true, only extract words without saving to database
+  customPrompt?: string // Custom user prompt for extraction
 }
 
 /* -------------------------------------------------------------------------- */
@@ -44,7 +45,7 @@ serve(async (req) => {
   }
 
   try {
-    const { content, fileType, userId, folderIds, existingWords, previewMode }: RequestBody = await req.json()
+    const { content, fileType, userId, folderIds, existingWords, previewMode, customPrompt }: RequestBody = await req.json()
 
     if (!content || !userId) {
       return json({ success: false, error: 'Missing required fields' }, 400)
@@ -65,13 +66,13 @@ serve(async (req) => {
 
     /* --------------------- STEP 2 – EXTRACT VOCABULARY --------------------- */
 
-    let words = await extractWords(normalised, existingWords)
+    let words = await extractWordsCustom(normalised, existingWords, customPrompt)
 
     if (!words.length) {
       return json(
         {
           success: false,
-          error: 'No vocabulary found',
+          error: 'No vocabulary found matching your criteria',
         },
         400
       )
@@ -93,7 +94,7 @@ serve(async (req) => {
 
     return json({ success: true, savedCount: saved.length, words })
   } catch (err) {
-    console.error('process-document error:', {
+    console.error('process-document-custom error:', {
       message: err.message,
       stack: err.stack,
     })
@@ -115,7 +116,7 @@ async function normaliseContent(content: string, fileType: string): Promise<stri
   return content
 }
 
-async function extractWords(content: string, existingWords?: string[]): Promise<ExtractedWord[]> {
+async function extractWordsCustom(content: string, existingWords?: string[], customPrompt?: string): Promise<ExtractedWord[]> {
   // If content is already JSON (confirmed words), parse and return
   try {
     const parsed = JSON.parse(content)
@@ -130,7 +131,7 @@ async function extractWords(content: string, existingWords?: string[]): Promise<
   if (!apiKey) throw new Error('CLAUDE_API_KEY is not set.')
 
   try {
-    return await extractWithClaude(content, apiKey, existingWords)
+    return await extractWithClaudeCustom(content, apiKey, existingWords, customPrompt)
   } catch (err) {
     console.error('Claude extraction failed, no fallback possible.', err)
     throw new Error('AI-based vocabulary extraction failed.')
@@ -163,12 +164,13 @@ async function ensureDefinitions(words: ExtractedWord[], context: string): Promi
 /*                            LLM HELPER UTILITIES                             */
 /* -------------------------------------------------------------------------- */
 
-async function extractWithClaude(
+async function extractWithClaudeCustom(
   content: string,
   apiKey: string,
-  existingWords?: string[]
+  existingWords?: string[],
+  customPrompt?: string
 ): Promise<ExtractedWord[]> {
-  const prompt = buildExtractionPrompt(content, existingWords)
+  const prompt = buildCustomExtractionPrompt(content, existingWords, customPrompt)
   const { text } = await callClaude(prompt, apiKey, 2000)
 
   try {
@@ -198,7 +200,7 @@ async function translateDefinitionsWithClaude(
   }
 }
 
-function buildExtractionPrompt(content: string, existingWords: string[] = []): string {
+function buildCustomExtractionPrompt(content: string, existingWords: string[] = [], customPrompt?: string): string {
   const snippet = content.length > 16000 ? content.slice(0, 16000) + '...' : content
   const exclusionClause =
     existingWords.length > 0
@@ -207,7 +209,33 @@ function buildExtractionPrompt(content: string, existingWords: string[] = []): s
         )}.`
       : ''
 
-  return `You are an expert linguist and vocabulary assistant.
+  // Build intelligent custom extraction criteria with examples and clarifications
+  const customCriteria = customPrompt 
+    ? `\n\n**CUSTOM EXTRACTION CRITERIA**:
+The user has specified: "${customPrompt}"
+
+IMPORTANT - INTERPRET THE USER'S REQUEST INTELLIGENTLY:
+- If they say "prepositions" → extract prepositions like "durch", "mit", "über"
+- If they say "words with prepositions" → extract compound words or phrases that CONTAIN prepositions, like "durchführen", "mitarbeiten", "übersetzen"
+- If they say "verbs" → extract action words like "arbeiten", "sprechen", "verstehen"
+- If they say "verbs with prepositions" → extract phrasal/prepositional verbs like "sich freuen auf", "denken an", "warten auf"
+- If they say "nouns" → extract naming words like "Haus", "Arbeit", "Freund"
+- If they say "adjectives" → extract descriptive words like "schön", "interessant", "wichtig"
+- If they say "technical terms" → extract specialized vocabulary from the field/domain
+- If they say "business vocabulary" → extract professional/commercial terms
+- If they say "academic words" → extract scholarly/formal vocabulary
+- If they say "German compound words" → extract words like "Arbeitsplatz", "Geschäftsführer", "Wissenschaft"
+
+ANALYZE THE USER'S INTENT:
+- Consider the grammatical category they want
+- Consider if they want single words vs. phrases vs. compounds
+- Consider the semantic domain (technical, academic, casual, etc.)
+- Prioritize words that truly match their learning objectives
+
+Focus on extracting vocabulary that matches the user's ACTUAL learning intent, not just literal keyword matching.`
+    : ''
+
+  return `You are an expert linguist and vocabulary assistant specializing in intelligent content analysis and targeted vocabulary extraction.
 
 DOCUMENT ANALYSIS:
 The user has uploaded a document. Your first task is to analyze the following text to identify the primary language and subject matter.
@@ -220,7 +248,13 @@ VOCABULARY EXTRACTION (CRITICAL INSTRUCTIONS):
    - If the word is just the noun without article (like "Wirtschaft"), you MAY include the article in a separate "article" field
    - **Example 1**: If you extract "der Aufenthalt", output: {"word":"der Aufenthalt","definition":"stay; residence; sojourn"}
    - **Example 2**: If you extract "Wirtschaft", output: {"word":"Wirtschaft","definition":"economy; commerce", "article":"die"}
-4. **Filtering**: EXCLUDE all metadata, common filler words, and any random-looking character sequences.${exclusionClause}
+4. **Filtering**: EXCLUDE all metadata, common filler words, random character sequences, and overly basic words (like "der", "die", "das" unless specifically requested).${exclusionClause}${customCriteria}
+
+QUALITY CRITERIA:
+- Prioritize vocabulary that would be valuable for language learning
+- Focus on words that are substantive and meaningful
+- Ensure definitions are clear and contextually appropriate
+- For multi-word expressions, extract them as complete units when grammatically coherent
 
 OUTPUT FORMAT:
 Return ONLY a valid, minified JSON array. Do not include any other text, markdown, or explanations.

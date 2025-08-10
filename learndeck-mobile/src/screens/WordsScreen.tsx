@@ -9,24 +9,36 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  ScrollView,
 } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NavigationProp, RouteProp } from '@react-navigation/native';
 import type { RootStackParamList, TabParamList } from '../types/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
+import { useCustomImportWords, ExtractedWord } from '../hooks/useCustomImportWords';
 import { Word } from '../types/database';
 
 export const WordsScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<TabParamList, 'Words'>>();
   const { user } = useAuth();
-  const { words, loading, addWord, deleteWord } = useWords(user?.id);
+  const { words, loading, addWord, deleteWord, refetch } = useWords(user?.id);
+  const { customProcessDocument, confirmCustomImportWords, loading: customLoading } = useCustomImportWords();
+  
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showCustomImportModal, setShowCustomImportModal] = useState(false);
   const [newWord, setNewWord] = useState('');
   const [newDefinition, setNewDefinition] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Custom import states
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [extractedWords, setExtractedWords] = useState<ExtractedWord[]>([]);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
 
   // Handle navigation params
   useEffect(() => {
@@ -67,6 +79,87 @@ export const WordsScreen = () => {
         },
       ]
     );
+  };
+
+  const handleCustomDocumentPicker = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['text/plain', 'application/pdf'],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setSelectedDocument(result.assets[0]);
+        setShowCustomImportModal(true);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick document');
+    }
+  };
+
+  const handleCustomProcessDocument = async () => {
+    if (!selectedDocument || !user) {
+      Alert.alert('Error', 'Please select a document and ensure you are logged in');
+      return;
+    }
+
+    try {
+      // Read file content
+      const response = await fetch(selectedDocument.uri);
+      const content = await response.text();
+
+      const result = await customProcessDocument(
+        content,
+        selectedDocument.mimeType || 'text/plain',
+        user.id,
+        [], // folderIds - empty for now
+        [], // existingWords - empty for now
+        true, // previewMode
+        customPrompt.trim() || undefined
+      );
+
+      if (result.success && result.words) {
+        setExtractedWords(result.words);
+        setShowCustomImportModal(false);
+        setShowPreviewModal(true);
+      } else {
+        Alert.alert('Error', result.error || 'Failed to process document');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to process document');
+    }
+  };
+
+  const handleConfirmCustomImport = async () => {
+    if (!user || extractedWords.length === 0) {
+      Alert.alert('Error', 'No words to import');
+      return;
+    }
+
+    try {
+      const result = await confirmCustomImportWords(extractedWords, user.id, []);
+      
+      if (result.success) {
+        Alert.alert('Success', `Successfully imported ${result.savedCount} words!`);
+        setShowPreviewModal(false);
+        setExtractedWords([]);
+        setCustomPrompt('');
+        setSelectedDocument(null);
+        refetch(); // Refresh the words list
+      } else {
+        Alert.alert('Error', result.error || 'Failed to import words');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to import words');
+    }
+  };
+
+  const resetCustomImport = () => {
+    setShowCustomImportModal(false);
+    setShowPreviewModal(false);
+    setExtractedWords([]);
+    setCustomPrompt('');
+    setSelectedDocument(null);
   };
 
   const renderWord = ({ item }: { item: Word }) => (
@@ -120,12 +213,20 @@ export const WordsScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Library</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setShowAddModal(true)}
-        >
-          <Text style={styles.addButtonText}>Add Word</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            style={[styles.addButton, styles.customImportButton]}
+            onPress={handleCustomDocumentPicker}
+          >
+            <Text style={styles.addButtonText}>Custom Import</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => setShowAddModal(true)}
+          >
+            <Text style={styles.addButtonText}>Add Word</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search Bar */}
@@ -240,6 +341,108 @@ export const WordsScreen = () => {
               textAlignVertical="top"
             />
           </View>
+        </View>
+      </Modal>
+
+      {/* Custom Import Modal */}
+      <Modal
+        visible={showCustomImportModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={resetCustomImport}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={resetCustomImport}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Custom Document Processing</Text>
+            <TouchableOpacity onPress={handleCustomProcessDocument} disabled={customLoading || !selectedDocument}>
+              {customLoading ? (
+                <ActivityIndicator size="small" color="#007AFF" />
+              ) : (
+                <Text style={[styles.saveText, (!selectedDocument) && styles.disabledText]}>Process</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            {selectedDocument && (
+              <View style={styles.documentInfo}>
+                <Text style={styles.documentInfoTitle}>Selected Document:</Text>
+                <Text style={styles.documentName}>{selectedDocument.name}</Text>
+              </View>
+            )}
+            
+            <Text style={styles.inputLabel}>
+              Custom Requirements (optional)
+            </Text>
+            <Text style={styles.inputHint}>
+              Specify what type of words you want to extract, e.g., "verbs", "German phrases", "technical terms", etc.
+            </Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Example: 'Extract only verbs' or 'Focus on German nouns' or 'Technical vocabulary only'"
+              value={customPrompt}
+              onChangeText={setCustomPrompt}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Preview Modal */}
+      <Modal
+        visible={showPreviewModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={resetCustomImport}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={resetCustomImport}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Preview Extracted Words</Text>
+            <TouchableOpacity onPress={handleConfirmCustomImport} disabled={customLoading || extractedWords.length === 0}>
+              {customLoading ? (
+                <ActivityIndicator size="small" color="#007AFF" />
+              ) : (
+                <Text style={[styles.saveText, (extractedWords.length === 0) && styles.disabledText]}>
+                  Import ({extractedWords.length})
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            {extractedWords.length > 0 ? (
+              <>
+                <Text style={styles.previewTitle}>
+                  Found {extractedWords.length} words matching your criteria:
+                </Text>
+                {extractedWords.map((word, index) => (
+                  <View key={index} style={styles.previewWordItem}>
+                    <View style={styles.previewWordHeader}>
+                      <Text style={styles.previewWordText}>
+                        {word.article && !word.word.toLowerCase().includes(word.article.toLowerCase()) && `${word.article} `}{word.word}
+                      </Text>
+                    </View>
+                    <Text style={styles.previewDefinitionText}>{word.definition}</Text>
+                  </View>
+                ))}
+              </>
+            ) : (
+              <View style={styles.emptyPreview}>
+                <Text style={styles.emptyTitle}>No words found</Text>
+                <Text style={styles.emptySubtitle}>
+                  Try adjusting your custom requirements or selecting a different document.
+                </Text>
+              </View>
+            )}
+          </ScrollView>
         </View>
       </Modal>
     </View>
@@ -448,5 +651,79 @@ const styles = StyleSheet.create({
   textArea: {
     height: 100,
     paddingTop: 16,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  customImportButton: {
+    backgroundColor: '#34C759',
+  },
+  documentInfo: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e1e1e1',
+  },
+  documentInfoTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  documentName: {
+    fontSize: 16,
+    color: '#007AFF',
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  inputHint: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  disabledText: {
+    color: '#999',
+  },
+  previewTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+  },
+  previewWordItem: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e1e1e1',
+  },
+  previewWordHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  previewWordText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  previewDefinitionText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  emptyPreview: {
+    alignItems: 'center',
+    padding: 40,
   },
 });

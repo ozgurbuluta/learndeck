@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   progressNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#FF8C00',
     marginBottom: 4,
   },
   progressLabel: {

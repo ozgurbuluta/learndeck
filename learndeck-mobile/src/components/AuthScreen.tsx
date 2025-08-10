@@ -9,6 +9,7 @@ import {
   Alert,
   ScrollView,
   Platform,
+  Image,
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 
@@ -43,7 +44,11 @@ export const AuthScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>LearnDeck</Text>
+          <Image 
+            source={require('../../assets/logo-horizontal.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.subtitle}>Master Your Vocabulary</Text>
         </View>
         
@@ -119,12 +124,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-    textAlign: 'center',
+  logo: {
+    width: 200,
+    height: 80,
+    marginBottom: 16,
   },
   subtitle: {
     fontSize: 16,

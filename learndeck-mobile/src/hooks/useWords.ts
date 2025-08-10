@@ -55,6 +55,26 @@ export const useWords = (userId: string | undefined) => {
     }
   };
 
+  const addWords = async (wordsToAdd: Array<Omit<Word, 'id'>>) => {
+    if (!userId) return { error: 'User not authenticated' };
+
+    try {
+      const { data, error } = await supabase
+        .from('words')
+        .insert(wordsToAdd)
+        .select();
+
+      if (error) throw error;
+
+      setWords(prev => [...(data || []), ...prev]);
+      return { data, error: null };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      setError(errorMessage);
+      return { error: errorMessage };
+    }
+  };
+
   const deleteWord = async (wordId: string) => {
     if (!userId) return { error: 'User not authenticated' };
 
@@ -85,6 +105,7 @@ export const useWords = (userId: string | undefined) => {
     loading,
     error,
     addWord,
+    addWords,
     deleteWord,
     refetch: fetchWords,
   };

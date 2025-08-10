@@ -54,6 +54,11 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ onNavigate, onAddWords, cu
   const [showFolderSelection, setShowFolderSelection] = useState(false);
   const [isAddingWords, setIsAddingWords] = useState(false);
   
+  // Word preview and selection states
+  const [showAllWords, setShowAllWords] = useState(false);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedWordIndices, setSelectedWordIndices] = useState<Set<number>>(new Set());
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -130,6 +135,10 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ onNavigate, onAddWords, cu
             level: result.level,
             category: result.category,
           });
+          // Reset word preview and selection states
+          setShowAllWords(false);
+          setIsSelectMode(false);
+          setSelectedWordIndices(new Set());
         }
       } else {
         // Handle the case where the function call itself failed or returned success: false
@@ -159,6 +168,40 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ onNavigate, onAddWords, cu
     setShowFolderSelection(true);
   };
 
+  const toggleWordSelection = (index: number) => {
+    setSelectedWordIndices(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (!currentSuggestion) return;
+    const totalWords = currentSuggestion.words.length;
+    if (selectedWordIndices.size === totalWords) {
+      setSelectedWordIndices(new Set());
+    } else {
+      setSelectedWordIndices(new Set(Array.from({ length: totalWords }, (_, i) => i)));
+    }
+  };
+
+  const enterSelectMode = () => {
+    setIsSelectMode(true);
+    if (currentSuggestion) {
+      setSelectedWordIndices(new Set(Array.from({ length: currentSuggestion.words.length }, (_, i) => i)));
+    }
+  };
+
+  const exitSelectMode = () => {
+    setIsSelectMode(false);
+    setSelectedWordIndices(new Set());
+  };
+
   const handleRejectWords = async () => {
     setCurrentSuggestion(null);
     await simulateTyping(
@@ -171,14 +214,30 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ onNavigate, onAddWords, cu
 
     setIsAddingWords(true);
     try {
-      await onAddWords(currentSuggestion.words, selectedFolderIds);
+      // If in select mode, only add selected words
+      const wordsToAdd = isSelectMode 
+        ? currentSuggestion.words.filter((_, index) => selectedWordIndices.has(index))
+        : currentSuggestion.words;
+      
+      if (wordsToAdd.length === 0) {
+        await simulateTyping(
+          "Please select at least one word to add to your library."
+        );
+        setIsAddingWords(false);
+        return;
+      }
+
+      await onAddWords(wordsToAdd, selectedFolderIds);
       
       setCurrentSuggestion(null);
       setSelectedFolderIds([]);
       setShowFolderSelection(false);
+      setIsSelectMode(false);
+      setSelectedWordIndices(new Set());
+      setShowAllWords(false);
       
       await simulateTyping(
-        `Perfect! I've added ${currentSuggestion.words.length} words to your library. You can now study them using spaced repetition. Would you like me to help you create more vocabulary for a different topic?`
+        `Perfect! I've added ${wordsToAdd.length} word${wordsToAdd.length !== 1 ? 's' : ''} to your library. You can now study them using spaced repetition. Would you like me to help you create more vocabulary for a different topic?`
       );
     } catch (error) {
       console.error('Error adding words:', error);
@@ -289,10 +348,50 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ onNavigate, onAddWords, cu
           {currentSuggestion && (
             <div className="border-t border-primary-bg p-6">
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-primary-navy mb-2 flex items-center">
-                  <Sparkles className="h-5 w-5 mr-2 text-primary-highlight" />
-                  Generated Flashcards ({currentSuggestion.words.length} words)
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-primary-navy flex items-center">
+                    <Sparkles className="h-5 w-5 mr-2 text-primary-highlight" />
+                    Generated Flashcards ({currentSuggestion.words.length} words)
+                    {isSelectMode && (
+                      <span className="ml-2 text-sm text-primary-highlight">
+                        ({selectedWordIndices.size} selected)
+                      </span>
+                    )}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {currentSuggestion.words.length > 4 && !showAllWords && (
+                      <button
+                        onClick={() => setShowAllWords(true)}
+                        className="text-sm text-primary-highlight hover:text-primary-highlight/80 transition-colors duration-200 px-3 py-1 border border-primary-highlight rounded-md"
+                      >
+                        See More
+                      </button>
+                    )}
+                    {!isSelectMode ? (
+                      <button
+                        onClick={enterSelectMode}
+                        className="text-sm text-primary-highlight hover:text-primary-highlight/80 transition-colors duration-200 px-3 py-1 border border-primary-highlight rounded-md"
+                      >
+                        Select Words
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={toggleSelectAll}
+                          className="text-sm text-primary-highlight hover:text-primary-highlight/80 transition-colors duration-200"
+                        >
+                          {selectedWordIndices.size === currentSuggestion.words.length ? 'Deselect All' : 'Select All'}
+                        </button>
+                        <button
+                          onClick={exitSelectMode}
+                          className="text-sm text-primary-text hover:text-primary-highlight transition-colors duration-200"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 {currentSuggestion.language && (
                   <p className="text-sm text-primary-text/70 mb-4">
                     {currentSuggestion.language} • {currentSuggestion.level} • {currentSuggestion.category}
@@ -301,22 +400,61 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ onNavigate, onAddWords, cu
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 max-h-64 overflow-y-auto">
-                {currentSuggestion.words.map((word, index) => (
-                  <div key={index} className="bg-primary-cream/30 rounded-lg p-3 border border-primary-bg">
-                    <h4 className="font-semibold text-primary-navy mb-1">{word.word || (word as any).sentence}</h4>
-                    {word.definition && <p className="text-sm text-primary-text">{word.definition}</p>}
-                  </div>
-                ))}
+                {currentSuggestion.words.map((word, index) => {
+                  // Only show this word if we're showing all words, or if it's in the first 4
+                  if (!showAllWords && index >= 4) return null;
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className={`rounded-lg p-3 border transition-all duration-200 ${
+                        isSelectMode
+                          ? selectedWordIndices.has(index)
+                            ? 'bg-primary-highlight/10 border-primary-highlight cursor-pointer'
+                            : 'bg-primary-cream/30 border-primary-bg cursor-pointer hover:border-primary-highlight/50'
+                          : 'bg-primary-cream/30 border-primary-bg'
+                      }`}
+                      onClick={isSelectMode ? () => toggleWordSelection(index) : undefined}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-primary-navy mb-1">
+                            {word.word || (word as any).sentence}
+                          </h4>
+                          {word.definition && <p className="text-sm text-primary-text">{word.definition}</p>}
+                        </div>
+                        {isSelectMode && (
+                          <div className="ml-3 flex-shrink-0">
+                            <input
+                              type="checkbox"
+                              checked={selectedWordIndices.has(index)}
+                              onChange={() => toggleWordSelection(index)}
+                              className="w-4 h-4 text-primary-highlight bg-gray-100 border-gray-300 rounded focus:ring-primary-highlight focus:ring-2"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {!showFolderSelection ? (
                 <div className="flex gap-3">
                   <button
                     onClick={handleApproveWords}
-                    className="flex-1 bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-all duration-200 flex items-center justify-center"
+                    disabled={isSelectMode && selectedWordIndices.size === 0}
+                    className="flex-1 bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
                   >
                     <Check className="h-5 w-5 mr-2" />
-                    Add to Library
+                    {isSelectMode 
+                      ? selectedWordIndices.size === 0 
+                        ? 'Select Words to Add'
+                        : selectedWordIndices.size === 1
+                        ? 'Add Selected Word'
+                        : `Add ${selectedWordIndices.size} Selected Words`
+                      : 'Add All Words'
+                    }
                   </button>
                   <button
                     onClick={handleRejectWords}
@@ -365,7 +503,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ onNavigate, onAddWords, cu
                   <div className="flex gap-3">
                     <button
                       onClick={handleAddToLibrary}
-                      disabled={isAddingWords}
+                      disabled={isAddingWords || (isSelectMode && selectedWordIndices.size === 0)}
                       className="flex-1 bg-primary-highlight text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-highlight/90 disabled:opacity-50 transition-all duration-200 flex items-center justify-center"
                     >
                       {isAddingWords ? (
@@ -373,7 +511,14 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ onNavigate, onAddWords, cu
                       ) : (
                         <Plus className="h-5 w-5 mr-2" />
                       )}
-                      Add Words
+                      {isSelectMode 
+                        ? selectedWordIndices.size === 0 
+                          ? 'Select Words to Add'
+                          : selectedWordIndices.size === 1
+                          ? 'Add Selected Word'
+                          : `Add ${selectedWordIndices.size} Selected Words`
+                        : 'Add All Words'
+                      }
                     </button>
                     <button
                       onClick={() => setShowFolderSelection(false)}

@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Word } from '../types/database';
+import { shuffleWordsForStudy } from '../utils/studyAlgorithm';
 
 interface StudyResult {
   wordId: string;
@@ -38,7 +39,7 @@ export const useStudySession = (userId: string | undefined) => {
       }
       // 'all' type doesn't add any filters
 
-      const { data, error } = await query.order('created_at', { ascending: true }).limit(20);
+      const { data, error } = await query.limit(20);
 
       if (error) {
         console.error('Supabase query error:', error);
@@ -52,11 +53,13 @@ export const useStudySession = (userId: string | undefined) => {
       });
 
       if (data && data.length > 0) {
-        setStudyWords(data);
+        // Apply intelligent randomization for optimal learning
+        const shuffledWords = shuffleWordsForStudy(data);
+        setStudyWords(shuffledWords);
         setCurrentIndex(0);
         setIsFlipped(false);
-        setSessionStats({ correct: 0, incorrect: 0, total: data.length });
-        return { success: true, count: data.length };
+        setSessionStats({ correct: 0, incorrect: 0, total: shuffledWords.length });
+        return { success: true, count: shuffledWords.length };
       } else {
         return { success: false, message: `No ${studyType === 'all' ? '' : studyType + ' '}words available for study` };
       }

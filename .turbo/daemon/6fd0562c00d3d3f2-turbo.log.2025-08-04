@@ -1,0 +1,8 @@
+2025-08-04T20:18:27.170085Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo/cookies/.turbo-cookie")}
+2025-08-04T20:18:27.170092Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-08-04T20:18:27.870545Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/vite.config.ts.timestamp-1754338707793-b80cdedd66e9.mjs")}
+2025-08-04T20:18:27.870556Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-08-04T20:20:38.372990Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/AIChatbot.tsx.tmp.30812.1754338838294"), AnchoredSystemPathBuf("apps/web/src/components/AIChatbot.tsx")}
+2025-08-04T20:20:38.373057Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-08-04T20:22:41.672992Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("learndeck-mobile/src/screens/ChatbotScreen.tsx"), AnchoredSystemPathBuf("learndeck-mobile/src/screens/ChatbotScreen.tsx.tmp.30812.1754338961623")}
+2025-08-04T20:22:41.673029Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))

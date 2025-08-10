@@ -1,3 +1,11 @@
+// Polyfill for setPrototypeOf which is needed by Supabase
+if (typeof Object.setPrototypeOf === 'undefined') {
+  Object.setPrototypeOf = function(obj, prototype) {
+    obj.__proto__ = prototype;
+    return obj;
+  };
+}
+
 // Polyfill for structuredClone which is not available in React Native
 if (typeof global.structuredClone === 'undefined') {
   global.structuredClone = (obj: any) => {

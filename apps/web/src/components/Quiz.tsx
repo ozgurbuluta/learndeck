@@ -257,11 +257,26 @@ export const Quiz: React.FC<QuizProps> = ({ words, onUpdateWord, onNavigate }) =
 
 function shuffleArray<T>(array: T[]): T[] {
   const a = [...array];
-  for (let i = a.length - 1; i > 0; i++) {
+  for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+function sampleWithoutReplacement<T>(array: T[], k: number): T[] {
+  if (k <= 0) return [];
+  if (array.length <= k) return shuffleArray(array).slice(0, k);
+  const result: T[] = [];
+  const used = new Set<number>();
+  while (result.length < k && used.size < array.length) {
+    const idx = Math.floor(Math.random() * array.length);
+    if (!used.has(idx)) {
+      used.add(idx);
+      result.push(array[idx]);
+    }
+  }
+  return result;
 }
 
 
