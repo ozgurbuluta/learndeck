@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, User, ChevronDown, Play, Clock, Folder, Brain, HelpCircle } from 'lucide-react';
+import { LogOut, User, ChevronDown, Play, Clock, Folder, Brain } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useStudySessions } from '../hooks/useStudySessions';
 import { useFolders } from '../hooks/useFolders';
@@ -19,6 +19,11 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'dashb
   const [showStudyDropdown, setShowStudyDropdown] = useState(false);
   const [showStudyModal, setShowStudyModal] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState<any>(null);
+
+  // Check if quiz is available (need at least 4 words with definitions)
+  const eligibleWordsForQuiz = words.filter(w => !!w.definition && w.definition.trim().length > 0);
+  const isQuizAvailable = eligibleWordsForQuiz.length >= 4;
+  
 
   const handleSignOut = async () => {
     await signOut();
@@ -254,11 +259,13 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView = 'dashb
                 Progress
               </button>
               <button
-                onClick={() => onNavigate('quiz')}
-                className={getNavItemClasses('quiz')}
+                onClick={() => isQuizAvailable ? onNavigate('quiz') : undefined}
+                className={`${getNavItemClasses('quiz')} ${!isQuizAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
                 aria-current={currentView === 'quiz' ? 'page' : undefined}
+                disabled={!isQuizAvailable}
+                title={!isQuizAvailable ? 'Add at least 4 words to enable quiz' : 'Start quiz'}
               >
-                <span className="inline-flex items-center"><HelpCircle className="h-4 w-4 mr-1" /> Quiz</span>
+                Quiz
               </button>
               <button
                 onClick={() => onNavigate('word-list')}

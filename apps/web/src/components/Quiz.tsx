@@ -19,19 +19,34 @@ type QuizQuestion = {
 
 const NUM_QUESTIONS_DEFAULT = 10;
 
+function getDefaultQuestionCount(wordCount: number): number {
+  if (wordCount >= 15) return 15;
+  if (wordCount >= 10) return 10;
+  return Math.max(wordCount, 1);
+}
+
 export const Quiz: React.FC<QuizProps> = ({ words, onUpdateWord, onNavigate }) => {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  
   const [score, setScore] = useState(0);
   const [completed, setCompleted] = useState(false);
-  const [numQuestions, setNumQuestions] = useState(NUM_QUESTIONS_DEFAULT);
   const [isGenerating, setIsGenerating] = useState(false);
+
 
   const eligibleWords = useMemo(() => {
     // Avoid creating new arrays unnecessarily when words is large
     return words.filter(w => !!w.definition && w.definition.trim().length > 0);
   }, [words]);
+
+  const [numQuestions, setNumQuestions] = useState(() => getDefaultQuestionCount(eligibleWords.length));
+
+  // Update numQuestions when eligible words count changes
+  useEffect(() => {
+    const defaultCount = getDefaultQuestionCount(eligibleWords.length);
+    setNumQuestions(defaultCount);
+  }, [eligibleWords.length]);
 
   const regenerateQuiz = useCallback(() => {
     setIsGenerating(true);
@@ -177,9 +192,26 @@ export const Quiz: React.FC<QuizProps> = ({ words, onUpdateWord, onNavigate }) =
             onChange={(e) => setNumQuestions(Number(e.target.value))}
             className="px-3 py-1 border border-primary-bg rounded-lg bg-white text-primary-text text-sm"
           >
-            {[5, 10, 15, 20].map(n => (
-              <option key={n} value={n}>{n}</option>
-            ))}
+            {(() => {
+              const maxQuestions = Math.min(eligibleWords.length, 20);
+              const options = [];
+              
+              // Add common question counts that are valid for the current word count
+              for (const count of [5, 10, 15, 20]) {
+                if (count <= maxQuestions) {
+                  options.push(count);
+                }
+              }
+              
+              // If we have a very small number of words, add that as an option
+              if (eligibleWords.length < 5 && !options.includes(eligibleWords.length)) {
+                options.unshift(eligibleWords.length);
+              }
+              
+              return options.map(n => (
+                <option key={n} value={n}>{n}</option>
+              ));
+            })()} 
           </select>
           <button
             onClick={regenerateQuiz}
