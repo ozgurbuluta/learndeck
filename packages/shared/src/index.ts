@@ -14,3 +14,4 @@ export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKe
 
 export * from './types';
 // Future: export hooks and utils once migrated. 
+export * from './utils/studyAlgorithm';

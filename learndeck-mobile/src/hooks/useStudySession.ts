@@ -8,7 +8,7 @@ interface StudyResult {
   correct: boolean;
 }
 
-export const useStudySession = (userId: string | undefined) => {
+export const useStudySession = (userId: string | undefined, folderId: string | null = null) => {
   const [studyWords, setStudyWords] = useState<Word[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -18,6 +18,8 @@ export const useStudySession = (userId: string | undefined) => {
     total: 0,
   });
   const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
 
   const startStudySession = useCallback(async (studyType: 'all' | 'due' | 'new' = 'due') => {
     if (!userId) return { success: false, message: 'User not authenticated' };
@@ -28,6 +30,20 @@ export const useStudySession = (userId: string | undefined) => {
         .from('words')
         .select('*')
         .eq('user_id', userId);
+
+      // Optional folder filter via join on word_folders
+      if (folderId) {
+        // Filter words that are in the selected folder
+        query = query.in(
+          'id',
+          (
+            await supabase
+              .from('word_folders')
+              .select('word_id')
+              .eq('folder_id', folderId)
+          ).data?.map((x: any) => x.word_id) || []
+        );
+      }
 
       // Filter based on study type
       if (studyType === 'due') {
@@ -59,6 +75,67 @@ export const useStudySession = (userId: string | undefined) => {
         setCurrentIndex(0);
         setIsFlipped(false);
         setSessionStats({ correct: 0, incorrect: 0, total: shuffledWords.length });
+        // Create a study session record
+        const startedAt = new Date();
+        try {
+          const persistedStudyType = studyType === 'due' ? 'review' : studyType;
+          const { data: created, error: createError } = await supabase
+            .from('study_sessions')
+            .insert({
+              user_id: userId,
+              folder_id: folderId,
+              study_type: persistedStudyType,
+              started_at: startedAt.toISOString(),
+            })
+            .select()
+            .single();
+          if (createError) {
+            console.warn('Failed to create study session row:', createError);
+          } else {
+            setSessionId(created.id);
+            setSessionStartTime(startedAt);
+            // Update recent study options (upsert-like)
+            try {
+              // Try find existing combo
+              let query = supabase
+                .from('recent_study_options')
+                .select('id, use_count')
+                .eq('user_id', userId)
+                .eq('study_type', persistedStudyType);
+              if (folderId) {
+                query = query.eq('folder_id', folderId);
+              } else {
+                query = query.is('folder_id', null);
+              }
+              const { data: existing, error: selectErr } = await query.single();
+              if (selectErr && selectErr.code !== 'PGRST116') {
+                // PGRST116 = no rows found
+                throw selectErr;
+              }
+              if (existing) {
+                await supabase
+                  .from('recent_study_options')
+                  .update({
+                    last_used_at: startedAt.toISOString(),
+                    use_count: (existing as any).use_count + 1,
+                  })
+                  .eq('id', (existing as any).id);
+              } else {
+                await supabase.from('recent_study_options').insert({
+                  user_id: userId,
+                  folder_id: folderId,
+                  study_type: persistedStudyType,
+                  last_used_at: startedAt.toISOString(),
+                  use_count: 1,
+                });
+              }
+            } catch (recentErr) {
+              console.warn('Failed to update recent study options:', recentErr);
+            }
+          }
+        } catch (err) {
+          console.warn('Error creating study session row:', err);
+        }
         return { success: true, count: shuffledWords.length };
       } else {
         return { success: false, message: `No ${studyType === 'all' ? '' : studyType + ' '}words available for study` };
@@ -150,6 +227,34 @@ export const useStudySession = (userId: string | undefined) => {
     }
   }, [currentIndex, studyWords]);
 
+  const completeSession = useCallback(async () => {
+    if (!userId || !sessionId || !sessionStartTime) return;
+    try {
+      const wordsStudied = sessionStats.correct + sessionStats.incorrect;
+      const correctAnswers = sessionStats.correct;
+      const totalTimeMinutes = Math.max(1, Math.round((Date.now() - sessionStartTime.getTime()) / 60000));
+      const { error } = await supabase
+        .from('study_sessions')
+        .update({
+          words_studied: wordsStudied,
+          correct_answers: correctAnswers,
+          total_time_minutes: totalTimeMinutes,
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', sessionId)
+        .eq('user_id', userId);
+      if (error) {
+        console.warn('Failed to complete study session row:', error);
+      }
+    } catch (err) {
+      console.warn('Error completing study session:', err);
+    } finally {
+      // Reset identifiers so next session starts clean
+      setSessionId(null);
+      setSessionStartTime(null);
+    }
+  }, [sessionId, sessionStartTime, sessionStats, userId]);
+
   const flipCard = useCallback(() => {
     setIsFlipped(prev => !prev);
   }, []);
@@ -178,5 +283,6 @@ export const useStudySession = (userId: string | undefined) => {
     submitAnswer,
     flipCard,
     resetSession,
+    completeSession,
   };
 };

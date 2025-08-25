@@ -7,7 +7,7 @@ export interface Word {
   last_reviewed: string | null;
   review_count: number;
   correct_count: number;
-  difficulty: 'new' | 'learning' | 'review' | 'mastered';
+  difficulty: 'new' | 'learning' | 'review' | 'mastered' | 'failed';
   next_review: string;
 }
 

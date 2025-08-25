@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF8C00',
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   toggleText: {
-    color: '#007AFF',
+    color: '#FF8C00',
     fontSize: 14,
   },
 });

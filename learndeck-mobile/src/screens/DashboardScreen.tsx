@@ -11,14 +11,22 @@ import type { NavigationProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
+import { useFolders } from '../hooks/useFolders';
+import { supabase } from '../lib/supabase';
+import { Alert } from 'react-native';
 
 export const DashboardScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { user } = useAuth();
   const { words, loading } = useWords(user?.id);
+  const { folders } = useFolders(user?.id);
+  const [recent, setRecent] = React.useState<Array<{ id: string; folder_id: string | null; folder_name?: string; study_type: string; last_used_at: string }>>([]);
+  const [selectedFolderId, setSelectedFolderId] = React.useState<string | null>(null);
+  const [folderWordIds, setFolderWordIds] = React.useState<Set<string>>(new Set());
+  const [folderLoading, setFolderLoading] = React.useState(false);
 
-  const handleStartStudy = (studyType: 'all' | 'due' | 'new' = 'due') => {
-    navigation.navigate('StudySession', { studyType });
+  const handleStartStudy = (studyType: 'all' | 'due' | 'new' = 'due', folderId: string | null = null) => {
+    navigation.navigate('StudySession', { studyType, folderId });
   };
 
   const handleAddWord = () => {
@@ -28,14 +36,58 @@ export const DashboardScreen = () => {
     });
   };
 
+  React.useEffect(() => {
+    const fetchRecent = async () => {
+      if (!user) { setRecent([]); return; }
+      const { data, error } = await supabase
+        .from('recent_study_options')
+        .select('id, folder_id, study_type, last_used_at, folders(name)')
+        .eq('user_id', user.id)
+        .order('last_used_at', { ascending: false })
+        .limit(6);
+      if (!error && data) {
+        const rec = data.map((r: any) => ({
+          id: r.id,
+          folder_id: r.folder_id,
+          study_type: r.study_type,
+          last_used_at: r.last_used_at,
+          folder_name: r.folders?.name || 'All Words',
+        }));
+        setRecent(rec);
+      }
+    };
+    fetchRecent();
+  }, [user?.id]);
+
+  // Fetch word IDs for selected folder to compute counts
+  React.useEffect(() => {
+    const fetchFolderWordIds = async () => {
+      if (!user || !selectedFolderId) { setFolderWordIds(new Set()); return; }
+      setFolderLoading(true);
+      const { data, error } = await supabase
+        .from('word_folders')
+        .select('word_id')
+        .eq('folder_id', selectedFolderId);
+      if (!error && data) {
+        setFolderWordIds(new Set(data.map((x: any) => x.word_id)));
+      } else {
+        setFolderWordIds(new Set());
+      }
+      setFolderLoading(false);
+    };
+    fetchFolderWordIds();
+  }, [user?.id, selectedFolderId]);
+
   // Calculate stats
-  const totalWords = words.length;
-  const newWords = words.filter(word => word.difficulty === 'new').length;
-  const dueWords = words.filter(word => 
+  const overallWordsCount = words.length;
+  const visibleWords = selectedFolderId ? words.filter(w => folderWordIds.has(w.id)) : words;
+  const totalWords = visibleWords.length;
+  const newWords = visibleWords.filter(word => word.difficulty === 'new').length;
+  const dueWords = visibleWords.filter(word => 
     new Date(word.next_review) <= new Date() || 
     (word.difficulty === 'new' && !word.last_reviewed)
   ).length;
-  const masteredWords = words.filter(word => word.difficulty === 'mastered').length;
+  const masteredWords = visibleWords.filter(word => word.difficulty === 'mastered').length;
   const studyStreak = 0; // TODO: implement streak calculation
 
   if (loading) {
@@ -53,10 +105,37 @@ export const DashboardScreen = () => {
         <Text style={styles.subtitle}>Ready to learn some vocabulary?</Text>
       </View>
 
+      {/* Folder Selector (moved to top) */}
+      {folders.length > 0 && overallWordsCount > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Select Folder</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            <TouchableOpacity
+              onPress={() => setSelectedFolderId(null)}
+              style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: selectedFolderId ? '#e1e1e1' : '#FF8C00', backgroundColor: selectedFolderId ? '#f8f9fa' : '#FF8C00' }}
+            >
+              <Text style={{ color: selectedFolderId ? '#333' : '#fff', fontSize: 12 }}>All Words</Text>
+            </TouchableOpacity>
+            {folders.map((f) => {
+              const selected = selectedFolderId === f.id;
+              return (
+                <TouchableOpacity
+                  key={f.id}
+                  onPress={() => setSelectedFolderId(f.id)}
+                  style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: selected ? '#FF8C00' : '#e1e1e1', backgroundColor: selected ? '#FF8C00' : '#f8f9fa' }}
+                >
+                  <Text style={{ color: selected ? '#fff' : '#333', fontSize: 12 }}>{f.name}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
       {/* Quick Study Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Study</Text>
-        {totalWords === 0 ? (
+        {overallWordsCount === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>No words yet</Text>
             <Text style={styles.emptySubtitle}>Add your first word to start learning</Text>
@@ -67,7 +146,7 @@ export const DashboardScreen = () => {
         ) : (
           <TouchableOpacity 
             style={styles.primaryStudyButton}
-            onPress={() => handleStartStudy('due')}
+            onPress={() => handleStartStudy('due', selectedFolderId)}
           >
             <Text style={styles.primaryStudyButtonText}>Start Study Session</Text>
             <Text style={styles.primaryStudyButtonSubtext}>
@@ -78,13 +157,14 @@ export const DashboardScreen = () => {
       </View>
 
       {/* Study Options */}
-      {totalWords > 0 && (
+      {overallWordsCount > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Study Options</Text>
+          {/* Recent section intentionally omitted on mobile */}
           <View style={styles.studyGrid}>
             <TouchableOpacity
               style={styles.studyCard}
-              onPress={() => handleStartStudy('new')}
+              onPress={() => handleStartStudy('new', selectedFolderId)}
             >
               <Text style={styles.studyCardNumber}>{newWords}</Text>
               <Text style={styles.studyCardLabel}>New Words</Text>
@@ -92,7 +172,7 @@ export const DashboardScreen = () => {
 
             <TouchableOpacity
               style={styles.studyCard}
-              onPress={() => handleStartStudy('due')}
+              onPress={() => handleStartStudy('due', selectedFolderId)}
             >
               <Text style={styles.studyCardNumber}>{dueWords}</Text>
               <Text style={styles.studyCardLabel}>Due for Review</Text>
@@ -100,7 +180,7 @@ export const DashboardScreen = () => {
 
             <TouchableOpacity
               style={styles.studyCard}
-              onPress={() => handleStartStudy('all')}
+              onPress={() => handleStartStudy('all', selectedFolderId)}
             >
               <Text style={styles.studyCardNumber}>{totalWords}</Text>
               <Text style={styles.studyCardLabel}>All Words</Text>
@@ -228,7 +308,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   addWordButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF8C00',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -239,7 +319,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   primaryStudyButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF8C00',
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',

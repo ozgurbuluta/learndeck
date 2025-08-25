@@ -7,6 +7,7 @@ export type RootStackParamList = {
   };
   StudySession: {
     studyType: 'all' | 'due' | 'new';
+    folderId?: string | null;
   };
   ProfileEdit: undefined;
 };

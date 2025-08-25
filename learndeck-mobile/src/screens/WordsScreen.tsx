@@ -12,12 +12,14 @@ import {
   ScrollView,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NavigationProp, RouteProp } from '@react-navigation/native';
 import type { RootStackParamList, TabParamList } from '../types/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
 import { useCustomImportWords, ExtractedWord } from '../hooks/useCustomImportWords';
+import { useFolders } from '../hooks/useFolders';
 import { Word } from '../types/database';
 
 export const WordsScreen = () => {
@@ -25,6 +27,7 @@ export const WordsScreen = () => {
   const route = useRoute<RouteProp<TabParamList, 'Words'>>();
   const { user } = useAuth();
   const { words, loading, addWord, deleteWord, refetch } = useWords(user?.id);
+  const { folders } = useFolders(user?.id);
   const { customProcessDocument, confirmCustomImportWords, loading: customLoading } = useCustomImportWords();
   
   const [showAddModal, setShowAddModal] = useState(false);
@@ -39,6 +42,7 @@ export const WordsScreen = () => {
   const [extractedWords, setExtractedWords] = useState<ExtractedWord[]>([]);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [selectedFolderIds, setSelectedFolderIds] = useState<string[]>([]);
 
   // Handle navigation params
   useEffect(() => {
@@ -54,7 +58,7 @@ export const WordsScreen = () => {
     }
 
     setIsAdding(true);
-    const { error } = await addWord(newWord, newDefinition);
+    const { error } = await addWord(newWord, newDefinition, selectedFolderIds);
     setIsAdding(false);
 
     if (error) {
@@ -63,6 +67,7 @@ export const WordsScreen = () => {
       setNewWord('');
       setNewDefinition('');
       setShowAddModal(false);
+      setSelectedFolderIds([]);
     }
   };
 
@@ -84,7 +89,7 @@ export const WordsScreen = () => {
   const handleCustomDocumentPicker = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['text/plain', 'application/pdf'],
+        type: ['text/plain', 'text/csv', 'application/pdf'],
         copyToCacheDirectory: true,
       });
 
@@ -104,16 +109,28 @@ export const WordsScreen = () => {
     }
 
     try {
-      // Read file content
-      const response = await fetch(selectedDocument.uri);
-      const content = await response.text();
+      // Read file content depending on type
+      const mime = (selectedDocument.mimeType || '').toLowerCase();
+
+      if (mime.includes('pdf')) {
+        Alert.alert(
+          'PDF Not Supported on Mobile (Yet)',
+          'Please use a TXT or CSV file on mobile for now, or upload the PDF via the web app to extract text. '
+        );
+        return;
+      }
+
+      // Support plain text or CSV
+      const content = await FileSystem.readAsStringAsync(selectedDocument.uri, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
 
       const result = await customProcessDocument(
         content,
-        selectedDocument.mimeType || 'text/plain',
+        mime || 'text/plain',
         user.id,
-        [], // folderIds - empty for now
-        [], // existingWords - empty for now
+        selectedFolderIds,
+        words.map(w => w.word.toLowerCase()), // existingWords for dedupe
         true, // previewMode
         customPrompt.trim() || undefined
       );
@@ -137,7 +154,7 @@ export const WordsScreen = () => {
     }
 
     try {
-      const result = await confirmCustomImportWords(extractedWords, user.id, []);
+      const result = await confirmCustomImportWords(extractedWords, user.id, selectedFolderIds);
       
       if (result.success) {
         Alert.alert('Success', `Successfully imported ${result.savedCount} words!`);
@@ -160,6 +177,7 @@ export const WordsScreen = () => {
     setExtractedWords([]);
     setCustomPrompt('');
     setSelectedDocument(null);
+    setSelectedFolderIds([]);
   };
 
   const renderWord = ({ item }: { item: Word }) => (
@@ -316,7 +334,7 @@ export const WordsScreen = () => {
             <Text style={styles.modalTitle}>Add New Word</Text>
             <TouchableOpacity onPress={handleAddWord} disabled={isAdding}>
               {isAdding ? (
-                <ActivityIndicator size="small" color="#007AFF" />
+                <ActivityIndicator size="small" color="#FF8C00" />
               ) : (
                 <Text style={styles.saveText}>Save</Text>
               )}
@@ -340,6 +358,25 @@ export const WordsScreen = () => {
               numberOfLines={4}
               textAlignVertical="top"
             />
+            {folders.length > 0 && (
+              <View>
+                <Text style={styles.inputLabel}>Add to Folders (optional)</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {folders.map((f) => {
+                    const selected = selectedFolderIds.includes(f.id);
+                    return (
+                      <TouchableOpacity
+                        key={f.id}
+                        onPress={() => setSelectedFolderIds(prev => selected ? prev.filter(id => id !== f.id) : [...prev, f.id])}
+                        style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: selected ? '#FF8C00' : '#e1e1e1', backgroundColor: selected ? '#FF8C00' : '#f8f9fa', marginTop: 8 }}
+                      >
+                        <Text style={{ color: selected ? '#fff' : '#333', fontSize: 12 }}>{f.name}</Text>
+                      </TouchableOpacity>
+                    )
+                  })}
+                </View>
+              </View>
+            )}
           </View>
         </View>
       </Modal>
@@ -359,7 +396,7 @@ export const WordsScreen = () => {
             <Text style={styles.modalTitle}>Custom Document Processing</Text>
             <TouchableOpacity onPress={handleCustomProcessDocument} disabled={customLoading || !selectedDocument}>
               {customLoading ? (
-                <ActivityIndicator size="small" color="#007AFF" />
+                <ActivityIndicator size="small" color="#FF8C00" />
               ) : (
                 <Text style={[styles.saveText, (!selectedDocument) && styles.disabledText]}>Process</Text>
               )}
@@ -374,6 +411,26 @@ export const WordsScreen = () => {
               </View>
             )}
             
+            {folders.length > 0 && (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={styles.inputLabel}>Add to Folders (optional)</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {folders.map((f) => {
+                    const selected = selectedFolderIds.includes(f.id);
+                    return (
+                      <TouchableOpacity
+                        key={f.id}
+                        onPress={() => setSelectedFolderIds(prev => selected ? prev.filter(id => id !== f.id) : [...prev, f.id])}
+                        style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: selected ? '#FF8C00' : '#e1e1e1', backgroundColor: selected ? '#FF8C00' : '#f8f9fa' }}
+                      >
+                        <Text style={{ color: selected ? '#fff' : '#333', fontSize: 12 }}>{f.name}</Text>
+                      </TouchableOpacity>
+                    )
+                  })}
+                </View>
+              </View>
+            )}
+
             <Text style={styles.inputLabel}>
               Custom Requirements (optional)
             </Text>
@@ -408,7 +465,7 @@ export const WordsScreen = () => {
             <Text style={styles.modalTitle}>Preview Extracted Words</Text>
             <TouchableOpacity onPress={handleConfirmCustomImport} disabled={customLoading || extractedWords.length === 0}>
               {customLoading ? (
-                <ActivityIndicator size="small" color="#007AFF" />
+                <ActivityIndicator size="small" color="#FF8C00" />
               ) : (
                 <Text style={[styles.saveText, (extractedWords.length === 0) && styles.disabledText]}>
                   Import ({extractedWords.length})
@@ -475,7 +532,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   addButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF8C00',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -632,7 +689,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   saveText: {
-    color: '#007AFF',
+    color: '#FF8C00',
     fontSize: 16,
     fontWeight: '600',
   },

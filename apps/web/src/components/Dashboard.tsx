@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { Plus, BookOpen, TrendingUp, Brain, Target, Trophy, ArrowRight, Zap, Play, MessageCircle, Info, HelpCircle } from 'lucide-react';
 import { Word } from '@shared/types';
 import { StudyOptionsModal } from './StudyOptionsModal';
-import { useStudySessions } from '../hooks/useStudySessions';
 import { useAuth } from '../hooks/useAuth';
 import { FloatingChatbot } from './FloatingChatbot';
 
@@ -15,7 +14,7 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ words, onNavigate, currentView: _currentView }) => {
   void _currentView;
   const { user } = useAuth();
-  const { recentStudyOptions, startStudySession } = useStudySessions(user);
+  // Removed recent study shortcuts
   const [showStudyModal, setShowStudyModal] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState<any>(null);
   const [isChatbotOpen, setChatbotOpen] = useState(false);
@@ -72,17 +71,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ words, onNavigate, current
     };
   }, [words, now]);
 
-  const handleRecentStudyOption = (option: any) => {
-    setSelectedFolder(option.folder || null);
-    setShowStudyModal(true);
-  };
+  // Recent study options removed
 
   const handleStartStudy = async (folderId: string | null, studyType: any) => {
-    const session = await startStudySession(folderId, studyType);
-    if (session) {
-      setShowStudyModal(false);
-      onNavigate('study');
-    }
+    setShowStudyModal(false);
+    onNavigate('study');
   };
 
   const stats = [
@@ -257,56 +250,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ words, onNavigate, current
           ))}
         </div>
 
-        {/* Recent Study Options */}
-        {recentStudyOptions.length > 0 && (
-          <div className="mb-12">
-            <h3 className="text-2xl font-bold text-primary-navy mb-6">Recent Study Sessions</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {recentStudyOptions.slice(0, 6).map((option) => {
-                const folderWords = option.folder_id 
-                  ? words.filter(word => word.folders?.some(f => f.id === option.folder_id))
-                  : words;
-                
-                return (
-                  <button
-                    key={option.id}
-                    onClick={() => handleRecentStudyOption(option)}
-                    className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-4 border border-primary-bg group text-left transform hover:-translate-y-1"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        {option.folder && (
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: option.folder.color }}
-                          />
-                        )}
-                        <h4 className="font-semibold text-primary-navy truncate">
-                          {option.folder ? option.folder.name : 'All Words'}
-                        </h4>
-                      </div>
-                      <div onClick={(e) => {
-                          e.stopPropagation();
-                          handleStartStudy(option.folder_id || null, 'all');
-                        }}
-                        className="p-2 rounded-full -m-2 hover:bg-primary-highlight/10 cursor-pointer"
-                      >
-                        <Play className="h-4 w-4 text-primary-text/30 group-hover:text-primary-highlight transition-colors duration-200" />
-                      </div>
-                    </div>
-                    <p className="text-sm text-primary-text/70 mb-2">
-                      {folderWords.length} words
-                    </p>
-                    <div className="flex items-center justify-between text-xs text-primary-text/50">
-                      <span>Used {option.use_count} times</span>
-                      <span>{option.last_used_at.toLocaleDateString()}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* Recent Study Options removed as per product decision */}
 
         {/* Commented out Study by Folder section - can be reactivated by removing comment blocks */}
         {/*

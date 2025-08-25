@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { LogOut, User, ChevronDown, Play, Clock, Folder, Brain } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { useStudySessions } from '../hooks/useStudySessions';
 import { useFolders } from '../hooks/useFolders';
+import { useStudySessions } from '../hooks/useStudySessions';
 import { StudyOptionsModal } from './StudyOptionsModal';
 import { Word } from '@shared/types';
 

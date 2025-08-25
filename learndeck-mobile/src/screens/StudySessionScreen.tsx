@@ -13,12 +13,13 @@ import { useStudySession } from '../hooks/useStudySession';
 
 interface RouteParams {
   studyType?: 'all' | 'due' | 'new';
+  folderId?: string | null;
 }
 
 export const StudySessionScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { studyType = 'due' } = (route.params as RouteParams) || {};
+  const { studyType = 'due', folderId = null } = (route.params as RouteParams) || {};
   const { user, loading: authLoading } = useAuth();
   const {
     currentWord,
@@ -31,7 +32,8 @@ export const StudySessionScreen = () => {
     submitAnswer,
     flipCard,
     resetSession,
-  } = useStudySession(user?.id);
+    completeSession,
+  } = useStudySession(user?.id, folderId ?? null);
 
   useEffect(() => {
     if (user?.id) {
@@ -58,7 +60,7 @@ export const StudySessionScreen = () => {
     await submitAnswer(correct);
     
     if (isLastWord) {
-      // Session complete
+      await completeSession();
       Alert.alert(
         'Study Session Complete!',
         `Great job! You got ${sessionStats.correct + (correct ? 1 : 0)} out of ${sessionStats.total} correct.`,
@@ -76,7 +78,7 @@ export const StudySessionScreen = () => {
       'Are you sure you want to exit? Your progress will be saved.',
       [
         { text: 'Continue Studying', style: 'cancel' },
-        { text: 'Exit', onPress: () => navigation.goBack() },
+        { text: 'Exit', onPress: async () => { await completeSession(); navigation.goBack(); } },
       ]
     );
   };
@@ -84,7 +86,7 @@ export const StudySessionScreen = () => {
   if (authLoading || loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#FF8C00" />
         <Text style={styles.loadingText}>
           {authLoading ? 'Loading...' : 'Starting study session...'}
         </Text>
@@ -215,7 +217,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   exitText: {
-    color: '#007AFF',
+    color: '#FF8C00',
     fontSize: 16,
   },
   progressContainer: {
@@ -325,7 +327,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF8C00',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
