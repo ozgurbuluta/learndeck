@@ -42,7 +42,7 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'online.learndeck',
-    buildNumber: '6',
+    buildNumber: '7',
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
@@ -53,7 +53,7 @@ const config: ExpoConfig = {
       backgroundColor: '#ffffff',
     },
     package: 'online.learndeck',
-    versionCode: 6,
+    versionCode: 7,
   },
   web: {
     favicon: './assets/favicon.png',
