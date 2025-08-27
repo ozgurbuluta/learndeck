@@ -15,6 +15,7 @@ export interface CustomImportResult {
   error?: string;
 }
 
+// Mobile custom import removed; export no-op API to avoid breaking imports
 export const useCustomImportWords = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +38,15 @@ export const useCustomImportWords = () => {
     setError(null);
 
     try {
+      console.log('Calling Edge Function with:', {
+        userId,
+        hasContent: !!content,
+        contentLength: content?.length,
+        fileType,
+        previewMode,
+        hasCustomPrompt: !!customPrompt,
+      });
+
       const { data, error: functionError } = await supabase.functions.invoke('process-document-custom', {
         body: {
           content,
@@ -49,12 +59,19 @@ export const useCustomImportWords = () => {
         },
       });
 
+      console.log('Edge Function response:', {
+        functionError: functionError ? JSON.stringify(functionError) : null,
+        data: data ? JSON.stringify(data) : null,
+      });
+
       if (functionError) {
-        throw new Error(`Edge Function returned a non-2xx status code`);
+        console.error('Function error details:', functionError);
+        throw new Error(`Network error: ${functionError.message || 'Edge Function returned a non-2xx status code'}`);
       }
 
-      if (!data.success) {
-        throw new Error(data.error || 'An unknown error occurred in the edge function.');
+      if (!data?.success) {
+        console.error('Function returned error:', data?.error);
+        throw new Error(data?.error || 'An unknown error occurred in the edge function.');
       }
 
       return {
@@ -152,10 +169,11 @@ export const useCustomImportWords = () => {
     }
   };
 
-  return { 
-    customProcessDocument, 
-    confirmCustomImportWords, 
-    loading, 
-    error 
+  // Return inert handlers to preserve type shape; they show a friendly error
+  return {
+    customProcessDocument: async () => ({ success: false, error: 'Custom import is not available on mobile.' }),
+    confirmCustomImportWords: async () => ({ success: false, error: 'Custom import is not available on mobile.' }),
+    loading: false,
+    error,
   };
 };

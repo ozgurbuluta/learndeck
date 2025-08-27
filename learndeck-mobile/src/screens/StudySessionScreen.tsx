@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,10 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '../hooks/useAuth';
 import { useStudySession } from '../hooks/useStudySession';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Swipeable, GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
+import { Animated, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface RouteParams {
   studyType?: 'all' | 'due' | 'new';
@@ -21,7 +25,10 @@ export const StudySessionScreen = () => {
   const route = useRoute();
   const { studyType = 'due', folderId = null } = (route.params as RouteParams) || {};
   const { user, loading: authLoading } = useAuth();
+  const insets = useSafeAreaInsets();
   const {
+    studyWords,
+    currentIndex,
     currentWord,
     isFlipped,
     sessionStats,
@@ -34,6 +41,47 @@ export const StudySessionScreen = () => {
     resetSession,
     completeSession,
   } = useStudySession(user?.id, folderId ?? null);
+
+  const screenWidth = Dimensions.get('window').width;
+  const swipeThreshold = Math.max(48, Math.floor(screenWidth * 0.5));
+  const swipeableRef = useRef<Swipeable | null>(null);
+  const translateX = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+  const rotate = translateX.interpolate({
+    inputRange: [-screenWidth, 0, screenWidth],
+    outputRange: ['-12deg', '0deg', '12deg'],
+    extrapolate: 'clamp',
+  });
+  const likeOpacity = translateX.interpolate({ inputRange: [0, swipeThreshold], outputRange: [0, 1], extrapolate: 'clamp' });
+  const nopeOpacity = translateX.interpolate({ inputRange: [-swipeThreshold, 0], outputRange: [1, 0], extrapolate: 'clamp' });
+
+  const onGestureEvent = Animated.event(
+    [{ nativeEvent: { translationX: translateX, translationY: translateY } }],
+    { useNativeDriver: true }
+  );
+
+  const onHandlerStateChange = ({ nativeEvent }: any) => {
+    if (nativeEvent.state === State.END) {
+      const { translationX, velocityX } = nativeEvent;
+      const projected = translationX + 0.2 * velocityX; // velocity-assisted
+      if (projected > swipeThreshold) {
+        Animated.timing(translateX, { toValue: screenWidth * 1.2, duration: 250, useNativeDriver: true }).start(async () => {
+          await handleAnswer(true);
+          translateX.setValue(0);
+          translateY.setValue(0);
+        });
+      } else if (projected < -swipeThreshold) {
+        Animated.timing(translateX, { toValue: -screenWidth * 1.2, duration: 250, useNativeDriver: true }).start(async () => {
+          await handleAnswer(false);
+          translateX.setValue(0);
+          translateY.setValue(0);
+        });
+      } else {
+        Animated.spring(translateX, { toValue: 0, useNativeDriver: true, bounciness: 8 }).start();
+        Animated.spring(translateY, { toValue: 0, useNativeDriver: true, bounciness: 8 }).start();
+      }
+    }
+  };
 
   useEffect(() => {
     if (user?.id) {
@@ -117,16 +165,16 @@ export const StudySessionScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(12, insets.top + 12) }]}>
         <TouchableOpacity onPress={handleExit} style={styles.exitButton}>
           <Text style={styles.exitText}>Exit</Text>
         </TouchableOpacity>
         
         <View style={styles.progressContainer}>
           <Text style={styles.progressText}>
-            {sessionStats.correct + sessionStats.incorrect + 1} / {sessionStats.total}
+            {Math.min(sessionStats.correct + sessionStats.incorrect + 1, sessionStats.total)} / {sessionStats.total}
           </Text>
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
@@ -139,25 +187,51 @@ export const StudySessionScreen = () => {
         </View>
       </View>
 
-      {/* Flashcard */}
+      {/* Flashcard with swipe and stacked previews */}
       <View style={styles.cardContainer}>
-        <TouchableOpacity onPress={handleFlip} style={styles.cardTouchable}>
-          <View style={styles.card}>
-            {!isFlipped ? (
-              // Front - Word
-              <View style={styles.cardFace}>
-                <Text style={styles.cardWord}>{currentWord.word}</Text>
-                <Text style={styles.tapHint}>Tap to reveal definition</Text>
+        {/* Behind cards preview (next 2) - fully opaque, same component structure */}
+        {[...studyWords.slice(currentIndex + 1, currentIndex + 3)].reverse().map((w, i, arr) => {
+          const depth = arr.length - i; // 1 is nearest under active
+          const offset = depth * 5; // 5px apart
+          return (
+            <View key={`preview-${w.id}-${i}`} style={[styles.previewWrapper, { transform: [{ translateY: offset }] }]}> 
+              <View style={styles.card} pointerEvents="none">
+                <View style={styles.cardFace}>
+                  <Text style={styles.cardWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} ellipsizeMode="tail">{w.word}</Text>
+                  <Text style={styles.tapHint}>Tap to reveal definition</Text>
+                </View>
               </View>
-            ) : (
-              // Back - Definition
-              <View style={styles.cardFace}>
-                <Text style={styles.cardDefinition}>{currentWord.definition}</Text>
-                <Text style={styles.tapHint}>Tap to see word again</Text>
+            </View>
+          );
+        })}
+
+        <PanGestureHandler onGestureEvent={onGestureEvent} onHandlerStateChange={onHandlerStateChange}>
+          <Animated.View style={[styles.cardTouchable, { transform: [{ translateX }, { translateY }, { rotate }] }] }>
+            {/* Overlays */}
+            <Animated.View pointerEvents="none" style={[styles.overlay, { opacity: likeOpacity, right: 16 }]}>
+              <Ionicons name="checkmark" size={28} color="#34C759" />
+            </Animated.View>
+            <Animated.View pointerEvents="none" style={[styles.overlay, { opacity: nopeOpacity, left: 16 }]}>
+              <Ionicons name="close" size={28} color="#DC3545" />
+            </Animated.View>
+
+            <TouchableOpacity onPress={handleFlip} activeOpacity={1} style={{ flex: 1 }}>
+              <View style={[styles.card, { backfaceVisibility: 'hidden' as any }]}>
+                {!isFlipped ? (
+                  <View style={styles.cardFace}>
+                    <Text style={styles.cardWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} ellipsizeMode="tail">{currentWord.word}</Text>
+                    <Text style={styles.tapHint}>Tap to reveal definition</Text>
+                  </View>
+                ) : (
+                  <View style={styles.cardFace}>
+                    <Text style={styles.cardDefinition}>{currentWord.definition}</Text>
+                    <Text style={styles.tapHint}>Tap to see word again</Text>
+                  </View>
+                )}
               </View>
-            )}
-          </View>
-        </TouchableOpacity>
+            </TouchableOpacity>
+          </Animated.View>
+        </PanGestureHandler>
       </View>
 
       {/* Action Buttons - Always visible */}
@@ -176,7 +250,7 @@ export const StudySessionScreen = () => {
           <Text style={styles.actionButtonText}>I know it!</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 };
 
@@ -256,11 +330,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+    position: 'relative',
   },
   cardTouchable: {
     width: '100%',
     maxWidth: 350,
     aspectRatio: 1.2,
+    position: 'absolute',
   },
   card: {
     flex: 1,
@@ -282,9 +358,11 @@ const styles = StyleSheet.create({
     padding: 32,
     borderRadius: 16,
     backgroundColor: '#fff',
+    // Prevent any transparency showing through during tap/flip
+    opacity: 1,
   },
   cardWord: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#000',
     textAlign: 'center',
@@ -308,6 +386,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 40,
     gap: 16,
+  },
+  swipeBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 16,
+    marginHorizontal: 0,
+  },
+  previewWrapper: {
+    position: 'absolute',
+    width: '100%',
+    maxWidth: 350,
+    aspectRatio: 1.2,
+    alignSelf: 'center',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 16,
+    zIndex: 2,
+    backgroundColor: 'transparent',
+  },
+  swipeLabel: {
+    color: '#333',
+    fontSize: 12,
+    fontWeight: '600',
   },
   actionButton: {
     flex: 1,

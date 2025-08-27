@@ -1,6 +1,17 @@
+// @deno-types="https://deno.land/std@0.168.0/http/server.ts"
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+// @deno-types="https://esm.sh/@supabase/supabase-js@2"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { decode as base64Decode } from 'https://deno.land/std@0.168.0/encoding/base64.ts'
+// @deno-types="https://esm.sh/pdfjs-dist@4.6.82/build/pdf.mjs"
+import * as pdfjsLib from 'https://esm.sh/pdfjs-dist@4.6.82/build/pdf.mjs'
 import type { ExtractedWord } from '../_shared/types.ts'
+
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined
+  }
+}
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -112,6 +123,7 @@ serve(async (req) => {
 async function normaliseContent(content: string, fileType: string): Promise<string> {
   if (fileType.includes('csv')) return extractTextFromCSV(content)
   if (fileType.includes('json')) return content // JSON content for confirmed words
+  if (fileType.includes('pdf')) return await extractTextFromPDFBase64(content)
   // For PDF and TXT, content is already plain text from the client
   return content
 }
@@ -322,6 +334,48 @@ function extractTextFromCSV(csv: string): string {
     .flatMap((l) => l.split(','))
     .map((c) => c.replace(/['"]/g, '').trim())
     .join(' ')
+}
+
+// Remove helper and use base64Decode inline to avoid any scoping issues
+
+async function extractTextFromPDFBase64(base64: string): Promise<string> {
+  try {
+    const cleaned = base64.startsWith('data:')
+      ? base64.substring(base64.indexOf(',') + 1)
+      : base64
+
+    const bytes = base64Decode(cleaned)
+
+    // CRITICAL: Set GlobalWorkerOptions.workerSrc BEFORE calling getDocument
+    // This must be done at the global level, not just in options
+    (pdfjsLib as any).GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@4.6.82/build/pdf.worker.mjs'
+
+    const loadingTask = (pdfjsLib as any).getDocument({
+      data: bytes,
+      disableWorker: true,
+    })
+
+    const pdf = await loadingTask.promise
+    let text = ''
+    const maxPages = Math.min(pdf.numPages, 10) // Process max 10 pages
+
+    for (let i = 1; i <= maxPages; i++) {
+      const page = await pdf.getPage(i)
+      const content = await page.getTextContent()
+      const pageText = content.items
+        .map((item: any) => (item && item.str ? item.str : ''))
+        .join(' ')
+      text += pageText + '\n'
+    }
+    return text
+  } catch (err) {
+    console.error('Failed to extract PDF text:', err)
+    throw new Error(
+      `PDF processing failed: ${
+        err?.message || 'Unknown error'
+      }. Please try a different PDF or convert it to text format.`
+    )
+  }
 }
 
 /* -------------------------------------------------------------------------- */

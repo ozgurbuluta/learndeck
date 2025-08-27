@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../hooks/useAuth';
 import { useAIChatbot } from '../hooks/useAIChatbot';
 import { useWords } from '../hooks/useWords';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Message {
   id: string;
@@ -43,6 +44,7 @@ export const ChatbotScreen = () => {
   const { user } = useAuth();
   const { addWords } = useWords(user?.id);
   const { generateFlashcards, loading: aiLoading } = useAIChatbot();
+  const insets = useSafeAreaInsets();
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -389,7 +391,7 @@ export const ChatbotScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(12, insets.top + 12) }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>

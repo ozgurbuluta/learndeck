@@ -1,8 +1,29 @@
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
 
-const supabaseUrl = 'https://lxueubcappfiykvpdjfv.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4dWV1YmNhcHBmaXlrdnBkamZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1OTIyNTgsImV4cCI6MjA2NjE2ODI1OH0.xcLOBVDZW2FEyA4xjC54EkvtiL6IsY0D45HE4m_IIpo';
+const supabaseUrl =
+  process.env.EXPO_PUBLIC_SUPABASE_URL ||
+  (Constants.expoConfig?.extra?.supabaseUrl as string | undefined) ||
+  '';
+
+const supabaseAnonKey =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  (Constants.expoConfig?.extra?.supabaseAnonKey as string | undefined) ||
+  '';
+
+function validateSupabaseConfig(url: string, key: string) {
+  const problems: string[] = [];
+  if (!url) problems.push('EXPO_PUBLIC_SUPABASE_URL is missing');
+  if (!key) problems.push('EXPO_PUBLIC_SUPABASE_ANON_KEY is missing');
+  if (url && !/^https?:\/\//i.test(url)) problems.push('EXPO_PUBLIC_SUPABASE_URL must start with http(s)://');
+  if (key && key.split('.').length < 2) problems.push('EXPO_PUBLIC_SUPABASE_ANON_KEY looks malformed');
+  if (problems.length) {
+    throw new Error(`Supabase config error: ${problems.join('; ')}. Configure via .env (EXPO_PUBLIC_*) or app config extras (app.config.ts).`);
+  }
+}
+
+validateSupabaseConfig(supabaseUrl, supabaseAnonKey);
 
 const ExpoSecureStoreAdapter = {
   getItem: (key: string) => {

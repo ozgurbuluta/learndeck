@@ -5,11 +5,13 @@ import type { NavigationProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const ProfileScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { user, signOut } = useAuth();
   const { words } = useWords(user?.id);
+  const insets = useSafeAreaInsets();
 
   const handleSignOut = () => {
     Alert.alert(
@@ -40,7 +42,7 @@ export const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(12, insets.top + 12) }]}>
         <Text style={styles.title}>Profile</Text>
         <TouchableOpacity 
           style={styles.editButton}

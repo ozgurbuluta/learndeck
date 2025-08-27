@@ -14,12 +14,14 @@ import { useWords } from '../hooks/useWords';
 import { useFolders } from '../hooks/useFolders';
 import { supabase } from '../lib/supabase';
 import { Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const DashboardScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { user } = useAuth();
   const { words, loading } = useWords(user?.id);
   const { folders } = useFolders(user?.id);
+  const insets = useSafeAreaInsets();
   const [recent, setRecent] = React.useState<Array<{ id: string; folder_id: string | null; folder_name?: string; study_type: string; last_used_at: string }>>([]);
   const [selectedFolderId, setSelectedFolderId] = React.useState<string | null>(null);
   const [folderWordIds, setFolderWordIds] = React.useState<Set<string>>(new Set());
@@ -100,7 +102,7 @@ export const DashboardScreen = () => {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(12, insets.top + 12) }]}>
         <Text style={styles.greeting}>Hello! 👋</Text>
         <Text style={styles.subtitle}>Ready to learn some vocabulary?</Text>
       </View>

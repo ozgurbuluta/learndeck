@@ -34,9 +34,12 @@
       "eas": {
         "projectId": "1974c6f8-e38c-40af-8a29-dc95e4ec0bb6"
       },
-      "supabaseUrl": "${EXPO_PUBLIC_SUPABASE_URL}",
-      "supabaseAnonKey": "${EXPO_PUBLIC_SUPABASE_ANON_KEY}"
+      "supabaseUrl": "",
+      "supabaseAnonKey": ""
     },
-    "owner": "ozgurbulut"
+    "owner": "ozgurbulut",
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

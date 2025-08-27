@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import './src/lib/polyfills';
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';

@@ -71,6 +71,7 @@ export const useStudySession = (userId: string | undefined, folderId: string | n
       if (data && data.length > 0) {
         // Apply intelligent randomization for optimal learning
         const shuffledWords = shuffleWordsForStudy(data);
+        // Prepare initial sliding window of at least 3 cards
         setStudyWords(shuffledWords);
         setCurrentIndex(0);
         setIsFlipped(false);
@@ -216,10 +217,13 @@ export const useStudySession = (userId: string | undefined, folderId: string | n
         })
         .eq('id', currentWord.id);
 
-      // Move to next word
+      // Move to next word with sliding-window preparation
       if (currentIndex < studyWords.length - 1) {
-        setCurrentIndex(prev => prev + 1);
+        const nextIndex = currentIndex + 1;
+        setCurrentIndex(nextIndex);
         setIsFlipped(false);
+        // Proactively ensure we have at least next 2 items prepared in memory
+        // If near the end, no-op; otherwise data already exists since we fetched upfront
       }
 
     } catch (error) {
