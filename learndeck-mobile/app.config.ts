@@ -45,6 +45,8 @@ const config: ExpoConfig = {
     buildNumber: '7',
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+      NSMicrophoneUsageDescription: 'We use the microphone to enable speech practice and voice chat.',
+      NSSpeechRecognitionUsageDescription: 'We use speech recognition to transcribe your voice during practice.',
     },
   },
   android: {
@@ -54,6 +56,9 @@ const config: ExpoConfig = {
     },
     package: 'online.learndeck',
     versionCode: 7,
+    permissions: [
+      'RECORD_AUDIO'
+    ],
   },
   web: {
     favicon: './assets/favicon.png',

@@ -11,11 +11,26 @@ import { StudySessionScreen } from './src/screens/StudySessionScreen';
 import { ProfileEditScreen } from './src/screens/ProfileEditScreen';
 import { useAuth } from './src/hooks/useAuth';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import { Audio } from 'expo-av';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   const { session, loading } = useAuth();
+
+  useEffect(() => {
+    // Force audio playback in iOS silent mode globally
+    (async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+        });
+      } catch {}
+    })();
+  }, []);
 
   if (loading) {
     return (

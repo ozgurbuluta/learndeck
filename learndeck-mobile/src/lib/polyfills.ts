@@ -40,3 +40,19 @@ if (typeof global.structuredClone === 'undefined') {
 
 // Export empty object to make this a module
 export {};
+
+// Ensure global fetch Blob.arrayBuffer exists in RN environments
+try {
+  if (typeof Blob !== 'undefined' && !(Blob.prototype as any).arrayBuffer) {
+    (Blob.prototype as any).arrayBuffer = function () {
+      return new Promise<ArrayBuffer>((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result as ArrayBuffer);
+        fr.onerror = reject;
+        fr.readAsArrayBuffer(this as any);
+      });
+    };
+  }
+} catch (_) {
+  // no-op
+}

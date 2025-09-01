@@ -6,12 +6,30 @@ import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useWords } from '../hooks/useWords';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Switch } from 'react-native';
+import { Settings } from '../lib/settings';
 
 export const ProfileScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { user, signOut } = useAuth();
   const { words } = useWords(user?.id);
   const insets = useSafeAreaInsets();
+  const [analyticsEnabled, setAnalyticsEnabled] = React.useState(true);
+  const [voiceDataRetention, setVoiceDataRetention] = React.useState(false);
+  React.useEffect(() => {
+    (async () => {
+      setAnalyticsEnabled(await Settings.getAnalyticsEnabled());
+      setVoiceDataRetention(await Settings.getVoiceCacheRetention());
+    })();
+  }, []);
+  const toggleAnalytics = async (v: boolean) => {
+    setAnalyticsEnabled(v);
+    await Settings.setAnalyticsEnabled(v);
+  };
+  const toggleCache = async (v: boolean) => {
+    setVoiceDataRetention(v);
+    await Settings.setVoiceCacheRetention(v);
+  };
 
   const handleSignOut = () => {
     Alert.alert(
@@ -53,6 +71,17 @@ export const ProfileScreen = () => {
       </View>
 
       <View style={styles.content}>
+        <View style={styles.stats}>
+          <Text style={styles.statsTitle}>Privacy & Voice</Text>
+          <View style={styles.privacyRow}>
+            <Text style={styles.statLabel}>Voice usage analytics</Text>
+            <Switch value={analyticsEnabled} onValueChange={toggleAnalytics} />
+          </View>
+          <View style={styles.privacyRow}>
+            <Text style={styles.statLabel}>Store audio locally for retries</Text>
+            <Switch value={voiceDataRetention} onValueChange={toggleCache} />
+          </View>
+        </View>
         <View style={styles.userInfo}>
           <Text style={styles.email}>{user?.email}</Text>
           <Text style={styles.displayName}>
@@ -184,6 +213,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 16,
+  },
+  privacyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   statItem: {
     flexDirection: 'row',

@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Swipeable, GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
 import { Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { VoiceService } from '../lib/voice';
 
 interface RouteParams {
   studyType?: 'all' | 'due' | 'new';
@@ -198,6 +199,9 @@ export const StudySessionScreen = () => {
               <View style={styles.card} pointerEvents="none">
                 <View style={styles.cardFace}>
                   <Text style={styles.cardWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} ellipsizeMode="tail">{w.word}</Text>
+                  <View style={styles.speakerButton}>
+                    <Ionicons name="volume-high" size={32} color="#FF8C00" />
+                  </View>
                   <Text style={styles.tapHint}>Tap to reveal definition</Text>
                 </View>
               </View>
@@ -220,6 +224,9 @@ export const StudySessionScreen = () => {
                 {!isFlipped ? (
                   <View style={styles.cardFace}>
                     <Text style={styles.cardWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} ellipsizeMode="tail">{currentWord.word}</Text>
+                    <TouchableOpacity onPress={() => VoiceService.speak({ text: currentWord.word })} style={styles.speakerButton}>
+                      <Ionicons name="volume-high" size={32} color="#FF8C00" />
+                    </TouchableOpacity>
                     <Text style={styles.tapHint}>Tap to reveal definition</Text>
                   </View>
                 ) : (
@@ -380,6 +387,11 @@ const styles = StyleSheet.create({
     color: '#666',
     fontStyle: 'italic',
     textAlign: 'center',
+  },
+  speakerButton: {
+    marginVertical: 16,
+    alignSelf: 'center',
+    padding: 8,
   },
   actionsContainer: {
     flexDirection: 'row',
