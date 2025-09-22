@@ -26,11 +26,12 @@ try {
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+const IS_HTTP_SUPABASE = /^http:\/\//i.test(SUPABASE_URL);
 
 const config: ExpoConfig = {
   name: 'LearnDeck',
   slug: 'learndeck',
-  version: '1.1.3',
+  version: '1.2.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',
@@ -42,11 +43,19 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'online.learndeck',
-    buildNumber: '7',
+    buildNumber: '8',
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       NSMicrophoneUsageDescription: 'We use the microphone to enable speech practice and voice chat.',
       NSSpeechRecognitionUsageDescription: 'We use speech recognition to transcribe your voice during practice.',
+      // Allow non-HTTPS endpoints in development if Supabase URL is http://
+      ...(IS_HTTP_SUPABASE
+        ? {
+            NSAppTransportSecurity: {
+              NSAllowsArbitraryLoads: true,
+            },
+          }
+        : {}),
     },
   },
   android: {
@@ -55,7 +64,7 @@ const config: ExpoConfig = {
       backgroundColor: '#ffffff',
     },
     package: 'online.learndeck',
-    versionCode: 7,
+    versionCode: 8,
     permissions: [
       'RECORD_AUDIO'
     ],
