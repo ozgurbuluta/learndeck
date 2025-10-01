@@ -5,7 +5,6 @@ import { DashboardScreen } from './DashboardScreen';
 import { WordsScreen } from './WordsScreen';
 import { ProfileScreen } from './ProfileScreen';
 import { ChatbotScreen } from './ChatbotScreen';
-import { PracticeScreen } from './PracticeScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -29,16 +28,6 @@ export const HomeScreen = () => {
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="Practice" 
-        component={PracticeScreen}
-        options={{
-          tabBarLabel: 'Voice Practice',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="mic" size={size} color={color} />
           ),
         }}
       />

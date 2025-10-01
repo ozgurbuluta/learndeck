@@ -15,20 +15,14 @@ export const ProfileScreen = () => {
   const { words } = useWords(user?.id);
   const insets = useSafeAreaInsets();
   const [analyticsEnabled, setAnalyticsEnabled] = React.useState(true);
-  const [voiceDataRetention, setVoiceDataRetention] = React.useState(false);
   React.useEffect(() => {
     (async () => {
       setAnalyticsEnabled(await Settings.getAnalyticsEnabled());
-      setVoiceDataRetention(await Settings.getVoiceCacheRetention());
     })();
   }, []);
   const toggleAnalytics = async (v: boolean) => {
     setAnalyticsEnabled(v);
     await Settings.setAnalyticsEnabled(v);
-  };
-  const toggleCache = async (v: boolean) => {
-    setVoiceDataRetention(v);
-    await Settings.setVoiceCacheRetention(v);
   };
 
   const handleSignOut = () => {
@@ -72,14 +66,10 @@ export const ProfileScreen = () => {
 
       <View style={styles.content}>
         <View style={styles.stats}>
-          <Text style={styles.statsTitle}>Privacy & Voice</Text>
+          <Text style={styles.statsTitle}>Privacy</Text>
           <View style={styles.privacyRow}>
-            <Text style={styles.statLabel}>Voice usage analytics</Text>
+            <Text style={styles.statLabel}>Usage analytics</Text>
             <Switch value={analyticsEnabled} onValueChange={toggleAnalytics} />
-          </View>
-          <View style={styles.privacyRow}>
-            <Text style={styles.statLabel}>Store audio locally for retries</Text>
-            <Switch value={voiceDataRetention} onValueChange={toggleCache} />
           </View>
         </View>
         <View style={styles.userInfo}>

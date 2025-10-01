@@ -237,7 +237,7 @@ export const About: React.FC<AboutProps> = ({ onNavigate }) => {
                 <Github className="h-6 w-6" />
               </a>
               <a
-                href="https://x.com/ozgurbulutttt"
+            href="https://x.com/ozbwrites"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/70 hover:text-white transition-colors duration-200"
