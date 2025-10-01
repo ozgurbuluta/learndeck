@@ -11,7 +11,7 @@ export const Footer: React.FC = () => {
           <div className="space-y-4">
             <img src="/logo-horizontal.png" alt="LearnDeck" className="h-16 w-auto" />
             <p className="text-white/70 text-sm leading-relaxed">
-              LearnDeck helps learners build lasting vocabulary habits with AI-guided practice. Join the waiting list to be among the first to access the next generation experience.
+              A free, ad-free language learning app built for learners who want effective vocabulary practice without the paywalls.
             </p>
             <div className="flex space-x-3">
               <a
@@ -61,19 +61,19 @@ export const Footer: React.FC = () => {
             <h4 className="font-semibold uppercase tracking-wide text-sm mb-4">Contact</h4>
             <ul className="space-y-3 text-white/70 text-sm">
               <li><span className="block">support@learndeck.online</span></li>
-              <li><span className="block">Berlin · Remote-first</span></li>
+              <li><span className="block">Munich</span></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-semibold uppercase tracking-wide text-sm mb-4">Stay Updated</h4>
             <p className="text-white/70 text-sm mb-4">
-              We share product updates and behind-the-scenes progress on social. Follow along while we prepare the public launch.
+              Follow along on social media while I build LearnDeck in public. Share your feedback and help shape the product.
             </p>
             <div className="flex space-x-3 text-sm text-white/80">
               <span className="inline-flex items-center space-x-1">
                 <Heart className="h-4 w-4 text-red-400" />
-                <span>Made with focus on real learners</span>
+                <span>Built by a learner, for learners</span>
               </span>
             </div>
           </div>

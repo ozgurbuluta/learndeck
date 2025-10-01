@@ -1,137 +1,27 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   ArrowRight,
   Brain,
   Check,
-  Clock,
-  Mail,
   Rocket,
   Sparkles,
   Target,
   Users,
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import { Footer } from './Footer';
 
-type SubmissionState = 'idle' | 'loading' | 'success' | 'error';
-
 export const LandingPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-  const [languageSearch, setLanguageSearch] = useState('');
-  const [isLanguagePickerOpen, setIsLanguagePickerOpen] = useState(false);
-  const [status, setStatus] = useState<SubmissionState>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
-  const languageDropdownRef = useRef<HTMLDivElement | null>(null);
-
-  const languageOptions = [
-    'Arabic',
-    'Chinese (Mandarin)',
-    'Chinese (Cantonese)',
-    'Dutch',
-    'English',
-    'French',
-    'German',
-    'Greek',
-    'Hebrew',
-    'Hindi',
-    'Indonesian',
-    'Italian',
-    'Japanese',
-    'Korean',
-    'Polish',
-    'Portuguese',
-    'Russian',
-    'Spanish',
-    'Swedish',
-    'Turkish',
-    'Vietnamese',
-  ];
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedEmail) {
-      setStatus('error');
-      setErrorMessage('Please enter your email so we can reach out.');
-      return;
-    }
-
-    setStatus('loading');
-    setErrorMessage('');
-
-    try {
-      const { error } = await supabase.from('waiting_list_signups').insert({
-        email: trimmedEmail,
-        source: 'web_waiting_list',
-        metadata: {
-          languages: selectedLanguages,
-        },
-      });
-
-      if (error) {
-        if (error.code === '23505') {
-          setStatus('success');
-          setEmail('');
-          setSelectedLanguages([]);
-          setLanguageSearch('');
-          return;
-        }
-        throw error;
-      }
-
-      setStatus('success');
-      setEmail('');
-      setSelectedLanguages([]);
-      setLanguageSearch('');
-    } catch (err: unknown) {
-      console.error('Waitlist submission failed', err);
-      setStatus('error');
-      if (err instanceof Error) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage('Something went wrong. Please try again or email support@learndeck.online.');
-      }
-    }
-  };
-
-  const toggleLanguage = (language: string) => {
-    setSelectedLanguages((prev) =>
-      prev.includes(language)
-        ? prev.filter((item) => item !== language)
-        : [...prev, language]
-    );
-  };
-
-  const handleLanguageSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && languageSearch.trim()) {
-      event.preventDefault();
-      const normalized = languageSearch.trim();
-      setSelectedLanguages((prev) =>
-        prev.includes(normalized) ? prev : [...prev, normalized]
-      );
-      setLanguageSearch('');
-    }
-  };
-
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        languageDropdownRef.current &&
-        !languageDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsLanguagePickerOpen(false);
-      }
+    // Load Tally.so embed script
+    const script = document.createElement('script');
+    script.src = 'https://tally.so/widgets/embed.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const filteredLanguageOptions = languageOptions.filter((option) =>
-    option.toLowerCase().includes(languageSearch.toLowerCase())
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-slate-900">
@@ -186,137 +76,26 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            <div id="waitlist" className="bg-white/90 backdrop-blur-lg rounded-3xl border border-white shadow-xl p-8">
-              <div className="space-y-2 mb-6">
-                <h2 className="text-2xl font-semibold">Join the private beta list</h2>
-                <p className="text-sm text-slate-500">Share your focus language and we will be in touch as soon as invites open.</p>
+            <div id="waitlist" className="bg-white/90 backdrop-blur-lg rounded-3xl border border-white shadow-xl overflow-hidden">
+              <div className="p-8 pb-6">
+                <h2 className="text-2xl font-semibold mb-2">Join the private beta list</h2>
+                <p className="text-sm text-slate-500">We will be in touch as soon as invites open.</p>
               </div>
-
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <label className="block text-sm font-medium text-slate-600">
-                  Email
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@example.com"
-                    required
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-base shadow-sm focus:border-primary-highlight focus:outline-none focus:ring-2 focus:ring-primary-highlight/40"
-                  />
-                </label>
-
-                <div className="text-sm font-medium text-slate-600">
-                  What language are you focused on?
-                  <div className="mt-2" ref={languageDropdownRef}>
-                    <button
-                      type="button"
-                      onClick={() => setIsLanguagePickerOpen((prev) => !prev)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-base shadow-sm focus:border-primary-highlight focus:outline-none focus:ring-2 focus:ring-primary-highlight/40 flex flex-wrap items-center gap-2"
-                    >
-                      {selectedLanguages.length === 0 ? (
-                        <span className="text-slate-400">Select one or more languages</span>
-                      ) : (
-                        selectedLanguages.map((language) => (
-                          <span
-                            key={language}
-                            className="inline-flex items-center rounded-full bg-primary-highlight/10 text-primary-highlight px-3 py-1 text-sm"
-                          >
-                            {language}
-                          </span>
-                        ))
-                      )}
-                    </button>
-
-                    {isLanguagePickerOpen && (
-                      <div className="relative">
-                        <div className="absolute z-20 mt-2 w-full rounded-2xl border border-slate-200 bg-white shadow-xl">
-                          <div className="p-3 border-b border-slate-100">
-                            <input
-                              type="text"
-                              value={languageSearch}
-                              onChange={(event) => setLanguageSearch(event.target.value)}
-                              onKeyDown={handleLanguageSearchKeyDown}
-                              placeholder="Search languages or press Enter to add"
-                              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-primary-highlight focus:outline-none focus:ring-2 focus:ring-primary-highlight/30"
-                            />
-                          </div>
-                          <div className="max-h-56 overflow-y-auto p-3 space-y-2">
-                            {filteredLanguageOptions.length === 0 && languageSearch && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const normalized = languageSearch.trim();
-                                  if (!normalized) return;
-                                  setSelectedLanguages((prev) =>
-                                    prev.includes(normalized) ? prev : [...prev, normalized]
-                                  );
-                                  setLanguageSearch('');
-                                }}
-                                className="w-full rounded-lg border border-dashed border-primary-highlight/40 px-3 py-2 text-left text-sm text-primary-highlight hover:bg-primary-highlight/10"
-                              >
-                                Add “{languageSearch.trim()}”
-                              </button>
-                            )}
-
-                            {filteredLanguageOptions.map((option) => {
-                              const checked = selectedLanguages.includes(option);
-                              return (
-                                <label
-                                  key={option}
-                                  className="flex items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-slate-50"
-                                >
-                                  <span>{option}</span>
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={() => toggleLanguage(option)}
-                                    className="h-4 w-4 rounded border-slate-300 text-primary-highlight focus:ring-primary-highlight"
-                                  />
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={status === 'loading'}
-                  className="w-full inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary-highlight to-orange-500 text-white font-semibold py-3.5 shadow-lg hover:shadow-xl transition disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {status === 'loading' ? (
-                    <span className="flex items-center space-x-2">
-                      <span className="h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
-                      <span>Saving you to the list...</span>
-                    </span>
-                  ) : (
-                    <span className="flex items-center space-x-2">
-                      <span>Join the waiting list</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </span>
-                  )}
-                </button>
-
-                {status === 'success' && (
-                  <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-                    🎉 Thanks! You're on the list. Check your inbox for a quick hello and we will reach out before the next milestone.
-                  </div>
-                )}
-
-                {status === 'error' && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                    {errorMessage || 'We could not save your request. Please retry in a moment.'}
-                  </div>
-                )}
-
-                <p className="text-xs text-slate-400 flex items-start space-x-2">
-                  <Mail className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                  <span>We respect your inbox. Unsubscribe any time with one click.</span>
-                </p>
-              </form>
+              
+              {/* Tally.so embed */}
+              <div className="px-8 pb-8">
+                <iframe
+                  data-tally-src="https://tally.so/embed/w20qxM?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
+                  loading="lazy"
+                  width="100%"
+                  height="200"
+                  frameBorder="0"
+                  marginHeight={0}
+                  marginWidth={0}
+                  title="Join the waitlist"
+                  style={{ border: 0 }}
+                ></iframe>
+              </div>
             </div>
           </div>
         </section>
