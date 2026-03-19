@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/supabase_service.dart';
+import '../services/firebase_service.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -35,12 +35,12 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (_isSignUp) {
-        await SupabaseService.signUpWithEmail(
+        await FirebaseService.signUpWithEmail(
           _emailController.text,
           _passwordController.text,
         );
       } else {
-        await SupabaseService.signInWithEmail(
+        await FirebaseService.signInWithEmail(
           _emailController.text,
           _passwordController.text,
         );

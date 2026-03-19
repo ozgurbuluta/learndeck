@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/word.dart';
 import '../providers/words_provider.dart';
-import '../services/supabase_service.dart';
+import '../services/firebase_service.dart';
 import 'study_session_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -41,7 +41,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white70),
             onPressed: () async {
-              await SupabaseService.signOut();
+              await FirebaseService.signOut();
             },
           ),
         ],

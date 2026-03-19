@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "660035173354",
+    "project_id": "learndeck-vocab-5332",
+    "storage_bucket": "learndeck-vocab-5332.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:660035173354:android:f9c85f8c342a1955f11093",
+        "android_client_info": {
+          "package_name": "online.learndeck.learndeck_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDw2nymqxr7fzemYFi4KfmRCaKi44BOi6g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
