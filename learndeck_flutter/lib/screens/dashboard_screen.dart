@@ -4,6 +4,7 @@ import '../models/word.dart';
 import '../providers/words_provider.dart';
 import '../services/firebase_service.dart';
 import 'study_session_screen.dart';
+import 'ai_chat_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -138,6 +139,42 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // AI Assistant Button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AIChatScreen()),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF6366f1), width: 2),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.auto_awesome, color: Color(0xFF6366f1), size: 24),
+                  SizedBox(width: 12),
+                  Text(
+                    'AI Vocabulary Assistant',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF6366f1),
                     ),
                   ),
                 ],
