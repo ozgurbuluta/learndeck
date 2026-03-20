@@ -5,6 +5,8 @@ import '../providers/words_provider.dart';
 import '../services/firebase_service.dart';
 import 'study_session_screen.dart';
 import 'ai_chat_screen.dart';
+import 'import_screen.dart';
+import 'word_list_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -182,6 +184,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
 
+          const SizedBox(height: 16),
+
+          // Quick Action Buttons Row
+          Row(
+            children: [
+              Expanded(
+                child: _buildQuickAction(
+                  icon: Icons.upload_file,
+                  label: 'Import',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ImportScreen()),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildQuickAction(
+                  icon: Icons.list_alt,
+                  label: 'All Words',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const WordListScreen()),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
           const SizedBox(height: 30),
 
           // Recent Words
@@ -269,6 +298,38 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickAction({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF252542),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: const Color(0xFF6366f1), size: 28),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
