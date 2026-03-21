@@ -55,21 +55,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: CircularProgressIndicator(color: Color(0xFF6366f1)),
           ),
           error: (error, _) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 60),
-                const SizedBox(height: 16),
-                Text(
-                  'Error loading words',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () => ref.read(wordsProvider.notifier).loadWords(),
-                  child: const Text('Retry'),
-                ),
-              ],
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 60),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Error loading words',
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF252542),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: SelectableText(
+                      error.toString(),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => ref.read(wordsProvider.notifier).loadWords(),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
           ),
           data: (words) => _buildDashboardContent(words),
