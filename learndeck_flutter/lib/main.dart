@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 import 'providers/words_provider.dart';
 import 'screens/auth_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,14 +28,7 @@ class LearnDeckApp extends ConsumerWidget {
     return MaterialApp(
       title: 'LearnDeck',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366f1),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFF1a1a2e),
-      ),
+      theme: AppTheme.light,
       home: authState.when(
         data: (isLoggedIn) => isLoggedIn ? const DashboardScreen() : const AuthScreen(),
         loading: () => const Scaffold(
