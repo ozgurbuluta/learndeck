@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/words_provider.dart';
 import '../services/ai_service.dart';
-import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 
 class AIChatScreen extends ConsumerStatefulWidget {
@@ -91,11 +91,12 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final wordsNotifier = ref.read(wordsProvider.notifier);
       int savedCount = 0;
       for (int i = 0; i < _pendingWords.length; i++) {
         if (_selectedWordIndices.contains(i)) {
           final word = _pendingWords[i];
-          await FirebaseService.createWord(
+          await wordsNotifier.addWord(
             word: word.word,
             definition: word.definition,
             article: word.article,
