@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class AIService {
   // TODO: Update this to your Vercel deployment URL
-  static const String _baseUrl = 'https://learndeck.vercel.app/api';
+  static const String _baseUrl = 'https://learndeck-six.vercel.app/api';
 
   /// Generate vocabulary words using AI based on user request
   static Future<AIVocabularyResponse> generateVocabulary({
