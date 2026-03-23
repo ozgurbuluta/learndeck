@@ -1,14 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../models/user_preferences.dart';
 
 class AIService {
-  // TODO: Update this to your Vercel deployment URL
   static const String _baseUrl = 'https://learndeck-six.vercel.app/api';
 
   /// Generate vocabulary words using AI based on user request
   static Future<AIVocabularyResponse> generateVocabulary({
     required String userMessage,
     List<Map<String, String>>? conversationHistory,
+    UserPreferences? userPreferences,
   }) async {
     try {
       final response = await http.post(
@@ -17,6 +18,12 @@ class AIService {
         body: jsonEncode({
           'userMessage': userMessage,
           'conversationHistory': conversationHistory ?? [],
+          if (userPreferences != null) 'userPreferences': {
+            'targetLanguage': userPreferences.targetLanguage,
+            'level': userPreferences.level,
+            'useCases': userPreferences.useCases,
+            'categories': userPreferences.categories,
+          },
         }),
       );
 

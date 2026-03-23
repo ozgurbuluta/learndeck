@@ -5,9 +5,17 @@ interface Message {
   content: string;
 }
 
+interface UserPreferences {
+  targetLanguage?: string;
+  level?: string;
+  useCases?: string[];
+  categories?: string[];
+}
+
 interface RequestBody {
   userMessage: string;
   conversationHistory?: Message[];
+  userPreferences?: UserPreferences;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -36,10 +44,51 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { userMessage, conversationHistory = [] }: RequestBody = req.body;
+    const { userMessage, conversationHistory = [], userPreferences }: RequestBody = req.body;
+
+    // Build personalized context from user preferences
+    let personalizationContext = '';
+    if (userPreferences) {
+      const parts: string[] = [];
+
+      if (userPreferences.targetLanguage) {
+        parts.push(`Target language: ${userPreferences.targetLanguage}`);
+      }
+
+      if (userPreferences.level) {
+        const levelDescriptions: Record<string, string> = {
+          beginner: 'Beginner (A1-A2) - Use simple, common words and basic phrases',
+          intermediate: 'Intermediate (B1-B2) - Include everyday conversational vocabulary',
+          advanced: 'Advanced (C1-C2) - Include sophisticated, nuanced vocabulary',
+        };
+        parts.push(`Proficiency level: ${levelDescriptions[userPreferences.level] || userPreferences.level}`);
+      }
+
+      if (userPreferences.useCases && userPreferences.useCases.length > 0) {
+        const useCaseDescriptions: Record<string, string> = {
+          work: 'professional/business contexts',
+          daily: 'everyday life situations',
+          travel: 'travel and tourism',
+          study: 'academic and formal contexts',
+        };
+        const useCases = userPreferences.useCases
+          .map(uc => useCaseDescriptions[uc] || uc)
+          .join(', ');
+        parts.push(`Learning focus: ${useCases}`);
+      }
+
+      if (userPreferences.categories && userPreferences.categories.length > 0) {
+        parts.push(`Interests: ${userPreferences.categories.join(', ')}`);
+      }
+
+      if (parts.length > 0) {
+        personalizationContext = `\n\n**USER PROFILE (tailor vocabulary to these preferences):**\n${parts.join('\n')}`;
+      }
+    }
 
     const systemPrompt = `
       You are a data transformation service. Your ONLY function is to receive a user's request for vocabulary and return a single, valid JSON object. You must not output any text, conversation, or formatting that is not part of the JSON object.
+${personalizationContext}
 
       **JSON OUTPUT SPECIFICATION:**
       Your entire response MUST be a single JSON object with the following keys: "success", "response", and "words".
@@ -48,6 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       2.  **"response"**: A friendly, conversational message for the user. This field is mandatory.
       3.  **"words"**: An array of objects.
           *   If generating vocabulary, each object in the array MUST contain two keys: "word" (the foreign term) and "definition" (its English meaning). For German words, include the article (der/die/das) with the word.
+          *   IMPORTANT: Match the vocabulary difficulty to the user's proficiency level. For beginners, use simple common words. For advanced learners, include sophisticated vocabulary.
           *   If you need to ask the user a clarifying question (e.g., about language, topic, or level), this array MUST be empty (\`[]\`).
 
       **Example of a Perfect Response:**

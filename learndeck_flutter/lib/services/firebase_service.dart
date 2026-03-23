@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/word.dart';
 import '../models/folder.dart';
+import '../models/user_preferences.dart';
 
 class FirebaseService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -249,5 +250,52 @@ class FirebaseService {
     for (final doc in snapshot.docs) {
       await doc.reference.delete();
     }
+  }
+
+  // User Preferences
+  static CollectionReference<Map<String, dynamic>> get _userPreferencesCollection =>
+      _db.collection('user_preferences');
+
+  static Future<UserPreferences?> getUserPreferences() async {
+    final userId = currentUser?.uid;
+    if (userId == null) return null;
+
+    final doc = await _userPreferencesCollection.doc(userId).get();
+    if (!doc.exists) return null;
+
+    final data = doc.data()!;
+    data['user_id'] = userId;
+    return UserPreferences.fromJson(data);
+  }
+
+  static Future<void> saveUserPreferences(UserPreferences prefs) async {
+    final userId = currentUser?.uid;
+    if (userId == null) throw Exception('Not authenticated');
+
+    await _userPreferencesCollection.doc(userId).set({
+      'user_id': userId,
+      'target_language': prefs.targetLanguage,
+      'use_cases': prefs.useCases,
+      'categories': prefs.categories,
+      'level': prefs.level,
+      'quiz_score': prefs.quizScore,
+      'onboarding_completed': prefs.onboardingCompleted,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  static Future<void> updateUserPreferences(UserPreferences prefs) async {
+    final userId = currentUser?.uid;
+    if (userId == null) throw Exception('Not authenticated');
+
+    await _userPreferencesCollection.doc(userId).update({
+      'target_language': prefs.targetLanguage,
+      'use_cases': prefs.useCases,
+      'categories': prefs.categories,
+      'level': prefs.level,
+      'quiz_score': prefs.quizScore,
+      'onboarding_completed': prefs.onboardingCompleted,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/words_provider.dart';
+import '../providers/user_preferences_provider.dart';
 import '../services/ai_service.dart';
 import '../theme/app_theme.dart';
 
@@ -56,6 +57,9 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     _scrollToBottom();
 
     try {
+      // Get user preferences for personalized vocabulary
+      final userPrefs = ref.read(userPreferencesProvider).valueOrNull;
+
       final response = await AIService.generateVocabulary(
         userMessage: text,
         conversationHistory: _messages
@@ -64,6 +68,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
                   'content': m.text,
                 })
             .toList(),
+        userPreferences: userPrefs,
       );
 
       setState(() {
