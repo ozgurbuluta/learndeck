@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/word.dart';
 import '../providers/words_provider.dart';
 import '../utils/study_algorithm.dart';
+import '../theme/app_theme.dart';
 
 class StudySessionScreen extends ConsumerStatefulWidget {
   final List<Word>? initialWords;
@@ -52,7 +53,6 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
     final word = _studyWords[previousIndex];
     final wasCorrect = direction == CardSwiperDirection.right;
 
-    // Update word in backend
     ref.read(wordsProvider.notifier).updateAfterReview(word.id, wasCorrect);
 
     setState(() {
@@ -87,17 +87,16 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1a1a2e),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
+          icon: Icon(Icons.close_rounded, color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           '${_currentIndex + 1} / ${_studyWords.length}',
-          style: const TextStyle(color: Colors.white),
+          style: AppTextStyles.h4,
         ),
         centerTitle: true,
       ),
@@ -106,15 +105,18 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
           children: [
             // Progress bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.md,
+              ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
                 child: LinearProgressIndicator(
                   value: _studyWords.isNotEmpty
                       ? (_currentIndex + 1) / _studyWords.length
                       : 0,
-                  backgroundColor: Colors.white24,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6366f1)),
+                  backgroundColor: AppColors.border,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                   minHeight: 8,
                 ),
               ),
@@ -122,18 +124,18 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
 
             // Score display
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildScoreChip(Icons.check_circle, _correctCount, Colors.green),
-                  const SizedBox(width: 20),
-                  _buildScoreChip(Icons.cancel, _incorrectCount, Colors.red),
+                  _buildScoreChip(Icons.check_circle_rounded, _correctCount, AppColors.success),
+                  const SizedBox(width: AppSpacing.xl),
+                  _buildScoreChip(Icons.cancel_rounded, _incorrectCount, AppColors.error),
                 ],
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
 
             // Swipe cards
             Expanded(
@@ -142,7 +144,10 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
                 cardsCount: _studyWords.length,
                 numberOfCardsDisplayed: _studyWords.length > 1 ? 2 : 1,
                 backCardOffset: const Offset(0, -30),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl,
+                  vertical: AppSpacing.md,
+                ),
                 onSwipe: (prev, curr, dir) {
                   _onSwipe(prev, curr, dir);
                   return true;
@@ -159,12 +164,12 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
 
             // Swipe hints
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildSwipeHint(Icons.arrow_back, 'Keep Learning', Colors.red),
-                  _buildSwipeHint(Icons.arrow_forward, 'I Know It', Colors.green),
+                  _buildSwipeHint(Icons.arrow_back_rounded, 'Keep Learning', AppColors.error),
+                  _buildSwipeHint(Icons.arrow_forward_rounded, 'I Know It', AppColors.success),
                 ],
               ),
             ),
@@ -175,7 +180,6 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
   }
 
   Widget _buildFlashcard(Word word, bool isTop, double swipeProgress) {
-    // Calculate overlay opacity based on swipe progress
     final showCorrectOverlay = swipeProgress > 0.3;
     final showIncorrectOverlay = swipeProgress < -0.3;
     final overlayOpacity = (swipeProgress.abs() - 0.3).clamp(0.0, 0.7);
@@ -192,64 +196,59 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF252542),
-                borderRadius: BorderRadius.circular(20),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+                border: Border.all(color: AppColors.border),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(30),
+                  padding: const EdgeInsets.all(AppSpacing.xxxl),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (word.article != null && !(_isFlipped && isTop))
                         Text(
                           word.article!,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white.withValues(alpha: 0.6),
+                          style: AppTextStyles.bodyLarge.copyWith(
+                            color: AppColors.textSecondary,
                           ),
                         ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
                         _isFlipped && isTop ? word.definition : word.word,
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                        style: AppTextStyles.h1.copyWith(fontSize: 32),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.xl),
                       if (!(_isFlipped && isTop))
                         Text(
                           'Tap to reveal',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white.withValues(alpha: 0.5),
+                          style: AppTextStyles.label.copyWith(
+                            color: AppColors.textTertiary,
                           ),
                         ),
                       if (_isFlipped && isTop)
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.sm,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF6366f1).withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(20),
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(AppRadius.full),
                           ),
                           child: Text(
                             word.displayWord,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Color(0xFF6366f1),
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -263,12 +262,12 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: overlayOpacity),
-                    borderRadius: BorderRadius.circular(20),
+                    color: AppColors.success.withValues(alpha: overlayOpacity),
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
                   ),
                   child: Center(
                     child: Icon(
-                      Icons.check_circle,
+                      Icons.check_circle_rounded,
                       size: 80,
                       color: Colors.white.withValues(alpha: overlayOpacity + 0.3),
                     ),
@@ -279,12 +278,12 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: overlayOpacity),
-                    borderRadius: BorderRadius.circular(20),
+                    color: AppColors.error.withValues(alpha: overlayOpacity),
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
                   ),
                   child: Center(
                     child: Icon(
-                      Icons.cancel,
+                      Icons.cancel_rounded,
                       size: 80,
                       color: Colors.white.withValues(alpha: overlayOpacity + 0.3),
                     ),
@@ -299,21 +298,23 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
 
   Widget _buildScoreChip(IconData icon, int count, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20),
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppRadius.full),
       ),
       child: Row(
         children: [
           Icon(icon, color: color, size: 20),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             '$count',
-            style: TextStyle(
+            style: AppTextStyles.bodyLarge.copyWith(
               color: color,
               fontWeight: FontWeight.bold,
-              fontSize: 16,
             ),
           ),
         ],
@@ -325,12 +326,11 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
     return Row(
       children: [
         Icon(icon, color: color.withValues(alpha: 0.7), size: 20),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.sm),
         Text(
           label,
-          style: TextStyle(
+          style: AppTextStyles.label.copyWith(
             color: color.withValues(alpha: 0.7),
-            fontSize: 14,
           ),
         ),
       ],
@@ -342,65 +342,54 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
     final percentage = total > 0 ? (_correctCount / total * 100).round() : 0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1a1a2e),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(30),
+            padding: const EdgeInsets.all(AppSpacing.xxxl),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.celebration,
+                Icon(
+                  Icons.celebration_rounded,
                   size: 80,
-                  color: Color(0xFF6366f1),
+                  color: AppColors.primary,
                 ),
-                const SizedBox(height: 30),
-                const Text(
-                  'Session Complete!',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.xxxl),
                 Text(
-                  '$percentage% accuracy',
+                  'Session Complete!',
+                  style: AppTextStyles.h1,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  '$percentage%',
                   style: TextStyle(
-                    fontSize: 48,
+                    fontSize: 64,
                     fontWeight: FontWeight.bold,
-                    color: percentage >= 70 ? Colors.green : Colors.orange,
+                    color: percentage >= 70 ? AppColors.success : AppColors.warning,
                   ),
                 ),
-                const SizedBox(height: 30),
+                Text(
+                  'accuracy',
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxxl),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildStatCard('Correct', _correctCount, Colors.green),
-                    const SizedBox(width: 20),
-                    _buildStatCard('To Review', _incorrectCount, Colors.red),
+                    _buildResultCard('Correct', _correctCount, AppColors.success),
+                    const SizedBox(width: AppSpacing.xl),
+                    _buildResultCard('To Review', _incorrectCount, AppColors.error),
                   ],
                 ),
-                const SizedBox(height: 50),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366f1),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 40,
-                      vertical: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: const Text(
-                    'Done',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                    ),
+                const SizedBox(height: AppSpacing.xxxl * 2),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Done'),
                   ),
                 ),
               ],
@@ -411,12 +400,16 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
     );
   }
 
-  Widget _buildStatCard(String label, int value, Color color) {
+  Widget _buildResultCard(String label, int value, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xxl,
+        vertical: AppSpacing.lg,
+      ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(16),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -430,8 +423,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
           ),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
+            style: AppTextStyles.labelSmall.copyWith(
               color: color.withValues(alpha: 0.8),
             ),
           ),
@@ -442,38 +434,33 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
 
   Widget _buildEmptyState() {
     return Scaffold(
-      backgroundColor: const Color(0xFF1a1a2e),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
+          icon: Icon(Icons.close_rounded, color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.library_books_outlined,
               size: 80,
-              color: Colors.white38,
+              color: AppColors.textTertiary,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             Text(
               'No words to study',
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.white70,
-              ),
+              style: AppTextStyles.h3,
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'Add some words first!',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white38,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textSecondary,
               ),
             ),
           ],

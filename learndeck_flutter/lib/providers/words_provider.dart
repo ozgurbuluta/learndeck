@@ -47,6 +47,19 @@ class WordsNotifier extends StateNotifier<AsyncValue<List<Word>>> {
     await loadWords();
   }
 
+  Future<void> updateWord(Word updatedWord) async {
+    try {
+      await FirebaseService.updateWord(updatedWord);
+      state.whenData((words) {
+        state = AsyncValue.data(
+          words.map((w) => w.id == updatedWord.id ? updatedWord : w).toList(),
+        );
+      });
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
   Future<void> deleteWord(String wordId) async {
     await FirebaseService.deleteWord(wordId);
     state.whenData((words) {

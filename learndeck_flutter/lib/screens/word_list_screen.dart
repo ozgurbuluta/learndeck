@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../models/word.dart';
 import '../providers/words_provider.dart';
+import '../theme/app_theme.dart';
+import '../widgets/widgets.dart';
 
 class WordListScreen extends ConsumerStatefulWidget {
   const WordListScreen({super.key});
@@ -15,12 +17,14 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
   final _searchController = TextEditingController();
   final FlutterTts _tts = FlutterTts();
   String _searchQuery = '';
-  String _filterDifficulty = 'all';
+  Difficulty? _filterDifficulty;
 
   @override
   void initState() {
     super.initState();
     _initTts();
+    // Load words when screen opens
+    Future.microtask(() => ref.read(wordsProvider.notifier).loadWords());
   }
 
   Future<void> _initTts() async {
@@ -45,8 +49,8 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
           word.word.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           word.definition.toLowerCase().contains(_searchQuery.toLowerCase());
 
-      final matchesFilter = _filterDifficulty == 'all' ||
-          word.difficulty.toString().split('.').last == _filterDifficulty;
+      final matchesFilter = _filterDifficulty == null ||
+          word.difficulty == _filterDifficulty;
 
       return matchesSearch && matchesFilter;
     }).toList();
@@ -57,85 +61,87 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
     final wordsAsync = ref.watch(wordsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1a1a2e),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('My Words', style: TextStyle(color: Colors.white)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        title: const Text('My Library'),
+        backgroundColor: AppColors.surface,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add_rounded, color: AppColors.primary),
+            onPressed: () => _showAddWordDialog(),
+          ),
+        ],
       ),
       body: Column(
         children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Search words...',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                prefixIcon: Icon(Icons.search, color: Colors.white.withValues(alpha: 0.5)),
-                filled: true,
-                fillColor: const Color(0xFF252542),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: (value) => setState(() => _searchQuery = value),
+          // Search and filters
+          Container(
+            color: AppColors.surface,
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              0,
+              AppSpacing.lg,
+              AppSpacing.lg,
             ),
-          ),
-
-          // Filter chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
+            child: Column(
               children: [
-                _buildFilterChip('all', 'All'),
-                _buildFilterChip('newWord', 'New'),
-                _buildFilterChip('learning', 'Learning'),
-                _buildFilterChip('review', 'Review'),
-                _buildFilterChip('mastered', 'Mastered'),
-                _buildFilterChip('failed', 'Failed'),
+                // Search bar
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search words...',
+                    prefixIcon: Icon(Icons.search, color: AppColors.textTertiary),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(Icons.clear, color: AppColors.textTertiary),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                  ),
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                ),
+                const SizedBox(height: AppSpacing.md),
+
+                // Filter chips
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterChip(null, 'All'),
+                      const SizedBox(width: AppSpacing.sm),
+                      _buildFilterChip(Difficulty.newWord, 'New'),
+                      const SizedBox(width: AppSpacing.sm),
+                      _buildFilterChip(Difficulty.learning, 'Learning'),
+                      const SizedBox(width: AppSpacing.sm),
+                      _buildFilterChip(Difficulty.review, 'Review'),
+                      const SizedBox(width: AppSpacing.sm),
+                      _buildFilterChip(Difficulty.mastered, 'Mastered'),
+                      const SizedBox(width: AppSpacing.sm),
+                      _buildFilterChip(Difficulty.failed, 'Failed'),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
 
-          const SizedBox(height: 16),
-
           // Word list
           Expanded(
             child: wordsAsync.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: Color(0xFF6366f1)),
+              loading: () => Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
               ),
-              error: (e, _) => Center(
-                child: Text('Error: $e', style: const TextStyle(color: Colors.red)),
-              ),
+              error: (e, _) => _buildErrorState(e),
               data: (words) {
                 final filtered = _filterWords(words);
                 if (filtered.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.search_off, size: 60, color: Colors.white.withValues(alpha: 0.3)),
-                        const SizedBox(height: 16),
-                        Text(
-                          _searchQuery.isNotEmpty ? 'No matching words' : 'No words yet',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                        ),
-                      ],
-                    ),
-                  );
+                  return _buildEmptyState();
                 }
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) => _buildWordTile(filtered[index]),
                 );
@@ -144,76 +150,170 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.primary,
+        onPressed: () => _showAddWordDialog(),
+        child: Icon(Icons.add, color: AppColors.textOnPrimary),
+      ),
     );
   }
 
-  Widget _buildFilterChip(String value, String label) {
+  Widget _buildFilterChip(Difficulty? value, String label) {
     final isSelected = _filterDifficulty == value;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (_) => setState(() => _filterDifficulty = value),
-        backgroundColor: const Color(0xFF252542),
-        selectedColor: const Color(0xFF6366f1),
-        labelStyle: TextStyle(
-          color: isSelected ? Colors.white : Colors.white70,
-          fontSize: 13,
+    return GestureDetector(
+      onTap: () => setState(() => _filterDifficulty = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
         ),
-        checkmarkColor: Colors.white,
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: isSelected ? AppColors.textOnPrimary : AppColors.textPrimary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildWordTile(Word word) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
-        color: const Color(0xFF252542),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        title: Text(
-          word.displayWord,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              word.definition,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.sm,
             ),
-            const SizedBox(height: 6),
-            Row(
+            title: Text(
+              word.displayWord,
+              style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDifficultyBadge(word.difficulty),
-                const SizedBox(width: 8),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
-                  '${(word.accuracy * 100).toInt()}% accuracy',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
+                  word.definition,
+                  style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    DifficultyBadge(difficulty: word.difficulty, compact: true),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      '${(word.accuracy * 100).toInt()}% accuracy',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.volume_up_rounded, color: AppColors.primary),
+                  onPressed: () => _speak(word.word),
+                  tooltip: 'Listen',
+                ),
+                IconButton(
+                  icon: Icon(Icons.edit_rounded, color: AppColors.textSecondary),
+                  onPressed: () => _showEditWordDialog(word),
+                  tooltip: 'Edit',
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete_outline_rounded, color: AppColors.error),
+                  onPressed: () => _confirmDelete(word),
+                  tooltip: 'Delete',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxxl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _searchQuery.isNotEmpty ? Icons.search_off_rounded : Icons.library_books_rounded,
+              size: 60,
+              color: AppColors.textTertiary,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              _searchQuery.isNotEmpty ? 'No matching words' : 'No words yet',
+              style: AppTextStyles.h4,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _searchQuery.isNotEmpty
+                  ? 'Try a different search term'
+                  : 'Add your first word to start learning',
+              style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            if (_searchQuery.isEmpty) ...[
+              const SizedBox(height: AppSpacing.xl),
+              PrimaryButton(
+                label: 'Add Your First Word',
+                fullWidth: false,
+                onPressed: () => _showAddWordDialog(),
+              ),
+            ],
           ],
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+      ),
+    );
+  }
+
+  Widget _buildErrorState(Object error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            IconButton(
-              icon: const Icon(Icons.volume_up, color: Color(0xFF6366f1)),
-              onPressed: () => _speak(word.word),
+            Icon(Icons.error_outline, color: AppColors.error, size: 60),
+            const SizedBox(height: AppSpacing.lg),
+            Text('Error loading words', style: AppTextStyles.h4),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              error.toString(),
+              style: AppTextStyles.bodySmall,
+              textAlign: TextAlign.center,
             ),
-            IconButton(
-              icon: Icon(Icons.delete_outline, color: Colors.red.withValues(alpha: 0.7)),
-              onPressed: () => _confirmDelete(word),
+            const SizedBox(height: AppSpacing.lg),
+            ElevatedButton(
+              onPressed: () => ref.read(wordsProvider.notifier).loadWords(),
+              child: const Text('Retry'),
             ),
           ],
         ),
@@ -221,42 +321,130 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
     );
   }
 
-  Widget _buildDifficultyBadge(Difficulty difficulty) {
-    Color color;
-    String label;
+  void _showAddWordDialog() {
+    final wordController = TextEditingController();
+    final definitionController = TextEditingController();
+    final articleController = TextEditingController();
 
-    switch (difficulty) {
-      case Difficulty.newWord:
-        color = Colors.blue;
-        label = 'New';
-        break;
-      case Difficulty.learning:
-        color = Colors.orange;
-        label = 'Learning';
-        break;
-      case Difficulty.review:
-        color = Colors.purple;
-        label = 'Review';
-        break;
-      case Difficulty.mastered:
-        color = Colors.green;
-        label = 'Mastered';
-        break;
-      case Difficulty.failed:
-        color = Colors.red;
-        label = 'Failed';
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
-      child: Text(
-        label,
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w500),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: AppSpacing.xl,
+          right: AppSpacing.xl,
+          top: AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Add New Word', style: AppTextStyles.h3),
+            const SizedBox(height: AppSpacing.xl),
+            TextField(
+              controller: articleController,
+              decoration: const InputDecoration(hintText: 'Article (der/die/das)'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: wordController,
+              decoration: const InputDecoration(hintText: 'Word'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: definitionController,
+              decoration: const InputDecoration(hintText: 'Definition'),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            PrimaryButton(
+              label: 'Add Word',
+              onPressed: () async {
+                if (wordController.text.isNotEmpty &&
+                    definitionController.text.isNotEmpty) {
+                  await ref.read(wordsProvider.notifier).addWord(
+                        word: wordController.text,
+                        definition: definitionController.text,
+                        article: articleController.text.isNotEmpty
+                            ? articleController.text
+                            : null,
+                      );
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+            ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditWordDialog(Word word) {
+    final wordController = TextEditingController(text: word.word);
+    final definitionController = TextEditingController(text: word.definition);
+    final articleController = TextEditingController(text: word.article ?? '');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: AppSpacing.xl,
+          right: AppSpacing.xl,
+          top: AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Edit Word', style: AppTextStyles.h3),
+            const SizedBox(height: AppSpacing.xl),
+            TextField(
+              controller: articleController,
+              decoration: const InputDecoration(hintText: 'Article (der/die/das)'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: wordController,
+              decoration: const InputDecoration(hintText: 'Word'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: definitionController,
+              decoration: const InputDecoration(hintText: 'Definition'),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            PrimaryButton(
+              label: 'Save Changes',
+              onPressed: () async {
+                if (wordController.text.isNotEmpty &&
+                    definitionController.text.isNotEmpty) {
+                  await ref.read(wordsProvider.notifier).updateWord(
+                        word.copyWith(
+                          word: wordController.text,
+                          definition: definitionController.text,
+                          article: articleController.text.isNotEmpty
+                              ? articleController.text
+                              : null,
+                        ),
+                      );
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+            ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
+        ),
       ),
     );
   }
@@ -265,12 +453,8 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF252542),
-        title: const Text('Delete Word', style: TextStyle(color: Colors.white)),
-        content: Text(
-          'Delete "${word.word}"?',
-          style: const TextStyle(color: Colors.white70),
-        ),
+        title: const Text('Delete Word'),
+        content: Text('Delete "${word.word}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -281,7 +465,7 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
               ref.read(wordsProvider.notifier).deleteWord(word.id);
               Navigator.pop(context);
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text('Delete', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),

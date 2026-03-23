@@ -122,6 +122,14 @@ class FirebaseService {
     });
   }
 
+  static Future<void> updateWord(Word word) async {
+    await _wordsCollection.doc(word.id).update({
+      'word': word.word,
+      'definition': word.definition,
+      'article': word.article,
+    });
+  }
+
   static Future<void> deleteWord(String wordId) {
     return _wordsCollection.doc(wordId).delete();
   }

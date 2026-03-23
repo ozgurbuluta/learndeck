@@ -5,6 +5,8 @@ import 'dart:convert';
 import '../services/ai_service.dart';
 import '../services/firebase_service.dart';
 import '../providers/words_provider.dart';
+import '../theme/app_theme.dart';
+import '../widgets/widgets.dart';
 
 class ImportScreen extends ConsumerStatefulWidget {
   const ImportScreen({super.key});
@@ -16,6 +18,8 @@ class ImportScreen extends ConsumerStatefulWidget {
 class _ImportScreenState extends ConsumerState<ImportScreen> {
   bool _isLoading = false;
   String? _statusMessage;
+  bool _isSuccess = false;
+  bool _isError = false;
   List<ExtractedWord> _extractedWords = [];
   bool _showPreview = false;
 
@@ -31,22 +35,25 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
       final file = result.files.first;
       if (file.bytes == null) {
-        setState(() => _statusMessage = 'Could not read file');
+        setState(() {
+          _statusMessage = 'Could not read file';
+          _isError = true;
+          _isSuccess = false;
+        });
         return;
       }
 
       setState(() {
         _isLoading = true;
         _statusMessage = 'Processing ${file.name}...';
+        _isError = false;
+        _isSuccess = false;
         _extractedWords = [];
         _showPreview = false;
       });
 
-      // Convert bytes to text
       String content;
       if (file.extension == 'pdf') {
-        // For PDF, we send the text extracted client-side
-        // In a real app, you'd use a PDF parsing library
         content = utf8.decode(file.bytes!, allowMalformed: true);
       } else {
         content = utf8.decode(file.bytes!);
@@ -63,14 +70,20 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
           _extractedWords = response.words;
           _showPreview = true;
           _statusMessage = 'Found ${response.words.length} words';
+          _isSuccess = true;
+          _isError = false;
         } else {
           _statusMessage = response.error ?? 'No words found in document';
+          _isError = true;
+          _isSuccess = false;
         }
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
         _statusMessage = 'Error: $e';
+        _isError = true;
+        _isSuccess = false;
       });
     }
   }
@@ -94,17 +107,17 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         savedCount++;
       }
 
-      // Refresh words list
       ref.read(wordsProvider.notifier).loadWords();
 
       setState(() {
         _isLoading = false;
-        _statusMessage = '✅ Saved $savedCount words!';
+        _statusMessage = 'Saved $savedCount words!';
+        _isSuccess = true;
+        _isError = false;
         _extractedWords = [];
         _showPreview = false;
       });
 
-      // Go back after short delay
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) Navigator.pop(context);
       });
@@ -112,6 +125,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
       setState(() {
         _isLoading = false;
         _statusMessage = 'Error saving: $e';
+        _isError = true;
+        _isSuccess = false;
       });
     }
   }
@@ -119,81 +134,60 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1a1a2e),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Import Words', style: TextStyle(color: Colors.white)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        backgroundColor: AppColors.surface,
+        title: const Text('Import Words'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Import button
             Container(
-              padding: const EdgeInsets.all(30),
+              padding: const EdgeInsets.all(AppSpacing.xxxl),
               decoration: BoxDecoration(
-                color: const Color(0xFF252542),
-                borderRadius: BorderRadius.circular(20),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.xl),
                 border: Border.all(
-                  color: const Color(0xFF6366f1).withValues(alpha: 0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   width: 2,
                 ),
               ),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.upload_file,
-                    size: 60,
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Import from File',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.upload_file_rounded,
+                      size: 48,
+                      color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.xl),
+                  Text(
+                    'Import from File',
+                    style: AppTextStyles.h3,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     'Supports PDF, TXT, CSV files',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 14,
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton.icon(
+                  const SizedBox(height: AppSpacing.xl),
+                  PrimaryButton(
+                    label: _isLoading ? 'Processing...' : 'Choose File',
+                    icon: _isLoading ? null : Icons.folder_open_rounded,
+                    isLoading: _isLoading,
+                    fullWidth: false,
                     onPressed: _isLoading ? null : _pickAndProcessFile,
-                    icon: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Icon(Icons.folder_open),
-                    label: Text(_isLoading ? 'Processing...' : 'Choose File'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6366f1),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -201,64 +195,83 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
             // Status message
             if (_statusMessage != null) ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.xl),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
-                  color: _statusMessage!.startsWith('✅')
-                      ? Colors.green.withValues(alpha: 0.2)
-                      : _statusMessage!.startsWith('Error')
-                          ? Colors.red.withValues(alpha: 0.2)
-                          : const Color(0xFF252542),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  _statusMessage!,
-                  style: TextStyle(
-                    color: _statusMessage!.startsWith('✅')
-                        ? Colors.green
-                        : _statusMessage!.startsWith('Error')
-                            ? Colors.red
-                            : Colors.white70,
-                    fontSize: 14,
+                  color: _isSuccess
+                      ? AppColors.success.withValues(alpha: 0.1)
+                      : _isError
+                          ? AppColors.error.withValues(alpha: 0.1)
+                          : AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(
+                    color: _isSuccess
+                        ? AppColors.success.withValues(alpha: 0.3)
+                        : _isError
+                            ? AppColors.error.withValues(alpha: 0.3)
+                            : AppColors.border,
                   ),
-                  textAlign: TextAlign.center,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _isSuccess
+                          ? Icons.check_circle_rounded
+                          : _isError
+                              ? Icons.error_outline_rounded
+                              : Icons.info_outline_rounded,
+                      color: _isSuccess
+                          ? AppColors.success
+                          : _isError
+                              ? AppColors.error
+                              : AppColors.textSecondary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Text(
+                        _statusMessage!,
+                        style: AppTextStyles.body.copyWith(
+                          color: _isSuccess
+                              ? AppColors.success
+                              : _isError
+                                  ? AppColors.error
+                                  : AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
 
             // Preview extracted words
             if (_showPreview && _extractedWords.isNotEmpty) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xxl),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Preview',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text('Preview', style: AppTextStyles.h4),
                   ElevatedButton.icon(
                     onPressed: _isLoading ? null : _saveAllWords,
-                    icon: const Icon(Icons.save, size: 18),
+                    icon: const Icon(Icons.save_rounded, size: 18),
                     label: const Text('Save All'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppColors.success,
+                      foregroundColor: AppColors.textOnPrimary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               ...(_extractedWords.map((word) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF252542),
-                      borderRadius: BorderRadius.circular(10),
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      border: Border.all(color: AppColors.border),
                     ),
                     child: Row(
                       children: [
@@ -267,18 +280,18 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                word.word,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                word.article != null
+                                    ? '${word.article} ${word.word}'
+                                    : word.word,
+                                style: AppTextStyles.body.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: AppSpacing.xs),
                               Text(
                                 word.definition,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.6),
-                                  fontSize: 13,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
                                 ),
                               ),
                             ],
@@ -286,8 +299,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                         ),
                         IconButton(
                           icon: Icon(
-                            Icons.close,
-                            color: Colors.white.withValues(alpha: 0.5),
+                            Icons.close_rounded,
+                            color: AppColors.textTertiary,
                             size: 20,
                           ),
                           onPressed: () {

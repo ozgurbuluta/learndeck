@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/ai_service.dart';
 import '../services/firebase_service.dart';
+import '../theme/app_theme.dart';
 
 class AIChatScreen extends ConsumerStatefulWidget {
   const AIChatScreen({super.key});
@@ -22,9 +23,9 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     super.initState();
     _addAssistantMessage(
       'Hi! I can help you create vocabulary cards. Try saying:\n'
-      '• "Give me 10 German words about food"\n'
-      '• "I need business vocabulary in German"\n'
-      '• "Teach me travel phrases"',
+      '- "Give me 10 German words about food"\n'
+      '- "I need business vocabulary in German"\n'
+      '- "Teach me travel phrases"',
     );
   }
 
@@ -99,7 +100,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
 
       setState(() {
         _messages.add(ChatMessage(
-          text: '✅ Saved $savedCount words to your vocabulary!',
+          text: 'Saved $savedCount words to your vocabulary!',
           isUser: false,
         ));
         _pendingWords = [];
@@ -132,18 +133,10 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1a1a2e),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'AI Vocabulary Assistant',
-          style: TextStyle(color: Colors.white),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        backgroundColor: AppColors.surface,
+        title: const Text('AI Vocabulary Assistant'),
       ),
       body: Column(
         children: [
@@ -151,7 +144,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
@@ -174,20 +167,25 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     return Align(
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(bottom: AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.8,
         ),
         decoration: BoxDecoration(
-          color: message.isUser
-              ? const Color(0xFF6366f1)
-              : const Color(0xFF252542),
-          borderRadius: BorderRadius.circular(16),
+          color: message.isUser ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: message.isUser
+              ? null
+              : Border.all(color: AppColors.border),
         ),
         child: Text(
           message.text,
-          style: const TextStyle(color: Colors.white, fontSize: 15),
+          style: AppTextStyles.body.copyWith(
+            color: message.isUser
+                ? AppColors.textOnPrimary
+                : AppColors.textPrimary,
+          ),
         ),
       ),
     );
@@ -195,12 +193,12 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
 
   Widget _buildPendingWords() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: const Color(0xFF252542),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF6366f1), width: 1),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.primary, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,43 +208,54 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
             children: [
               Text(
                 '${_pendingWords.length} words ready to save',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 13,
-                ),
+                style: AppTextStyles.labelSmall,
               ),
               ElevatedButton.icon(
                 onPressed: _isLoading ? null : _saveWords,
-                icon: const Icon(Icons.save, size: 18),
+                icon: const Icon(Icons.save_rounded, size: 18),
                 label: const Text('Save All'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366f1),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.textOnPrimary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.sm,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
             children: _pendingWords.take(5).map((w) {
-              return Chip(
-                label: Text(
-                  w.word,
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.xs,
                 ),
-                backgroundColor: const Color(0xFF6366f1).withValues(alpha: 0.3),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                ),
+                child: Text(
+                  w.word,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
               );
             }).toList(),
           ),
           if (_pendingWords.length > 5)
             Padding(
-              padding: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
               child: Text(
                 '+${_pendingWords.length - 5} more',
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
               ),
             ),
         ],
@@ -256,10 +265,16 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
 
   Widget _buildInput() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: Color(0xFF252542),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: SafeArea(
         child: Row(
@@ -267,38 +282,41 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
             Expanded(
               child: TextField(
                 controller: _messageController,
-                style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Ask for vocabulary...',
-                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                  filled: true,
-                  fillColor: const Color(0xFF1a1a2e),
+                  fillColor: AppColors.surfaceVariant,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                     borderSide: BorderSide.none,
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+                    horizontal: AppSpacing.xl,
+                    vertical: AppSpacing.md,
                   ),
                 ),
                 onSubmitted: (_) => _sendMessage(),
               ),
             ),
-            const SizedBox(width: 12),
-            CircleAvatar(
-              backgroundColor: const Color(0xFF6366f1),
+            const SizedBox(width: AppSpacing.md),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
               child: _isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
+                  ? Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: AppColors.textOnPrimary,
+                          strokeWidth: 2,
+                        ),
                       ),
                     )
                   : IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white),
+                      icon: Icon(Icons.send_rounded, color: AppColors.textOnPrimary),
                       onPressed: _sendMessage,
                     ),
             ),
