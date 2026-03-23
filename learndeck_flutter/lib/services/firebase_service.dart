@@ -179,4 +179,75 @@ class FirebaseService {
       updatedAt: now,
     );
   }
+
+  static Future<void> updateFolder(Folder folder) async {
+    await _foldersCollection.doc(folder.id).update({
+      'name': folder.name,
+      'color': folder.color,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  static Future<void> deleteFolder(String folderId) async {
+    // Delete folder and all word-folder associations
+    final batch = _db.batch();
+
+    // Delete the folder
+    batch.delete(_foldersCollection.doc(folderId));
+
+    // Delete all word-folder associations for this folder
+    final associations = await _wordFoldersCollection
+        .where('folder_id', isEqualTo: folderId)
+        .get();
+    for (final doc in associations.docs) {
+      batch.delete(doc.reference);
+    }
+
+    await batch.commit();
+  }
+
+  // Word-Folder Associations
+  static CollectionReference<Map<String, dynamic>> get _wordFoldersCollection =>
+      _db.collection('word_folders');
+
+  static Future<List<String>> getWordFolders(String wordId) async {
+    final snapshot = await _wordFoldersCollection
+        .where('word_id', isEqualTo: wordId)
+        .get();
+    return snapshot.docs.map((doc) => doc.data()['folder_id'] as String).toList();
+  }
+
+  static Future<List<String>> getWordsInFolder(String folderId) async {
+    final snapshot = await _wordFoldersCollection
+        .where('folder_id', isEqualTo: folderId)
+        .get();
+    return snapshot.docs.map((doc) => doc.data()['word_id'] as String).toList();
+  }
+
+  static Future<void> addWordToFolder(String wordId, String folderId) async {
+    // Check if association already exists
+    final existing = await _wordFoldersCollection
+        .where('word_id', isEqualTo: wordId)
+        .where('folder_id', isEqualTo: folderId)
+        .get();
+
+    if (existing.docs.isEmpty) {
+      await _wordFoldersCollection.add({
+        'word_id': wordId,
+        'folder_id': folderId,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  static Future<void> removeWordFromFolder(String wordId, String folderId) async {
+    final snapshot = await _wordFoldersCollection
+        .where('word_id', isEqualTo: wordId)
+        .where('folder_id', isEqualTo: folderId)
+        .get();
+
+    for (final doc in snapshot.docs) {
+      await doc.reference.delete();
+    }
+  }
 }
