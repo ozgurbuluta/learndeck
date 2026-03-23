@@ -16,6 +16,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   final _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   List<ExtractedWord> _pendingWords = [];
+  Set<int> _selectedWordIndices = {};
   bool _isLoading = false;
 
   @override
@@ -68,6 +69,8 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
       setState(() {
         _messages.add(ChatMessage(text: response.response, isUser: false));
         _pendingWords = response.words;
+        // Select all words by default
+        _selectedWordIndices = Set.from(List.generate(response.words.length, (i) => i));
         _isLoading = false;
       });
       _scrollToBottom();
@@ -83,19 +86,22 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   }
 
   Future<void> _saveWords() async {
-    if (_pendingWords.isEmpty) return;
+    if (_pendingWords.isEmpty || _selectedWordIndices.isEmpty) return;
 
     setState(() => _isLoading = true);
 
     try {
       int savedCount = 0;
-      for (final word in _pendingWords) {
-        await FirebaseService.createWord(
-          word: word.word,
-          definition: word.definition,
-          article: word.article,
-        );
-        savedCount++;
+      for (int i = 0; i < _pendingWords.length; i++) {
+        if (_selectedWordIndices.contains(i)) {
+          final word = _pendingWords[i];
+          await FirebaseService.createWord(
+            word: word.word,
+            definition: word.definition,
+            article: word.article,
+          );
+          savedCount++;
+        }
       }
 
       setState(() {
@@ -104,6 +110,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
           isUser: false,
         ));
         _pendingWords = [];
+        _selectedWordIndices = {};
         _isLoading = false;
       });
       _scrollToBottom();
@@ -191,73 +198,145 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     );
   }
 
+  void _toggleWordSelection(int index) {
+    setState(() {
+      if (_selectedWordIndices.contains(index)) {
+        _selectedWordIndices.remove(index);
+      } else {
+        _selectedWordIndices.add(index);
+      }
+    });
+  }
+
+  void _selectAll() {
+    setState(() {
+      _selectedWordIndices = Set.from(List.generate(_pendingWords.length, (i) => i));
+    });
+  }
+
+  void _deselectAll() {
+    setState(() {
+      _selectedWordIndices = {};
+    });
+  }
+
   Widget _buildPendingWords() {
+    final selectedCount = _selectedWordIndices.length;
+    final allSelected = selectedCount == _pendingWords.length;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      constraints: const BoxConstraints(maxHeight: 250),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.primary, width: 1),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${_pendingWords.length} words ready to save',
-                style: AppTextStyles.labelSmall,
-              ),
-              ElevatedButton.icon(
-                onPressed: _isLoading ? null : _saveWords,
-                icon: const Icon(Icons.save_rounded, size: 18),
-                label: const Text('Save All'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.textOnPrimary,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                    vertical: AppSpacing.sm,
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$selectedCount of ${_pendingWords.length} selected',
+                      style: AppTextStyles.labelSmall,
+                    ),
+                    GestureDetector(
+                      onTap: allSelected ? _deselectAll : _selectAll,
+                      child: Text(
+                        allSelected ? 'Deselect all' : 'Select all',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                ElevatedButton.icon(
+                  onPressed: _isLoading || selectedCount == 0 ? null : _saveWords,
+                  icon: const Icon(Icons.save_rounded, size: 18),
+                  label: Text('Save ($selectedCount)'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.textOnPrimary,
+                    disabledBackgroundColor: AppColors.textTertiary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.sm,
+                    ),
                   ),
                 ),
+              ],
+            ),
+          ),
+          // Word chips (scrollable)
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, 0, AppSpacing.md, AppSpacing.md,
               ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: _pendingWords.take(5).map((w) {
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                ),
-                child: Text(
-                  w.word,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          if (_pendingWords.length > 5)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.xs),
-              child: Text(
-                '+${_pendingWords.length - 5} more',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textTertiary,
-                ),
+              child: Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: List.generate(_pendingWords.length, (index) {
+                  final word = _pendingWords[index];
+                  final isSelected = _selectedWordIndices.contains(index);
+                  return GestureDetector(
+                    onTap: () => _toggleWordSelection(index),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.primary.withValues(alpha: 0.15)
+                            : AppColors.surfaceVariant,
+                        borderRadius: BorderRadius.circular(AppRadius.full),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.border,
+                          width: isSelected ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isSelected)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 4),
+                              child: Icon(
+                                Icons.check_circle,
+                                size: 16,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          Text(
+                            word.word,
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
               ),
             ),
+          ),
         ],
       ),
     );
