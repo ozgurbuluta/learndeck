@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/word.dart';
 import '../providers/words_provider.dart';
-import '../services/firebase_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/widgets.dart';
 import 'study_session_screen.dart';
-import 'ai_chat_screen.dart';
 import 'import_screen.dart';
-import 'word_list_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -19,7 +18,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Load words when dashboard opens
     Future.microtask(() => ref.read(wordsProvider.notifier).loadWords());
   }
 
@@ -28,249 +26,259 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final wordsAsync = ref.watch(wordsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1a1a2e),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'LearnDeck',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white70),
-            onPressed: () async {
-              await FirebaseService.signOut();
-            },
-          ),
-        ],
-      ),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: wordsAsync.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF6366f1)),
+          loading: () => Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
           ),
-          error: (error, _) => Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 60),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Error loading words',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF252542),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: SelectableText(
-                      error.toString(),
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => ref.read(wordsProvider.notifier).loadWords(),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          error: (error, _) => _buildErrorState(error),
           data: (words) => _buildDashboardContent(words),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF6366f1),
+        backgroundColor: AppColors.primary,
         onPressed: () => _showAddWordDialog(),
-        child: const Icon(Icons.add, color: Colors.white),
+        child: Icon(Icons.add, color: AppColors.textOnPrimary),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(Object error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, color: AppColors.error, size: 60),
+            const SizedBox(height: AppSpacing.lg),
+            Text('Error loading words', style: AppTextStyles.h3),
+            const SizedBox(height: AppSpacing.sm),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: SelectableText(
+                error.toString(),
+                style: AppTextStyles.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            ElevatedButton(
+              onPressed: () => ref.read(wordsProvider.notifier).loadWords(),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildDashboardContent(List<Word> words) {
     final stats = _calculateStats(words);
+    final dueWords = words.where((w) =>
+      DateTime.now().isAfter(w.nextReview) ||
+      (w.difficulty == Difficulty.newWord)
+    ).length;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Stats Grid
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 1.5,
-            children: [
-              _buildStatCard('Total Words', stats['total']!, Icons.library_books, const Color(0xFF6366f1)),
-              _buildStatCard('Mastered', stats['mastered']!, Icons.star, Colors.amber),
-              _buildStatCard('Learning', stats['learning']!, Icons.school, Colors.blue),
-              _buildStatCard('To Review', stats['review']!, Icons.refresh, Colors.orange),
-            ],
+          // Header
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            color: AppColors.surface,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Hello!', style: AppTextStyles.h1),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Ready to learn some vocabulary?',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
 
-          const SizedBox(height: 30),
-
-          // Start Study Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: words.isEmpty
-                  ? null
-                  : () {
+          // Quick Study Section
+          _buildSection(
+            title: 'Quick Study',
+            child: words.isEmpty
+                ? _buildEmptyState()
+                : PrimaryButton(
+                    label: 'Start Study Session',
+                    subtitle: '$dueWords word${dueWords != 1 ? 's' : ''} ready to review',
+                    icon: Icons.play_arrow_rounded,
+                    onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => StudySessionScreen(initialWords: words),
                         ),
                       );
                     },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366f1),
-                disabledBackgroundColor: Colors.grey,
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                  ),
+          ),
+
+          // Study Options
+          if (words.isNotEmpty)
+            _buildSection(
+              title: 'Study Options',
+              child: GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: AppSpacing.md,
+                crossAxisSpacing: AppSpacing.md,
+                childAspectRatio: 1.4,
                 children: [
-                  Icon(Icons.play_arrow, color: Colors.white, size: 28),
-                  SizedBox(width: 12),
-                  Text(
-                    'Start Study Session',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  StatCard(
+                    label: 'New Words',
+                    value: stats['new']!,
+                    icon: Icons.fiber_new_rounded,
+                    iconColor: AppColors.difficultyNew,
+                    onTap: () => _startStudySession(words, 'new'),
+                  ),
+                  StatCard(
+                    label: 'Due for Review',
+                    value: dueWords,
+                    icon: Icons.schedule_rounded,
+                    iconColor: AppColors.warning,
+                    onTap: () => _startStudySession(words, 'due'),
+                  ),
+                  StatCard(
+                    label: 'All Words',
+                    value: stats['total']!,
+                    icon: Icons.library_books_rounded,
+                    iconColor: AppColors.primary,
+                    onTap: () => _startStudySession(words, 'all'),
+                  ),
+                  StatCard(
+                    label: 'Mastered',
+                    value: stats['mastered']!,
+                    icon: Icons.star_rounded,
+                    iconColor: AppColors.difficultyMastered,
                   ),
                 ],
               ),
             ),
-          ),
 
-          const SizedBox(height: 16),
-
-          // AI Assistant Button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AIChatScreen()),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF6366f1), width: 2),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.auto_awesome, color: Color(0xFF6366f1), size: 24),
-                  SizedBox(width: 12),
-                  Text(
-                    'AI Vocabulary Assistant',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF6366f1),
-                    ),
-                  ),
-                ],
+          // Progress Overview
+          if (words.isNotEmpty)
+            _buildSection(
+              title: 'Your Progress',
+              child: ProgressCard(
+                totalWords: stats['total']!,
+                masteredWords: stats['mastered']!,
+                dayStreak: 0,
               ),
             ),
-          ),
 
-          const SizedBox(height: 16),
-
-          // Quick Action Buttons Row
-          Row(
-            children: [
-              Expanded(
-                child: _buildQuickAction(
-                  icon: Icons.upload_file,
-                  label: 'Import',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ImportScreen()),
+          // Quick Actions
+          _buildSection(
+            title: 'Quick Actions',
+            child: Row(
+              children: [
+                Expanded(
+                  child: QuickActionCard(
+                    icon: Icons.add_circle_outline_rounded,
+                    label: 'Add Word',
+                    onTap: () => _showAddWordDialog(),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildQuickAction(
-                  icon: Icons.list_alt,
-                  label: 'All Words',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const WordListScreen()),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: QuickActionCard(
+                    icon: Icons.upload_file_rounded,
+                    label: 'Import',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ImportScreen()),
+                    ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: QuickActionCard(
+                    icon: Icons.auto_awesome_rounded,
+                    label: 'AI Assistant',
+                    iconColor: AppColors.accent,
+                    onTap: () {
+                      // Navigate to AI Chat tab (index 3)
+                      // This will be handled by the parent HomeScreen
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
-
-          const SizedBox(height: 30),
 
           // Recent Words
-          const Text(
-            'Recent Words',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          if (words.isNotEmpty)
+            _buildSection(
+              title: 'Recent Words',
+              child: Column(
+                children: words
+                    .take(5)
+                    .map((word) => WordTile(word: word))
+                    .toList(),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
 
-          if (words.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(30),
-              decoration: BoxDecoration(
-                color: const Color(0xFF252542),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.add_circle_outline,
-                      size: 48,
-                      color: Colors.white38,
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'No words yet',
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Tap + to add your first word',
-                      style: TextStyle(color: Colors.white38, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            ...words.take(5).map((word) => _buildWordTile(word)),
+          const SizedBox(height: AppSpacing.xxxl),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection({required String title, required Widget child}) {
+    return Container(
+      margin: const EdgeInsets.only(top: AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      color: AppColors.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(title: title),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xxxl),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.add_circle_outline_rounded,
+            size: 48,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text('No words yet', style: AppTextStyles.h4),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Add your first word to start learning',
+            style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          PrimaryButton(
+            label: 'Add Your First Word',
+            fullWidth: false,
+            onPressed: () => _showAddWordDialog(),
+          ),
         ],
       ),
     );
@@ -279,158 +287,43 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Map<String, int> _calculateStats(List<Word> words) {
     return {
       'total': words.length,
+      'new': words.where((w) => w.difficulty == Difficulty.newWord).length,
       'mastered': words.where((w) => w.difficulty == Difficulty.mastered).length,
-      'learning': words.where((w) => w.difficulty == Difficulty.learning || w.difficulty == Difficulty.newWord).length,
-      'review': words.where((w) => w.difficulty == Difficulty.review || w.difficulty == Difficulty.failed).length,
+      'learning': words.where((w) =>
+          w.difficulty == Difficulty.learning ||
+          w.difficulty == Difficulty.newWord).length,
+      'review': words.where((w) =>
+          w.difficulty == Difficulty.review ||
+          w.difficulty == Difficulty.failed).length,
     };
   }
 
-  Widget _buildStatCard(String label, int value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF252542),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Icon(icon, color: color, size: 28),
-          const Spacer(),
-          Text(
-            '$value',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.6),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickAction({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF252542),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: const Color(0xFF6366f1), size: 28),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWordTile(Word word) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF252542),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  word.displayWord,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  word.definition,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.6),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          _buildDifficultyBadge(word.difficulty),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDifficultyBadge(Difficulty difficulty) {
-    Color color;
-    String label;
-
-    switch (difficulty) {
-      case Difficulty.newWord:
-        color = Colors.blue;
-        label = 'New';
+  void _startStudySession(List<Word> words, String type) {
+    List<Word> filteredWords;
+    switch (type) {
+      case 'new':
+        filteredWords = words.where((w) => w.difficulty == Difficulty.newWord).toList();
         break;
-      case Difficulty.learning:
-        color = Colors.orange;
-        label = 'Learning';
+      case 'due':
+        filteredWords = words.where((w) =>
+          DateTime.now().isAfter(w.nextReview) ||
+          w.difficulty == Difficulty.newWord
+        ).toList();
         break;
-      case Difficulty.review:
-        color = Colors.purple;
-        label = 'Review';
-        break;
-      case Difficulty.mastered:
-        color = Colors.green;
-        label = 'Mastered';
-        break;
-      case Difficulty.failed:
-        color = Colors.red;
-        label = 'Failed';
-        break;
+      default:
+        filteredWords = words;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          color: color,
-          fontWeight: FontWeight.w500,
-        ),
+    if (filteredWords.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No words available for this study type')),
+      );
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => StudySessionScreen(initialWords: filteredWords),
       ),
     );
   }
@@ -443,109 +336,61 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF252542),
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (context) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 20,
-          right: 20,
-          top: 20,
+          left: AppSpacing.xl,
+          right: AppSpacing.xl,
+          top: AppSpacing.xl,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Add New Word',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 20),
+            Text('Add New Word', style: AppTextStyles.h3),
+            const SizedBox(height: AppSpacing.xl),
             TextField(
               controller: articleController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Article (der/die/das)',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                filled: true,
-                fillColor: const Color(0xFF1a1a2e),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             TextField(
               controller: wordController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Word',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                filled: true,
-                fillColor: const Color(0xFF1a1a2e),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             TextField(
               controller: definitionController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Definition',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                filled: true,
-                fillColor: const Color(0xFF1a1a2e),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
               ),
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  if (wordController.text.isNotEmpty &&
-                      definitionController.text.isNotEmpty) {
-                    await ref.read(wordsProvider.notifier).addWord(
-                          word: wordController.text,
-                          definition: definitionController.text,
-                          article: articleController.text.isNotEmpty
-                              ? articleController.text
-                              : null,
-                        );
-                    if (context.mounted) Navigator.pop(context);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366f1),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Add Word',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+            const SizedBox(height: AppSpacing.xl),
+            PrimaryButton(
+              label: 'Add Word',
+              onPressed: () async {
+                if (wordController.text.isNotEmpty &&
+                    definitionController.text.isNotEmpty) {
+                  await ref.read(wordsProvider.notifier).addWord(
+                        word: wordController.text,
+                        definition: definitionController.text,
+                        article: articleController.text.isNotEmpty
+                            ? articleController.text
+                            : null,
+                      );
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
           ],
         ),
       ),

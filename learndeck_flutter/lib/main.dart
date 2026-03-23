@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'providers/words_provider.dart';
 import 'screens/auth_screen.dart';
-import 'screens/dashboard_screen.dart';
+import 'screens/home_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -30,7 +30,7 @@ class LearnDeckApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       home: authState.when(
-        data: (isLoggedIn) => isLoggedIn ? const DashboardScreen() : const AuthScreen(),
+        data: (isLoggedIn) => isLoggedIn ? const HomeScreen() : const AuthScreen(),
         loading: () => const Scaffold(
           backgroundColor: Color(0xFF1a1a2e),
           body: Center(
