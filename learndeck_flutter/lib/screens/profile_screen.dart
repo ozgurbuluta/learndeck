@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
 import '../services/firebase_service.dart';
+import '../providers/user_preferences_provider.dart';
+import 'onboarding/onboarding_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -63,6 +65,12 @@ class ProfileScreen extends ConsumerWidget {
               title: 'Theme',
               subtitle: 'Light',
               onTap: () {},
+            ),
+            _buildSettingsTile(
+              icon: Icons.restart_alt_rounded,
+              title: 'Reset Onboarding',
+              subtitle: 'Test the onboarding flow again',
+              onTap: () => _resetOnboarding(context, ref),
             ),
 
             const SizedBox(height: AppSpacing.xxl),
@@ -191,5 +199,48 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _resetOnboarding(BuildContext context, WidgetRef ref) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Onboarding'),
+        content: const Text(
+          'This will restart the onboarding flow. Your saved words will be kept.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              'Reset',
+              style: TextStyle(color: AppColors.primary),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      // Get current preferences and set onboarding_completed to false
+      final currentPrefs = ref.read(userPreferencesProvider).valueOrNull;
+      if (currentPrefs != null) {
+        final resetPrefs = currentPrefs.copyWith(onboardingCompleted: false);
+        await ref.read(userPreferencesProvider.notifier).updatePreferences(resetPrefs);
+      }
+
+      // Navigate to onboarding
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+          (route) => false,
+        );
+      }
+    }
   }
 }
