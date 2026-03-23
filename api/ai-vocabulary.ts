@@ -86,7 +86,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!claudeResponse.ok) {
       const errorBody = await claudeResponse.text();
       console.error('Claude API error:', errorBody);
-      throw new Error(`Claude API responded with status: ${claudeResponse.status}`);
+      return res.status(500).json({
+        success: false,
+        error: `Claude API error: ${errorBody}`,
+        response: 'Sorry, I could not process your request. Please try again.',
+        words: [],
+      });
     }
 
     const claudeData = await claudeResponse.json();
