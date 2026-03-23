@@ -113,6 +113,13 @@ class AppTextStyles {
   );
 
   // Labels
+  static const TextStyle labelLarge = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+    height: 1.4,
+  );
+
   static const TextStyle label = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
