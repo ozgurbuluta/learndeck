@@ -18,6 +18,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _currentPage = 0;
 
   // User selections
+  String _selectedTargetLanguage = '';
+  String _selectedNativeLanguage = '';
   List<String> _selectedUseCases = [];
   List<String> _selectedCategories = [];
   String _selectedLevel = '';
@@ -30,7 +32,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   void _nextPage() {
-    if (_currentPage < 3) {
+    if (_currentPage < 4) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -54,6 +56,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         context,
         MaterialPageRoute(
           builder: (context) => QuizScreen(
+            targetLanguage: _selectedTargetLanguage,
             onComplete: (score) => Navigator.pop(context, score),
           ),
         ),
@@ -79,7 +82,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Future<void> _savePreferences(String level, int? quizScore) async {
     final prefs = UserPreferences(
-      targetLanguage: 'German',
+      targetLanguage: _selectedTargetLanguage,
+      nativeLanguage: _selectedNativeLanguage,
       useCases: _selectedUseCases,
       categories: _selectedCategories,
       level: level,
@@ -110,7 +114,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
-                children: List.generate(4, (index) {
+                children: List.generate(5, (index) {
                   return Expanded(
                     child: Container(
                       height: 4,
@@ -137,6 +141,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 },
                 children: [
                   _buildWelcomePage(),
+                  _buildLanguagePage(),
                   _buildUseCasePage(),
                   _buildCategoriesPage(),
                   _buildLevelPage(),
@@ -197,6 +202,145 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLanguagePage() {
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Choose your languages', style: AppTextStyles.h2),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Select the language you want to learn and your native language',
+            style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+
+          // Target language section
+          Text(
+            'I want to learn:',
+            style: AppTextStyles.labelLarge.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            height: 110,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: LanguageOption.targetLanguages.length,
+              itemBuilder: (context, index) {
+                final lang = LanguageOption.targetLanguages[index];
+                final isSelected = _selectedTargetLanguage == lang.name;
+                return _buildLanguageCard(
+                  language: lang,
+                  isSelected: isSelected,
+                  onTap: () {
+                    setState(() {
+                      _selectedTargetLanguage = lang.name;
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.xxl),
+
+          // Native language section
+          Text(
+            'My native language is:',
+            style: AppTextStyles.labelLarge.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            height: 110,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: LanguageOption.nativeLanguages.length,
+              itemBuilder: (context, index) {
+                final lang = LanguageOption.nativeLanguages[index];
+                final isSelected = _selectedNativeLanguage == lang.name;
+                return _buildLanguageCard(
+                  language: lang,
+                  isSelected: isSelected,
+                  onTap: () {
+                    setState(() {
+                      _selectedNativeLanguage = lang.name;
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+
+          const Spacer(),
+          _buildNavigationButtons(
+            canProceed: _selectedTargetLanguage.isNotEmpty &&
+                       _selectedNativeLanguage.isNotEmpty,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageCard({
+    required LanguageOption language,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 100,
+        margin: const EdgeInsets.only(right: AppSpacing.md),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              language.flag,
+              style: const TextStyle(fontSize: 32),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              language.name,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              language.nativeName,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textTertiary,
+                fontSize: 10,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (isSelected)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Icon(
+                  Icons.check_circle,
+                  color: AppColors.primary,
+                  size: 16,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

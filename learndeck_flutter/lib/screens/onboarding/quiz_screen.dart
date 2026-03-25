@@ -4,8 +4,13 @@ import '../../theme/app_theme.dart';
 
 class QuizScreen extends StatefulWidget {
   final Function(int score) onComplete;
+  final String targetLanguage;
 
-  const QuizScreen({super.key, required this.onComplete});
+  const QuizScreen({
+    super.key,
+    required this.onComplete,
+    required this.targetLanguage,
+  });
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -17,7 +22,13 @@ class _QuizScreenState extends State<QuizScreen> {
   int? _selectedAnswer;
   bool _answered = false;
 
-  final List<QuizQuestion> _questions = QuizQuestion.germanQuiz;
+  late final List<QuizQuestion> _questions;
+
+  @override
+  void initState() {
+    super.initState();
+    _questions = QuizQuestion.getQuizForLanguage(widget.targetLanguage);
+  }
 
   void _selectAnswer(int index) {
     if (_answered) return;
@@ -55,25 +66,21 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Widget _buildResultsSheet() {
-    String level;
     String levelTitle;
     String levelDescription;
     Color levelColor;
 
     if (_score >= 8) {
-      level = 'advanced';
       levelTitle = 'Advanced (C1-C2)';
       levelDescription =
-          'Impressive! You have a strong command of German. We\'ll challenge you with complex vocabulary.';
+          'Impressive! You have a strong command of ${widget.targetLanguage}. We\'ll challenge you with complex vocabulary.';
       levelColor = Colors.purple;
     } else if (_score >= 5) {
-      level = 'intermediate';
       levelTitle = 'Intermediate (B1-B2)';
       levelDescription =
           'Great job! You have solid foundations. We\'ll help you expand your conversational skills.';
       levelColor = Colors.blue;
     } else {
-      level = 'beginner';
       levelTitle = 'Beginner (A1-A2)';
       levelDescription =
           'Good start! We\'ll build your vocabulary from the ground up with essential words and phrases.';

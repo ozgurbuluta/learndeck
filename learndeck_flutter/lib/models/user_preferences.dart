@@ -1,6 +1,7 @@
 class UserPreferences {
   final String? userId;
   final String targetLanguage;
+  final String nativeLanguage;
   final List<String> useCases;
   final List<String> categories;
   final String level;
@@ -11,6 +12,7 @@ class UserPreferences {
   UserPreferences({
     this.userId,
     this.targetLanguage = 'German',
+    this.nativeLanguage = 'English',
     this.useCases = const [],
     this.categories = const [],
     this.level = 'beginner',
@@ -23,6 +25,7 @@ class UserPreferences {
     return UserPreferences(
       userId: json['user_id'],
       targetLanguage: json['target_language'] ?? 'German',
+      nativeLanguage: json['native_language'] ?? 'English',
       useCases: List<String>.from(json['use_cases'] ?? []),
       categories: List<String>.from(json['categories'] ?? []),
       level: json['level'] ?? 'beginner',
@@ -38,6 +41,7 @@ class UserPreferences {
     return {
       'user_id': userId,
       'target_language': targetLanguage,
+      'native_language': nativeLanguage,
       'use_cases': useCases,
       'categories': categories,
       'level': level,
@@ -50,6 +54,7 @@ class UserPreferences {
   UserPreferences copyWith({
     String? userId,
     String? targetLanguage,
+    String? nativeLanguage,
     List<String>? useCases,
     List<String>? categories,
     String? level,
@@ -60,6 +65,7 @@ class UserPreferences {
     return UserPreferences(
       userId: userId ?? this.userId,
       targetLanguage: targetLanguage ?? this.targetLanguage,
+      nativeLanguage: nativeLanguage ?? this.nativeLanguage,
       useCases: useCases ?? this.useCases,
       categories: categories ?? this.categories,
       level: level ?? this.level,
@@ -164,6 +170,19 @@ class QuizQuestion {
     required this.difficulty,
   });
 
+  static List<QuizQuestion> getQuizForLanguage(String language) {
+    switch (language) {
+      case 'German':
+        return germanQuiz;
+      case 'Spanish':
+        return spanishQuiz;
+      case 'French':
+        return frenchQuiz;
+      default:
+        return germanQuiz;
+    }
+  }
+
   static const List<QuizQuestion> germanQuiz = [
     // Beginner questions (A1-A2)
     QuizQuestion(
@@ -233,5 +252,187 @@ class QuizQuestion {
       correctIndex: 1,
       difficulty: 'advanced',
     ),
+  ];
+
+  static const List<QuizQuestion> spanishQuiz = [
+    // Beginner questions (A1-A2)
+    QuizQuestion(
+      question: 'What does "Buenos días" mean?',
+      options: ['Good night', 'Good morning', 'Goodbye', 'Good evening'],
+      correctIndex: 1,
+      difficulty: 'beginner',
+    ),
+    QuizQuestion(
+      question: 'How do you say "please" in Spanish?',
+      options: ['Gracias', 'Por favor', 'De nada', 'Hola'],
+      correctIndex: 1,
+      difficulty: 'beginner',
+    ),
+    QuizQuestion(
+      question: 'What is "el gato"?',
+      options: ['The dog', 'The bird', 'The cat', 'The fish'],
+      correctIndex: 2,
+      difficulty: 'beginner',
+    ),
+    QuizQuestion(
+      question: '"Tengo hambre" means:',
+      options: ['I am tired', 'I am hungry', 'I am happy', 'I am cold'],
+      correctIndex: 1,
+      difficulty: 'beginner',
+    ),
+    // Intermediate questions (B1-B2)
+    QuizQuestion(
+      question: 'Complete: "Si ___ más dinero, viajaría."',
+      options: ['tengo', 'tuviera', 'tenía', 'tendré'],
+      correctIndex: 1,
+      difficulty: 'intermediate',
+    ),
+    QuizQuestion(
+      question: 'What does "sin embargo" mean?',
+      options: ['Always', 'However', 'Never', 'Therefore'],
+      correctIndex: 1,
+      difficulty: 'intermediate',
+    ),
+    QuizQuestion(
+      question: '"He comido" is in which tense?',
+      options: ['Present', 'Present Perfect', 'Simple Past', 'Future'],
+      correctIndex: 1,
+      difficulty: 'intermediate',
+    ),
+    // Advanced questions (C1-C2)
+    QuizQuestion(
+      question: 'What does "no obstante" mean?',
+      options: ['In spite of', 'Nevertheless', 'Meanwhile', 'Therefore'],
+      correctIndex: 1,
+      difficulty: 'advanced',
+    ),
+    QuizQuestion(
+      question: '"Las negociaciones fracasaron" means:',
+      options: [
+        'The negotiations succeeded',
+        'The negotiations failed',
+        'The negotiations continued',
+        'The negotiations started'
+      ],
+      correctIndex: 1,
+      difficulty: 'advanced',
+    ),
+    QuizQuestion(
+      question: 'Which is the correct subjunctive form of "ir" (yo)?',
+      options: ['voy', 'vaya', 'iré', 'iba'],
+      correctIndex: 1,
+      difficulty: 'advanced',
+    ),
+  ];
+
+  static const List<QuizQuestion> frenchQuiz = [
+    // Beginner questions (A1-A2)
+    QuizQuestion(
+      question: 'What does "Bonjour" mean?',
+      options: ['Good night', 'Hello/Good day', 'Goodbye', 'Good evening'],
+      correctIndex: 1,
+      difficulty: 'beginner',
+    ),
+    QuizQuestion(
+      question: 'How do you say "thank you" in French?',
+      options: ['S\'il vous plaît', 'Merci', 'Bonjour', 'Au revoir'],
+      correctIndex: 1,
+      difficulty: 'beginner',
+    ),
+    QuizQuestion(
+      question: 'What is "le chat"?',
+      options: ['The dog', 'The bird', 'The cat', 'The fish'],
+      correctIndex: 2,
+      difficulty: 'beginner',
+    ),
+    QuizQuestion(
+      question: '"J\'ai faim" means:',
+      options: ['I am tired', 'I am hungry', 'I am happy', 'I am cold'],
+      correctIndex: 1,
+      difficulty: 'beginner',
+    ),
+    // Intermediate questions (B1-B2)
+    QuizQuestion(
+      question: 'Complete: "Si j\'___ plus d\'argent, je voyagerais."',
+      options: ['ai', 'avais', 'aurai', 'aurais'],
+      correctIndex: 1,
+      difficulty: 'intermediate',
+    ),
+    QuizQuestion(
+      question: 'What does "cependant" mean?',
+      options: ['Always', 'However', 'Never', 'Therefore'],
+      correctIndex: 1,
+      difficulty: 'intermediate',
+    ),
+    QuizQuestion(
+      question: '"J\'ai mangé" is in which tense?',
+      options: ['Present', 'Passé Composé', 'Imparfait', 'Future'],
+      correctIndex: 1,
+      difficulty: 'intermediate',
+    ),
+    // Advanced questions (C1-C2)
+    QuizQuestion(
+      question: 'What does "néanmoins" mean?',
+      options: ['In spite of', 'Nevertheless', 'Meanwhile', 'Therefore'],
+      correctIndex: 1,
+      difficulty: 'advanced',
+    ),
+    QuizQuestion(
+      question: '"Les négociations ont échoué" means:',
+      options: [
+        'The negotiations succeeded',
+        'The negotiations failed',
+        'The negotiations continued',
+        'The negotiations started'
+      ],
+      correctIndex: 1,
+      difficulty: 'advanced',
+    ),
+    QuizQuestion(
+      question: 'Which is the correct subjunctive form of "être" (je)?',
+      options: ['suis', 'sois', 'serai', 'étais'],
+      correctIndex: 1,
+      difficulty: 'advanced',
+    ),
+  ];
+}
+
+class LanguageOption {
+  final String code;
+  final String name;
+  final String nativeName;
+  final String flag;
+
+  const LanguageOption({
+    required this.code,
+    required this.name,
+    required this.nativeName,
+    required this.flag,
+  });
+
+  static const List<LanguageOption> targetLanguages = [
+    LanguageOption(code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪'),
+    LanguageOption(code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸'),
+    LanguageOption(code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷'),
+    LanguageOption(code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹'),
+    LanguageOption(code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇵🇹'),
+    LanguageOption(code: 'nl', name: 'Dutch', nativeName: 'Nederlands', flag: '🇳🇱'),
+    LanguageOption(code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵'),
+    LanguageOption(code: 'ko', name: 'Korean', nativeName: '한국어', flag: '🇰🇷'),
+    LanguageOption(code: 'zh', name: 'Chinese', nativeName: '中文', flag: '🇨🇳'),
+  ];
+
+  static const List<LanguageOption> nativeLanguages = [
+    LanguageOption(code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧'),
+    LanguageOption(code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪'),
+    LanguageOption(code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸'),
+    LanguageOption(code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷'),
+    LanguageOption(code: 'tr', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷'),
+    LanguageOption(code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇵🇹'),
+    LanguageOption(code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹'),
+    LanguageOption(code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺'),
+    LanguageOption(code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦'),
+    LanguageOption(code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵'),
+    LanguageOption(code: 'zh', name: 'Chinese', nativeName: '中文', flag: '🇨🇳'),
   ];
 }

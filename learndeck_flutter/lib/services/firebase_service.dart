@@ -334,6 +334,7 @@ class FirebaseService {
     await _userPreferencesCollection.doc(userId).set({
       'user_id': userId,
       'target_language': prefs.targetLanguage,
+      'native_language': prefs.nativeLanguage,
       'use_cases': prefs.useCases,
       'categories': prefs.categories,
       'level': prefs.level,
@@ -349,6 +350,7 @@ class FirebaseService {
 
     await _userPreferencesCollection.doc(userId).update({
       'target_language': prefs.targetLanguage,
+      'native_language': prefs.nativeLanguage,
       'use_cases': prefs.useCases,
       'categories': prefs.categories,
       'level': prefs.level,
