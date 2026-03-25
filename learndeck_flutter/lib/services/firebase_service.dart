@@ -339,6 +339,7 @@ class FirebaseService {
       'categories': prefs.categories,
       'level': prefs.level,
       'quiz_score': prefs.quizScore,
+      'daily_goal': prefs.dailyGoal,
       'onboarding_completed': prefs.onboardingCompleted,
       'created_at': DateTime.now().toIso8601String(),
     });
@@ -355,6 +356,7 @@ class FirebaseService {
       'categories': prefs.categories,
       'level': prefs.level,
       'quiz_score': prefs.quizScore,
+      'daily_goal': prefs.dailyGoal,
       'onboarding_completed': prefs.onboardingCompleted,
       'updated_at': DateTime.now().toIso8601String(),
     });

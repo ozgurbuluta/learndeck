@@ -22,6 +22,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String _selectedNativeLanguage = '';
   List<String> _selectedUseCases = [];
   List<String> _selectedCategories = [];
+  int _selectedDailyGoal = 5;
   String _selectedLevel = '';
   bool _wantsQuiz = false;
 
@@ -32,7 +33,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   void _nextPage() {
-    if (_currentPage < 4) {
+    if (_currentPage < 5) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -86,6 +87,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       nativeLanguage: _selectedNativeLanguage,
       useCases: _selectedUseCases,
       categories: _selectedCategories,
+      dailyGoal: _selectedDailyGoal,
       level: level,
       quizScore: quizScore,
       onboardingCompleted: true,
@@ -114,7 +116,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
-                children: List.generate(5, (index) {
+                children: List.generate(6, (index) {
                   return Expanded(
                     child: Container(
                       height: 4,
@@ -144,6 +146,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   _buildLanguagePage(),
                   _buildUseCasePage(),
                   _buildCategoriesPage(),
+                  _buildGoalPage(),
                   _buildLevelPage(),
                 ],
               ),
@@ -440,6 +443,116 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildGoalPage() {
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Set your daily goal', style: AppTextStyles.h2),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'How many words do you want to learn each day?',
+            style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+          Expanded(
+            child: ListView.builder(
+              itemCount: DailyGoalOption.options.length,
+              itemBuilder: (context, index) {
+                final option = DailyGoalOption.options[index];
+                final isSelected = _selectedDailyGoal == option.words;
+                return _buildGoalOption(
+                  option: option,
+                  isSelected: isSelected,
+                  onTap: () {
+                    setState(() {
+                      _selectedDailyGoal = option.words;
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _buildNavigationButtons(canProceed: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoalOption({
+    required DailyGoalOption option,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.2)
+                    : AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Icon(
+                _getGoalIcon(option.icon),
+                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(option.title, style: AppTextStyles.labelLarge),
+                  Text(
+                    option.description,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected) Icon(Icons.check_circle, color: AppColors.primary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _getGoalIcon(String iconName) {
+    switch (iconName) {
+      case 'walk':
+        return Icons.directions_walk_rounded;
+      case 'directions_run':
+        return Icons.directions_run_rounded;
+      case 'fitness_center':
+        return Icons.fitness_center_rounded;
+      case 'local_fire_department':
+        return Icons.local_fire_department_rounded;
+      default:
+        return Icons.star_rounded;
+    }
   }
 
   Widget _buildLevelPage() {

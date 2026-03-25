@@ -6,6 +6,7 @@ class UserPreferences {
   final List<String> categories;
   final String level;
   final int? quizScore;
+  final int dailyGoal;
   final bool onboardingCompleted;
   final DateTime? createdAt;
 
@@ -17,6 +18,7 @@ class UserPreferences {
     this.categories = const [],
     this.level = 'beginner',
     this.quizScore,
+    this.dailyGoal = 5,
     this.onboardingCompleted = false,
     this.createdAt,
   });
@@ -30,6 +32,7 @@ class UserPreferences {
       categories: List<String>.from(json['categories'] ?? []),
       level: json['level'] ?? 'beginner',
       quizScore: json['quiz_score'],
+      dailyGoal: json['daily_goal'] ?? 5,
       onboardingCompleted: json['onboarding_completed'] ?? false,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
@@ -46,6 +49,7 @@ class UserPreferences {
       'categories': categories,
       'level': level,
       'quiz_score': quizScore,
+      'daily_goal': dailyGoal,
       'onboarding_completed': onboardingCompleted,
       'created_at': createdAt?.toIso8601String(),
     };
@@ -59,6 +63,7 @@ class UserPreferences {
     List<String>? categories,
     String? level,
     int? quizScore,
+    int? dailyGoal,
     bool? onboardingCompleted,
     DateTime? createdAt,
   }) {
@@ -70,6 +75,7 @@ class UserPreferences {
       categories: categories ?? this.categories,
       level: level ?? this.level,
       quizScore: quizScore ?? this.quizScore,
+      dailyGoal: dailyGoal ?? this.dailyGoal,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -434,5 +440,46 @@ class LanguageOption {
     LanguageOption(code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦'),
     LanguageOption(code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵'),
     LanguageOption(code: 'zh', name: 'Chinese', nativeName: '中文', flag: '🇨🇳'),
+  ];
+}
+
+class DailyGoalOption {
+  final int words;
+  final String title;
+  final String description;
+  final String icon;
+
+  const DailyGoalOption({
+    required this.words,
+    required this.title,
+    required this.description,
+    required this.icon,
+  });
+
+  static const List<DailyGoalOption> options = [
+    DailyGoalOption(
+      words: 3,
+      title: 'Casual',
+      description: '3 words/day • ~5 min',
+      icon: 'walk',
+    ),
+    DailyGoalOption(
+      words: 5,
+      title: 'Regular',
+      description: '5 words/day • ~10 min',
+      icon: 'directions_run',
+    ),
+    DailyGoalOption(
+      words: 10,
+      title: 'Serious',
+      description: '10 words/day • ~15 min',
+      icon: 'fitness_center',
+    ),
+    DailyGoalOption(
+      words: 20,
+      title: 'Intense',
+      description: '20 words/day • ~30 min',
+      icon: 'local_fire_department',
+    ),
   ];
 }
