@@ -4,11 +4,13 @@ import '../models/word.dart';
 import '../models/folder.dart';
 import '../providers/words_provider.dart';
 import '../providers/folders_provider.dart';
+import '../providers/user_preferences_provider.dart';
 import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/widgets.dart';
 import 'study_session_screen.dart';
 import 'import_screen.dart';
+import 'ai_chat_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -125,26 +127,72 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       DateTime.now().isAfter(w.nextReview) ||
       (w.difficulty == Difficulty.newWord)
     ).length;
+    final userPrefs = ref.watch(userPreferencesProvider).valueOrNull;
+    final dailyGoal = userPrefs?.dailyGoal ?? 5;
+    final todayWords = _countTodayWords(allWords);
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Personalized Header
           Container(
             padding: const EdgeInsets.all(AppSpacing.xl),
             color: AppColors.surface,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Hello!', style: AppTextStyles.h1),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Ready to learn some vocabulary?',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_getGreeting(), style: AppTextStyles.h1),
+                        const SizedBox(height: AppSpacing.xs),
+                        if (userPrefs != null)
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.sm,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                                ),
+                                child: Text(
+                                  userPrefs.targetLanguage,
+                                  style: AppTextStyles.labelSmall.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Text(
+                                userPrefs.levelDescription,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          Text(
+                            'Ready to learn some vocabulary?',
+                            style: AppTextStyles.bodyLarge.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
+                const SizedBox(height: AppSpacing.lg),
+                // Daily Goal Progress
+                _buildDailyGoalProgress(todayWords, dailyGoal),
               ],
             ),
           ),
@@ -249,33 +297,52 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           // Quick Actions
           _buildSection(
             title: 'Quick Actions',
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: QuickActionCard(
-                    icon: Icons.add_circle_outline_rounded,
-                    label: 'Add Word',
-                    onTap: () => _showAddWordDialog(),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: QuickActionCard(
-                    icon: Icons.upload_file_rounded,
-                    label: 'Import',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const ImportScreen()),
+                Row(
+                  children: [
+                    Expanded(
+                      child: QuickActionCard(
+                        icon: Icons.auto_awesome_rounded,
+                        label: 'AI Assistant',
+                        iconColor: AppColors.primary,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const AIChatScreen()),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: QuickActionCard(
+                        icon: Icons.add_circle_outline_rounded,
+                        label: 'Add Word',
+                        onTap: () => _showAddWordDialog(),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: QuickActionCard(
-                    icon: Icons.folder_rounded,
-                    label: 'Folders',
-                    iconColor: AppColors.accent,
-                    onTap: () => _showFoldersDialog(),
-                  ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: QuickActionCard(
+                        icon: Icons.upload_file_rounded,
+                        label: 'Import',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const ImportScreen()),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: QuickActionCard(
+                        icon: Icons.folder_rounded,
+                        label: 'Folders',
+                        iconColor: AppColors.accent,
+                        onTap: () => _showFoldersDialog(),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -392,6 +459,93 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           w.difficulty == Difficulty.review ||
           w.difficulty == Difficulty.failed).length,
     };
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning!';
+    if (hour < 17) return 'Good afternoon!';
+    return 'Good evening!';
+  }
+
+  int _countTodayWords(List<Word> words) {
+    final today = DateTime.now();
+    return words.where((w) =>
+      w.createdAt.year == today.year &&
+      w.createdAt.month == today.month &&
+      w.createdAt.day == today.day
+    ).length;
+  }
+
+  Widget _buildDailyGoalProgress(int todayWords, int dailyGoal) {
+    final progress = (todayWords / dailyGoal).clamp(0.0, 1.0);
+    final isComplete = todayWords >= dailyGoal;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isComplete
+            ? AppColors.success.withValues(alpha: 0.1)
+            : AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: isComplete ? AppColors.success : AppColors.border,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    isComplete ? Icons.check_circle : Icons.local_fire_department_rounded,
+                    color: isComplete ? AppColors.success : AppColors.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Daily Goal',
+                    style: AppTextStyles.labelLarge,
+                  ),
+                ],
+              ),
+              Text(
+                '$todayWords / $dailyGoal words',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: isComplete ? AppColors.success : AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: AppColors.border,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isComplete ? AppColors.success : AppColors.primary,
+              ),
+              minHeight: 8,
+            ),
+          ),
+          if (isComplete) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Goal complete! Great job!',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.success,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   void _startStudySession(List<Word> words, String type) {
