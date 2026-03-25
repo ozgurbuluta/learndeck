@@ -23,10 +23,27 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   @override
   void initState() {
     super.initState();
+    // Defer to get access to ref
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showWelcomeMessage();
+    });
+  }
+
+  void _showWelcomeMessage() {
+    final userPrefs = ref.read(userPreferencesProvider).valueOrNull;
+    final targetLang = userPrefs?.targetLanguage ?? 'German';
+    final categories = userPrefs?.categories ?? [];
+
+    String suggestions = '';
+    if (categories.isNotEmpty) {
+      final topCategories = categories.take(2).join(' or ');
+      suggestions = '- "Give me words about $topCategories"\n';
+    }
+
     _addAssistantMessage(
-      'Hi! I can help you create vocabulary cards. Try saying:\n'
-      '- "Give me 10 German words about food"\n'
-      '- "I need business vocabulary in German"\n'
+      'Hi! I can help you create $targetLang vocabulary cards. Try saying:\n'
+      '${suggestions.isNotEmpty ? suggestions : '- "Give me 10 words about food"\n'}'
+      '- "I need business vocabulary"\n'
       '- "Teach me travel phrases"',
     );
   }

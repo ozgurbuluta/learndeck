@@ -7,6 +7,7 @@ interface Message {
 
 interface UserPreferences {
   targetLanguage?: string;
+  nativeLanguage?: string;
   level?: string;
   useCases?: string[];
   categories?: string[];
@@ -48,11 +49,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Build personalized context from user preferences
     let personalizationContext = '';
+    let nativeLanguage = 'English'; // Default
+    let targetLanguage = 'German'; // Default
+
     if (userPreferences) {
       const parts: string[] = [];
 
       if (userPreferences.targetLanguage) {
+        targetLanguage = userPreferences.targetLanguage;
         parts.push(`Target language: ${userPreferences.targetLanguage}`);
+      }
+
+      if (userPreferences.nativeLanguage) {
+        nativeLanguage = userPreferences.nativeLanguage;
+        parts.push(`Native language (for definitions): ${userPreferences.nativeLanguage}`);
       }
 
       if (userPreferences.level) {
@@ -87,7 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const systemPrompt = `
-      You are a data transformation service. Your ONLY function is to receive a user's request for vocabulary and return a single, valid JSON object. You must not output any text, conversation, or formatting that is not part of the JSON object.
+      You are a vocabulary assistant helping users learn ${targetLanguage}. Your ONLY function is to receive a user's request for vocabulary and return a single, valid JSON object. You must not output any text, conversation, or formatting that is not part of the JSON object.
 ${personalizationContext}
 
       **JSON OUTPUT SPECIFICATION:**
@@ -96,18 +106,19 @@ ${personalizationContext}
       1.  **"success"**: Must always be \`true\`.
       2.  **"response"**: A friendly, conversational message for the user. This field is mandatory.
       3.  **"words"**: An array of objects.
-          *   If generating vocabulary, each object in the array MUST contain two keys: "word" (the foreign term) and "definition" (its English meaning). For German words, include the article (der/die/das) with the word.
+          *   If generating vocabulary, each object in the array MUST contain two keys: "word" (the ${targetLanguage} term) and "definition" (its ${nativeLanguage} meaning/translation).
+          *   For languages with articles (German: der/die/das, French: le/la/les, Spanish: el/la/los/las, etc.), include the article with the word.
           *   IMPORTANT: Match the vocabulary difficulty to the user's proficiency level. For beginners, use simple common words. For advanced learners, include sophisticated vocabulary.
-          *   If you need to ask the user a clarifying question (e.g., about language, topic, or level), this array MUST be empty (\`[]\`).
+          *   If you need to ask the user a clarifying question (e.g., about topic or preferences), this array MUST be empty (\`[]\`).
 
-      **Example of a Perfect Response:**
+      **Example of a Perfect Response (for ${targetLanguage} with ${nativeLanguage} definitions):**
       \`\`\`json
       {
         "success": true,
-        "response": "Here are some German words related to food:",
+        "response": "Here are some ${targetLanguage} words related to food:",
         "words": [
-          {"word": "der Apfel", "definition": "the apple"},
-          {"word": "das Brot", "definition": "the bread"}
+          {"word": "example_word", "definition": "translation in ${nativeLanguage}"},
+          {"word": "another_word", "definition": "translation in ${nativeLanguage}"}
         ]
       }
       \`\`\`

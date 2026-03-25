@@ -20,6 +20,7 @@ class AIService {
           'conversationHistory': conversationHistory ?? [],
           if (userPreferences != null) 'userPreferences': {
             'targetLanguage': userPreferences.targetLanguage,
+            'nativeLanguage': userPreferences.nativeLanguage,
             'level': userPreferences.level,
             'useCases': userPreferences.useCases,
             'categories': userPreferences.categories,
