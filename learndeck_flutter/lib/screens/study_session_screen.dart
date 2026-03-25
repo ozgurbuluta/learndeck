@@ -3,6 +3,7 @@ import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/word.dart';
 import '../providers/words_provider.dart';
+import '../providers/user_activity_provider.dart';
 import '../utils/study_algorithm.dart';
 import '../theme/app_theme.dart';
 
@@ -66,6 +67,8 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
 
       if (_currentIndex >= _studyWords.length) {
         _isComplete = true;
+        // Record activity for streak
+        ref.read(userActivityProvider.notifier).recordReviewCompleted();
       }
     });
   }

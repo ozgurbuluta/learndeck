@@ -361,4 +361,95 @@ class FirebaseService {
       'updated_at': DateTime.now().toIso8601String(),
     });
   }
+
+  // User Activity / Streaks
+  static CollectionReference<Map<String, dynamic>> get _userActivityCollection =>
+      _db.collection('user_activity');
+
+  static Future<Map<String, dynamic>?> getUserActivity() async {
+    final userId = currentUser?.uid;
+    if (userId == null) return null;
+
+    final doc = await _userActivityCollection.doc(userId).get();
+    if (!doc.exists) return null;
+
+    return doc.data();
+  }
+
+  static Future<void> recordActivity({
+    bool wordAdded = false,
+    bool reviewCompleted = false,
+  }) async {
+    final userId = currentUser?.uid;
+    if (userId == null) return;
+
+    final doc = await _userActivityCollection.doc(userId).get();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    if (!doc.exists) {
+      // First activity ever
+      await _userActivityCollection.doc(userId).set({
+        'user_id': userId,
+        'last_activity_date': today.toIso8601String(),
+        'current_streak': 1,
+        'longest_streak': 1,
+        'total_words_learned': wordAdded ? 1 : 0,
+        'total_review_sessions': reviewCompleted ? 1 : 0,
+        'created_at': now.toIso8601String(),
+      });
+      return;
+    }
+
+    final data = doc.data()!;
+    final lastActivityStr = data['last_activity_date'] as String?;
+    final lastActivity = lastActivityStr != null
+        ? DateTime.parse(lastActivityStr)
+        : null;
+
+    int currentStreak = data['current_streak'] ?? 0;
+    int longestStreak = data['longest_streak'] ?? 0;
+    int totalWordsLearned = data['total_words_learned'] ?? 0;
+    int totalReviewSessions = data['total_review_sessions'] ?? 0;
+
+    // Check if already active today
+    bool alreadyActiveToday = false;
+    if (lastActivity != null) {
+      final lastDate = DateTime(lastActivity.year, lastActivity.month, lastActivity.day);
+      alreadyActiveToday = lastDate.isAtSameMomentAs(today);
+    }
+
+    if (!alreadyActiveToday) {
+      // Check if this continues a streak (was active yesterday)
+      final yesterday = today.subtract(const Duration(days: 1));
+      bool wasActiveYesterday = false;
+      if (lastActivity != null) {
+        final lastDate = DateTime(lastActivity.year, lastActivity.month, lastActivity.day);
+        wasActiveYesterday = lastDate.isAtSameMomentAs(yesterday);
+      }
+
+      if (wasActiveYesterday) {
+        currentStreak += 1;
+      } else {
+        currentStreak = 1; // Start new streak
+      }
+
+      if (currentStreak > longestStreak) {
+        longestStreak = currentStreak;
+      }
+    }
+
+    // Update totals
+    if (wordAdded) totalWordsLearned += 1;
+    if (reviewCompleted) totalReviewSessions += 1;
+
+    await _userActivityCollection.doc(userId).update({
+      'last_activity_date': today.toIso8601String(),
+      'current_streak': currentStreak,
+      'longest_streak': longestStreak,
+      'total_words_learned': totalWordsLearned,
+      'total_review_sessions': totalReviewSessions,
+      'updated_at': now.toIso8601String(),
+    });
+  }
 }

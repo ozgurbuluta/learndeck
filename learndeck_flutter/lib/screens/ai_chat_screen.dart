@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/words_provider.dart';
 import '../providers/user_preferences_provider.dart';
+import '../providers/user_activity_provider.dart';
 import '../services/ai_service.dart';
 import '../theme/app_theme.dart';
 
@@ -126,6 +127,9 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
           savedCount++;
         }
       }
+
+      // Record activity for streak (count as one activity regardless of word count)
+      ref.read(userActivityProvider.notifier).recordWordAdded();
 
       setState(() {
         _messages.add(ChatMessage(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user_preferences.dart';
 import '../../providers/words_provider.dart';
+import '../../providers/user_activity_provider.dart';
 import '../../services/ai_service.dart';
 import '../../theme/app_theme.dart';
 import '../home_screen.dart';
@@ -95,6 +96,8 @@ class _StarterVocabularyScreenState
           );
         }
       }
+      // Record activity for streak
+      ref.read(userActivityProvider.notifier).recordWordAdded();
       _goToHome();
     } catch (e) {
       setState(() {

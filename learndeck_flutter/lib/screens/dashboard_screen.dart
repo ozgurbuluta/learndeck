@@ -5,6 +5,7 @@ import '../models/folder.dart';
 import '../providers/words_provider.dart';
 import '../providers/folders_provider.dart';
 import '../providers/user_preferences_provider.dart';
+import '../providers/user_activity_provider.dart';
 import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/widgets.dart';
@@ -30,6 +31,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     Future.microtask(() {
       ref.read(wordsProvider.notifier).loadWords();
       ref.read(foldersProvider.notifier).loadFolders();
+      ref.read(userActivityProvider.notifier).loadActivity();
     });
   }
 
@@ -287,11 +289,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           if (words.isNotEmpty)
             _buildSection(
               title: 'Your Progress',
-              child: ProgressCard(
-                totalWords: stats['total']!,
-                masteredWords: stats['mastered']!,
-                dayStreak: 0,
-              ),
+              child: _buildProgressSection(stats),
             ),
 
           // Quick Actions
@@ -475,6 +473,108 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       w.createdAt.month == today.month &&
       w.createdAt.day == today.day
     ).length;
+  }
+
+  Widget _buildProgressSection(Map<String, int> stats) {
+    final activityAsync = ref.watch(userActivityProvider);
+    final activity = activityAsync.valueOrNull;
+    final currentStreak = activity?.effectiveStreak ?? 0;
+    final longestStreak = activity?.longestStreak ?? 0;
+
+    return Column(
+      children: [
+        // Streak display
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primary.withValues(alpha: 0.1),
+                AppColors.primary.withValues(alpha: 0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Icon(
+                  Icons.local_fire_department_rounded,
+                  color: currentStreak > 0 ? AppColors.primary : AppColors.textTertiary,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$currentStreak day${currentStreak != 1 ? 's' : ''} streak',
+                      style: AppTextStyles.h3.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    Text(
+                      currentStreak > 0
+                          ? 'Keep it up! Longest: $longestStreak days'
+                          : 'Start learning to build your streak!',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (currentStreak >= 7)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.success,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.emoji_events_rounded,
+                        color: AppColors.textOnPrimary,
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Hot!',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.textOnPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        // Progress card
+        ProgressCard(
+          totalWords: stats['total']!,
+          masteredWords: stats['mastered']!,
+          dayStreak: currentStreak,
+        ),
+      ],
+    );
   }
 
   Widget _buildDailyGoalProgress(int todayWords, int dailyGoal) {
@@ -824,6 +924,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ? articleController.text
                             : null,
                       );
+                  // Record activity for streak
+                  ref.read(userActivityProvider.notifier).recordWordAdded();
                   if (context.mounted) Navigator.pop(context);
                 }
               },
