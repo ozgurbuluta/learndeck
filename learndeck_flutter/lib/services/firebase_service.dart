@@ -26,7 +26,10 @@ class FirebaseService {
   }
 
   static Future<void> signOut() async {
-    await GoogleSignIn().signOut();
+    // Try to sign out of Google (ignore errors if not signed in with Google)
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
     return _auth.signOut();
   }
 

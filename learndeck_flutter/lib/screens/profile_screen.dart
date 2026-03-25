@@ -128,7 +128,15 @@ class ProfileScreen extends ConsumerWidget {
                   );
 
                   if (confirm == true) {
-                    await FirebaseService.signOut();
+                    try {
+                      await FirebaseService.signOut();
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Sign out failed: $e')),
+                        );
+                      }
+                    }
                   }
                 },
                 style: OutlinedButton.styleFrom(
