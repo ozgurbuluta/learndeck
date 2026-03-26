@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
 import '../services/firebase_service.dart';
+import '../services/notification_service.dart';
 import '../providers/user_preferences_provider.dart';
 import 'onboarding/onboarding_screen.dart';
 
@@ -48,12 +49,7 @@ class ProfileScreen extends ConsumerWidget {
             _buildSectionTitle('Settings'),
             const SizedBox(height: AppSpacing.md),
 
-            _buildSettingsTile(
-              icon: Icons.notifications_rounded,
-              title: 'Notifications',
-              subtitle: 'Manage notification preferences',
-              onTap: () {},
-            ),
+            _NotificationTile(),
             _buildSettingsTile(
               icon: Icons.language_rounded,
               title: 'Language',
@@ -250,5 +246,182 @@ class ProfileScreen extends ConsumerWidget {
         );
       }
     }
+  }
+}
+
+class _NotificationTile extends StatefulWidget {
+  @override
+  State<_NotificationTile> createState() => _NotificationTileState();
+}
+
+class _NotificationTileState extends State<_NotificationTile> {
+  bool _enabled = false;
+  int _hour = 9;
+  int _minute = 0;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final enabled = await NotificationService.areNotificationsEnabled();
+    final time = await NotificationService.getScheduledTime();
+    setState(() {
+      _enabled = enabled;
+      if (time != null) {
+        _hour = time.hour;
+        _minute = time.minute;
+      }
+      _loading = false;
+    });
+  }
+
+  Future<void> _toggleNotifications(bool value) async {
+    if (value) {
+      final granted = await NotificationService.requestPermission();
+      if (granted) {
+        await NotificationService.scheduleDailyReminder(
+          hour: _hour,
+          minute: _minute,
+        );
+        setState(() => _enabled = true);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please enable notifications in system settings'),
+            ),
+          );
+        }
+      }
+    } else {
+      await NotificationService.cancelAll();
+      setState(() => _enabled = false);
+    }
+  }
+
+  Future<void> _showTimePicker() async {
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: _hour, minute: _minute),
+    );
+
+    if (time != null) {
+      setState(() {
+        _hour = time.hour;
+        _minute = time.minute;
+      });
+
+      if (_enabled) {
+        await NotificationService.scheduleDailyReminder(
+          hour: _hour,
+          minute: _minute,
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
+            child: Icon(Icons.notifications_rounded, color: AppColors.primary, size: 20),
+          ),
+          title: Text('Notifications', style: AppTextStyles.body),
+          subtitle: Text(
+            'Loading...',
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Icon(Icons.notifications_rounded, color: AppColors.primary, size: 20),
+            ),
+            title: Text('Daily Reminder', style: AppTextStyles.body),
+            subtitle: Text(
+              _enabled
+                  ? 'Reminder at ${NotificationService.formatTime(_hour, _minute)}'
+                  : 'Off',
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+            ),
+            trailing: Switch(
+              value: _enabled,
+              onChanged: _toggleNotifications,
+              activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
+              activeThumbColor: AppColors.primary,
+            ),
+          ),
+          if (_enabled)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl + 40,
+                0,
+                AppSpacing.lg,
+                AppSpacing.md,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.schedule_rounded,
+                    size: 16,
+                    color: AppColors.textTertiary,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Reminder time',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: _showTimePicker,
+                    child: Text(
+                      NotificationService.formatTime(_hour, _minute),
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
