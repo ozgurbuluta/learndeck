@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
 import '../providers/words_provider.dart';
 import 'listening_exercise_screen.dart';
+import 'spell_exercise_screen.dart';
 
 class VoicePracticeScreen extends ConsumerWidget {
   const VoicePracticeScreen({super.key});
@@ -60,7 +61,7 @@ class VoicePracticeScreen extends ConsumerWidget {
               },
             ),
 
-            // Listen & Spell (Coming Soon)
+            // Listen & Spell
             _buildExerciseCard(
               context,
               icon: Icons.keyboard_rounded,
@@ -68,8 +69,14 @@ class VoicePracticeScreen extends ConsumerWidget {
               description: 'Hear a word and type what you heard',
               wordCount: wordCount,
               minWords: 1,
-              comingSoon: true,
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SpellExerciseScreen(),
+                  ),
+                );
+              },
             ),
 
             const SizedBox(height: AppSpacing.xxl),
