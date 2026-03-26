@@ -213,7 +213,8 @@ Firebase config is auto-generated via FlutterFire CLI.
 ## Documentation
 
 - [NOTIFICATIONS.md](learndeck_flutter/NOTIFICATIONS.md) - Push notification tracking
-- [CLAUDE.md](CLAUDE.md) - LLM agent development guide
+- [LLM_AGENT_BRIEFING.md](LLM_AGENT_BRIEFING.md) - Detailed development guide for AI assistants
+- [CLAUDE.md](CLAUDE.md) - Claude Code project instructions
 
 ## Important Constraints
 
