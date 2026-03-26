@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import '../providers/words_provider.dart';
 import 'listening_exercise_screen.dart';
 import 'spell_exercise_screen.dart';
+import 'pronunciation_screen.dart';
 
 class VoicePracticeScreen extends ConsumerWidget {
   const VoicePracticeScreen({super.key});
@@ -88,7 +89,7 @@ class VoicePracticeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // Pronunciation Practice (Coming Soon)
+            // Pronunciation Practice
             _buildExerciseCard(
               context,
               icon: Icons.mic_rounded,
@@ -96,8 +97,14 @@ class VoicePracticeScreen extends ConsumerWidget {
               description: 'Speak words and get feedback on your pronunciation',
               wordCount: wordCount,
               minWords: 1,
-              comingSoon: true,
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PronunciationScreen(),
+                  ),
+                );
+              },
             ),
 
             // Shadowing (Coming Soon)
