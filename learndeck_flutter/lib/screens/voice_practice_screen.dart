@@ -5,6 +5,7 @@ import '../providers/words_provider.dart';
 import 'listening_exercise_screen.dart';
 import 'spell_exercise_screen.dart';
 import 'pronunciation_screen.dart';
+import 'shadowing_screen.dart';
 
 class VoicePracticeScreen extends ConsumerWidget {
   const VoicePracticeScreen({super.key});
@@ -107,7 +108,7 @@ class VoicePracticeScreen extends ConsumerWidget {
               },
             ),
 
-            // Shadowing (Coming Soon)
+            // Shadowing
             _buildExerciseCard(
               context,
               icon: Icons.record_voice_over_rounded,
@@ -115,8 +116,14 @@ class VoicePracticeScreen extends ConsumerWidget {
               description: 'Listen and repeat immediately after',
               wordCount: wordCount,
               minWords: 1,
-              comingSoon: true,
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ShadowingScreen(),
+                  ),
+                );
+              },
             ),
 
             const SizedBox(height: AppSpacing.xxl),
