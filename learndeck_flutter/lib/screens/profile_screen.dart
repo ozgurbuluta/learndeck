@@ -4,6 +4,8 @@ import '../theme/app_theme.dart';
 import '../services/firebase_service.dart';
 import '../services/notification_service.dart';
 import '../providers/user_preferences_provider.dart';
+import '../providers/tts_provider.dart';
+import '../models/tts_settings.dart';
 import 'onboarding/onboarding_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -50,6 +52,7 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
 
             _NotificationTile(),
+            const _VoiceSettingsTile(),
             _buildSettingsTile(
               icon: Icons.language_rounded,
               title: 'Language',
@@ -421,6 +424,151 @@ class _NotificationTileState extends State<_NotificationTile> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _VoiceSettingsTile extends ConsumerStatefulWidget {
+  const _VoiceSettingsTile();
+
+  @override
+  ConsumerState<_VoiceSettingsTile> createState() => _VoiceSettingsTileState();
+}
+
+class _VoiceSettingsTileState extends ConsumerState<_VoiceSettingsTile> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final ttsSettings = ref.watch(ttsSettingsProvider);
+    final prefs = ref.watch(userPreferencesProvider).valueOrNull;
+    final language = prefs?.targetLanguage ?? 'German';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            onTap: () => setState(() => _expanded = !_expanded),
+            leading: Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Icon(Icons.volume_up_rounded, color: AppColors.primary, size: 20),
+            ),
+            title: Text('Voice Settings', style: AppTextStyles.body),
+            subtitle: Text(
+              'Speed: ${ttsSettings.rateDisplayName}',
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+            ),
+            trailing: Icon(
+              _expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+              color: AppColors.textTertiary,
+            ),
+          ),
+          if (_expanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                0,
+                AppSpacing.lg,
+                AppSpacing.lg,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Speech Rate
+                  Text(
+                    'Speech Speed',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildRateSelector(ttsSettings),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Volume
+                  Row(
+                    children: [
+                      Icon(Icons.volume_down_rounded, size: 18, color: AppColors.textTertiary),
+                      Expanded(
+                        child: Slider(
+                          value: ttsSettings.volume,
+                          min: 0.0,
+                          max: 1.0,
+                          activeColor: AppColors.primary,
+                          inactiveColor: AppColors.border,
+                          onChanged: (value) {
+                            ref.read(ttsSettingsProvider.notifier).setVolume(value);
+                          },
+                        ),
+                      ),
+                      Icon(Icons.volume_up_rounded, size: 18, color: AppColors.textTertiary),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Test button
+                  Center(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        ref.read(ttsSettingsProvider.notifier).testVoice(language);
+                      },
+                      icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                      label: Text('Test Voice ($language)'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: BorderSide(color: AppColors.primary),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRateSelector(TTSSettings settings) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: TTSSettings.presetRates.entries.map((entry) {
+          final isSelected = (settings.speechRate - entry.value).abs() < 0.1;
+          return Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            child: ChoiceChip(
+              label: Text(entry.key),
+              selected: isSelected,
+              onSelected: (selected) {
+                if (selected) {
+                  ref.read(ttsSettingsProvider.notifier).setRate(entry.value);
+                }
+              },
+              selectedColor: AppColors.primary.withValues(alpha: 0.2),
+              labelStyle: TextStyle(
+                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 12,
+              ),
+              side: BorderSide(
+                color: isSelected ? AppColors.primary : AppColors.border,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
