@@ -43,6 +43,45 @@ class AIService {
     }
   }
 
+  /// Get AI conversation response for speaking practice
+  static Future<ConversationResponse> getConversationResponse({
+    required String userMessage,
+    required String targetLanguage,
+    String? nativeLanguage,
+    String? level,
+    String? topic,
+    List<ConversationMessage>? conversationHistory,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/conversation'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'userMessage': userMessage,
+          'targetLanguage': targetLanguage,
+          'nativeLanguage': nativeLanguage ?? 'English',
+          'level': level ?? 'beginner',
+          if (topic != null) 'topic': topic,
+          'conversationHistory': conversationHistory?.map((m) => m.toJson()).toList() ?? [],
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('API error: ${response.statusCode}');
+      }
+
+      final data = jsonDecode(response.body);
+      return ConversationResponse.fromJson(data);
+    } catch (e) {
+      return ConversationResponse(
+        success: false,
+        response: 'Could not get response. Please try again.',
+        translation: '',
+        suggestion: '',
+      );
+    }
+  }
+
   /// Get AI-powered pronunciation feedback
   static Future<PronunciationFeedback> getPronunciationFeedback({
     required String targetWord,
@@ -207,6 +246,38 @@ class PronunciationFeedback {
       feedback: json['feedback'] ?? '',
       tip: json['tip'] ?? '',
       encouragement: json['encouragement'] ?? 'Keep practicing!',
+    );
+  }
+}
+
+class ConversationMessage {
+  final String role;
+  final String content;
+
+  ConversationMessage({required this.role, required this.content});
+
+  Map<String, dynamic> toJson() => {'role': role, 'content': content};
+}
+
+class ConversationResponse {
+  final bool success;
+  final String response;
+  final String translation;
+  final String suggestion;
+
+  ConversationResponse({
+    required this.success,
+    required this.response,
+    required this.translation,
+    required this.suggestion,
+  });
+
+  factory ConversationResponse.fromJson(Map<String, dynamic> json) {
+    return ConversationResponse(
+      success: json['success'] ?? false,
+      response: json['response'] ?? '',
+      translation: json['translation'] ?? '',
+      suggestion: json['suggestion'] ?? '',
     );
   }
 }

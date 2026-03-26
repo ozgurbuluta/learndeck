@@ -6,6 +6,7 @@ import 'listening_exercise_screen.dart';
 import 'spell_exercise_screen.dart';
 import 'pronunciation_screen.dart';
 import 'shadowing_screen.dart';
+import 'conversation_screen.dart';
 
 class VoicePracticeScreen extends ConsumerWidget {
   const VoicePracticeScreen({super.key});
@@ -121,6 +122,33 @@ class VoicePracticeScreen extends ConsumerWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const ShadowingScreen(),
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: AppSpacing.xxl),
+
+            // Conversation Section
+            Text(
+              'Conversation',
+              style: AppTextStyles.h4.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // AI Conversation
+            _buildExerciseCard(
+              context,
+              icon: Icons.chat_rounded,
+              title: 'AI Conversation',
+              description: 'Practice speaking with an AI partner',
+              wordCount: wordCount,
+              minWords: 0,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ConversationScreen(),
                   ),
                 );
               },
