@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import '../models/word.dart';
 import '../providers/words_provider.dart';
+import '../providers/user_preferences_provider.dart';
+import '../services/tts_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/widgets.dart';
 
@@ -15,32 +16,27 @@ class WordListScreen extends ConsumerStatefulWidget {
 
 class _WordListScreenState extends ConsumerState<WordListScreen> {
   final _searchController = TextEditingController();
-  final FlutterTts _tts = FlutterTts();
   String _searchQuery = '';
   Difficulty? _filterDifficulty;
 
   @override
   void initState() {
     super.initState();
-    _initTts();
     // Load words when screen opens
     Future.microtask(() => ref.read(wordsProvider.notifier).loadWords());
-  }
-
-  Future<void> _initTts() async {
-    await _tts.setLanguage('de-DE');
-    await _tts.setSpeechRate(0.5);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _tts.stop();
+    TTSService.stop();
     super.dispose();
   }
 
   Future<void> _speak(String text) async {
-    await _tts.speak(text);
+    final prefs = ref.read(userPreferencesProvider).valueOrNull;
+    final language = prefs?.targetLanguage ?? 'German';
+    await TTSService.speak(text, language: language);
   }
 
   List<Word> _filterWords(List<Word> words) {

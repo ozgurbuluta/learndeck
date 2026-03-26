@@ -8,6 +8,7 @@ import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'services/notification_service.dart';
+import 'services/tts_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -20,6 +21,9 @@ void main() async {
 
   // Initialize notifications
   await NotificationService.initialize();
+
+  // Initialize text-to-speech
+  await TTSService.initialize();
 
   runApp(const ProviderScope(child: LearnDeckApp()));
 }

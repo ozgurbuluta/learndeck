@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/word.dart';
 import '../providers/words_provider.dart';
 import '../providers/user_activity_provider.dart';
+import '../providers/user_preferences_provider.dart';
+import '../services/tts_service.dart';
 import '../utils/study_algorithm.dart';
 import '../theme/app_theme.dart';
 
@@ -45,6 +47,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    TTSService.stop();
     super.dispose();
   }
 
@@ -77,6 +80,18 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
     setState(() {
       _isFlipped = !_isFlipped;
     });
+  }
+
+  Future<void> _speakWord(String text) async {
+    final prefs = ref.read(userPreferencesProvider).valueOrNull;
+    final language = prefs?.targetLanguage ?? 'German';
+    await TTSService.speak(text, language: language);
+  }
+
+  Future<void> _speakWordSlow(String text) async {
+    final prefs = ref.read(userPreferencesProvider).valueOrNull;
+    final language = prefs?.targetLanguage ?? 'German';
+    await TTSService.speakSlow(text, language: language);
   }
 
   @override
@@ -230,6 +245,33 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSpacing.xl),
+                      // Audio buttons
+                      if (!(_isFlipped && isTop))
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              onPressed: () => _speakWord(word.word),
+                              icon: Icon(
+                                Icons.volume_up_rounded,
+                                color: AppColors.primary,
+                                size: 28,
+                              ),
+                              tooltip: 'Listen',
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            IconButton(
+                              onPressed: () => _speakWordSlow(word.word),
+                              icon: Icon(
+                                Icons.slow_motion_video_rounded,
+                                color: AppColors.textSecondary,
+                                size: 24,
+                              ),
+                              tooltip: 'Listen slowly',
+                            ),
+                          ],
+                        ),
+                      const SizedBox(height: AppSpacing.md),
                       if (!(_isFlipped && isTop))
                         Text(
                           'Tap to reveal',
