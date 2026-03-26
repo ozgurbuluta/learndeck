@@ -43,6 +43,43 @@ class AIService {
     }
   }
 
+  /// Get AI-powered pronunciation feedback
+  static Future<PronunciationFeedback> getPronunciationFeedback({
+    required String targetWord,
+    required String spokenWord,
+    required String targetLanguage,
+    String? nativeLanguage,
+    required double similarityScore,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/pronunciation-feedback'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'targetWord': targetWord,
+          'spokenWord': spokenWord,
+          'targetLanguage': targetLanguage,
+          'nativeLanguage': nativeLanguage ?? 'English',
+          'similarityScore': similarityScore,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('API error: ${response.statusCode}');
+      }
+
+      final data = jsonDecode(response.body);
+      return PronunciationFeedback.fromJson(data);
+    } catch (e) {
+      return PronunciationFeedback(
+        success: false,
+        feedback: 'Could not get feedback. Please try again.',
+        tip: '',
+        encouragement: 'Keep practicing!',
+      );
+    }
+  }
+
   /// Extract vocabulary from a document (PDF text, CSV, etc.)
   static Future<DocumentProcessResponse> processDocument({
     required String content,
@@ -148,5 +185,28 @@ class ExtractedWord {
       'definition': definition,
       if (article != null) 'article': article,
     };
+  }
+}
+
+class PronunciationFeedback {
+  final bool success;
+  final String feedback;
+  final String tip;
+  final String encouragement;
+
+  PronunciationFeedback({
+    required this.success,
+    required this.feedback,
+    required this.tip,
+    required this.encouragement,
+  });
+
+  factory PronunciationFeedback.fromJson(Map<String, dynamic> json) {
+    return PronunciationFeedback(
+      success: json['success'] ?? false,
+      feedback: json['feedback'] ?? '',
+      tip: json['tip'] ?? '',
+      encouragement: json['encouragement'] ?? 'Keep practicing!',
+    );
   }
 }
