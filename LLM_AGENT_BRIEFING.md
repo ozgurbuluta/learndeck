@@ -195,6 +195,84 @@ English, Spanish, French, German, Italian, Portuguese, Dutch, Turkish, Russian, 
 - Firebase Emulator can be used for local development
 - Test on both iOS and Android for voice feature compatibility
 
+## iOS Troubleshooting
+
+### Xcode Workspace Crashes
+
+**Symptom**: Xcode crashes or freezes when opening `Runner.xcworkspace`
+
+**Root Cause**: Duplicate Pod folders created during interrupted builds (e.g., "Firebase 2", "abseil 3", "BoringSSL-GRPC 4")
+
+**Fix**:
+```bash
+cd learndeck_flutter/ios
+
+# Remove duplicate folders (with space + number suffix)
+find Pods -maxdepth 1 -name "* 2" -type d -exec rm -rf {} \;
+find Pods -maxdepth 1 -name "* 3" -type d -exec rm -rf {} \;
+find Pods -maxdepth 1 -name "* 4" -type d -exec rm -rf {} \;
+
+# Clean reinstall pods
+rm -rf Pods Podfile.lock
+pod install --repo-update
+```
+
+**Prevention**: Don't interrupt `pod install` or Xcode builds mid-process.
+
+### Sandbox Not in Sync Error
+
+**Symptom**: Build error "The sandbox is not in sync with the Podfile.lock"
+
+**Fix**:
+```bash
+cd learndeck_flutter/ios
+pod install
+```
+
+This syncs `Pods/Manifest.lock` with `Podfile.lock`.
+
+### Build Database Locked Error
+
+**Symptom**: "unable to attach DB: database is locked" error
+
+**Root Cause**: Multiple Xcode build processes running, or stale build process
+
+**Fix**:
+```bash
+# Kill stale build processes
+pkill -9 xcodebuild
+pkill -9 XCBuild
+
+# Clear DerivedData for this project
+rm -rf ~/Library/Developer/Xcode/DerivedData/Runner-*
+
+# Reopen Xcode and build again
+```
+
+### Code Signing for Simulator
+
+**Symptom**: Build fails due to code signing when targeting simulator
+
+**Fix**: Build with signing disabled:
+```bash
+cd learndeck_flutter/ios
+xcodebuild -workspace Runner.xcworkspace -scheme Runner \
+  -destination 'generic/platform=iOS Simulator' \
+  CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+```
+
+Or use Flutter:
+```bash
+flutter build ios --simulator --no-codesign
+```
+
+### Healthy Pods State
+
+A clean Pods folder should have:
+- ~35 items (not 90+)
+- ~95MB size (not 250MB+)
+- No folders with "2", "3", "4" suffixes
+
 ## Quick Commands
 
 ```bash
