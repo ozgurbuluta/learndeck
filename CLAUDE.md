@@ -98,5 +98,5 @@ cd api && vercel --prod                # Deploy API
 | `LLM_AGENT_BRIEFING.md` | Detailed development guide |
 | `learndeck_flutter/README.md` | Flutter implementation details |
 | `learndeck_flutter/NOTIFICATIONS.md` | Push notification tracking |
-| `tasks/todo.md` | Current task plan and progress |
+| `tasks/todo.md` | Current task plan, progress, and **Suggested next priorities** when idle |
 | `tasks/lessons.md` | Lessons learned from corrections |

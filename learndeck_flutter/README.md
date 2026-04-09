@@ -8,6 +8,10 @@ The Flutter implementation of LearnDeck - a vocabulary learning app with AI and 
 # Install dependencies
 flutter pub get
 
+# Release readiness (API smoke + see device checklist)
+# From repo root: bash scripts/release_readiness_verify.sh
+# Details: RELEASE_READINESS.md
+
 # Run on device/simulator
 flutter run
 

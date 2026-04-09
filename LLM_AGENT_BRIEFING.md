@@ -74,6 +74,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 | `lib/providers/words_provider.dart` | Vocabulary state management |
 | `lib/theme/app_theme.dart` | Colors, spacing, text styles |
 | `api/ai-vocabulary.ts` | Main AI vocabulary generation |
+| `tasks/todo.md` | Active task + **Suggested next priorities** (prioritized agent backlog when idle) |
+| `learndeck_flutter/RELEASE_READINESS.md` | API smoke script usage + manual device checklist before release |
 
 ## Adding New Features
 
@@ -180,6 +182,10 @@ final text = ref.read(speechProvider).recognizedText;
 - Speaking achievements/badges
 - Offline mode
 - Multiple word lists/folders
+
+## Agent backlog (prioritized work)
+
+When there is no **Active Task** in [`tasks/todo.md`](tasks/todo.md), continue from the **Suggested next priorities (agent backlog)** section there (P0→P2: release readiness, API cost and reliability, tests, legacy repo hygiene, notifications polish, store distribution). That list is **engineering and release** focus; it complements the **Not Yet Implemented** feature ideas above, which are product gaps rather than the next maintenance pass.
 
 ## Supported Languages
 
