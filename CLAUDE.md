@@ -90,6 +90,8 @@ cd learndeck_flutter && flutter run    # Run app
 cd api && vercel --prod                # Deploy API
 ```
 
+> **Important**: Clone to `~/Developer/learndeck` (or any non-iCloud path). Never work under `~/Documents/` or `~/Desktop/` — iCloud sync creates duplicate Pod folders that crash Xcode.
+
 ## Documentation
 
 | File | Purpose |

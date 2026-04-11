@@ -203,27 +203,28 @@ English, Spanish, French, German, Italian, Portuguese, Dutch, Turkish, Russian, 
 
 ## iOS Troubleshooting
 
-### Xcode Workspace Crashes
+### iCloud Duplicate Pod Folders / Xcode Hangs
 
-**Symptom**: Xcode crashes or freezes when opening `Runner.xcworkspace`
+**Symptom**: Xcode hangs on "Application Not Responding" when opening `Runner.xcworkspace`, or Pods folder contains duplicates like "Firebase 2", "abseil 3", "BoringSSL-GRPC 4".
 
-**Root Cause**: Duplicate Pod folders created during interrupted builds (e.g., "Firebase 2", "abseil 3", "BoringSSL-GRPC 4")
+**Root Cause**: If the project lives under `~/Documents/` (iCloud Desktop & Documents sync), macOS creates conflict copies of Pod folders during builds. These duplicates bloat the workspace and cause Xcode to hang while indexing.
 
-**Fix**:
+**Permanent Fix**: Clone/move the project to a directory **outside** iCloud sync:
+```bash
+mkdir -p ~/Developer
+git clone <repo-url> ~/Developer/learndeck
+# Or: mv ~/Documents/GitHub/learndeck ~/Developer/learndeck
+```
+
+**Temporary Fix** (if you must stay in `~/Documents/`):
 ```bash
 cd learndeck_flutter/ios
-
-# Remove duplicate folders (with space + number suffix)
-find Pods -maxdepth 1 -name "* 2" -type d -exec rm -rf {} \;
-find Pods -maxdepth 1 -name "* 3" -type d -exec rm -rf {} \;
-find Pods -maxdepth 1 -name "* 4" -type d -exec rm -rf {} \;
-
-# Clean reinstall pods
+find Pods -maxdepth 1 -name "* [0-9]" -type d -exec rm -rf {} +
 rm -rf Pods Podfile.lock
 pod install --repo-update
 ```
 
-**Prevention**: Don't interrupt `pod install` or Xcode builds mid-process.
+**Prevention**: Keep the repo outside `~/Documents/`, `~/Desktop/`, or any iCloud-synced folder.
 
 ### Sandbox Not in Sync Error
 
@@ -304,6 +305,7 @@ flutter analyze
 2. Firebase project configured (`flutterfire configure`)
 3. Vercel project with `CLAUDE_API_KEY` env var
 4. Xcode (for iOS) / Android Studio (for Android)
+5. **Clone to a non-iCloud directory** (e.g., `~/Developer/learndeck`) — see "iCloud Duplicate Pod Folders" above
 
 ## Code Style
 
