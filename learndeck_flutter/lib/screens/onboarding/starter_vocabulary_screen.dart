@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/default_vocabulary.dart';
 import '../../models/user_preferences.dart';
 import '../../providers/words_provider.dart';
 import '../../providers/user_activity_provider.dart';
@@ -36,7 +37,32 @@ class _StarterVocabularyScreenState
     return '${categories.take(2).join(', ')} and more';
   }
 
-  Future<void> _generateVocabulary() async {
+  void _loadDefaultVocabulary() {
+    setState(() {
+      _isGenerating = true;
+      _error = null;
+    });
+
+    final language = widget.preferences.targetLanguage;
+    final level = widget.preferences.level;
+
+    if (DefaultVocabulary.hasVocabulary(language)) {
+      final words = DefaultVocabulary.getWords(
+        language: language,
+        level: level,
+      );
+
+      setState(() {
+        _generatedWords = words;
+        _selectedIndices = Set.from(List.generate(words.length, (i) => i));
+        _isGenerating = false;
+      });
+    } else {
+      _generateVocabularyFromAI();
+    }
+  }
+
+  Future<void> _generateVocabularyFromAI() async {
     setState(() {
       _isGenerating = true;
       _error = null;
@@ -187,7 +213,7 @@ class _StarterVocabularyScreenState
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: _isGenerating ? null : _generateVocabulary,
+            onPressed: _isGenerating ? null : _loadDefaultVocabulary,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.textOnPrimary,

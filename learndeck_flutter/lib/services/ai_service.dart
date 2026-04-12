@@ -204,7 +204,7 @@ class ExtractedWord {
   final String definition;
   final String? article;
 
-  ExtractedWord({
+  const ExtractedWord({
     required this.word,
     required this.definition,
     this.article,
