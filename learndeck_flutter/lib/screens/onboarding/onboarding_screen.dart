@@ -34,7 +34,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   void _nextPage() {
-    if (_currentPage < 5) {
+    if (_currentPage < 4) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -112,7 +112,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
-                children: List.generate(6, (index) {
+                children: List.generate(5, (index) {
                   return Expanded(
                     child: Container(
                       height: 4,
@@ -140,7 +140,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   _buildWelcomePage(),
                   _buildLanguagePage(),
-                  _buildUseCasePage(),
                   _buildCategoriesPage(),
                   _buildGoalPage(),
                   _buildLevelPage(),
@@ -307,52 +306,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildUseCasePage() {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Why are you learning?', style: AppTextStyles.h2),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Select all that apply',
-            style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Expanded(
-            child: ListView.builder(
-              itemCount: UseCaseOption.options.length,
-              itemBuilder: (context, index) {
-                final option = UseCaseOption.options[index];
-                final isSelected = _selectedUseCases.contains(option.id);
-                return _buildOptionCard(
-                  title: option.title,
-                  description: option.description,
-                  icon: _getIcon(option.icon),
-                  isSelected: isSelected,
-                  onTap: () {
-                    setState(() {
-                      if (isSelected) {
-                        _selectedUseCases.remove(option.id);
-                      } else {
-                        _selectedUseCases.add(option.id);
-                      }
-                    });
-                  },
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          _buildNavigationButtons(
-            canProceed: _selectedUseCases.isNotEmpty,
-          ),
-        ],
       ),
     );
   }
@@ -673,60 +626,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   Text(title, style: AppTextStyles.labelLarge),
                   Text(
                     subtitle,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected) Icon(Icons.check_circle, color: AppColors.primary),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOptionCard({
-    required String title,
-    required String description,
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.md),
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.1)
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: Icon(icon, color: AppColors.primary),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: AppTextStyles.labelLarge),
-                  Text(
-                    description,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
