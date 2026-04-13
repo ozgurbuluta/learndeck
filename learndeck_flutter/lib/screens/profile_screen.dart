@@ -119,7 +119,7 @@ class ProfileScreen extends ConsumerWidget {
                           onPressed: () => Navigator.pop(context, true),
                           child: Text(
                             'Sign Out',
-                            style: TextStyle(color: AppColors.error),
+                            style: AppTextStyles.button.copyWith(color: AppColors.error),
                           ),
                         ),
                       ],
@@ -225,7 +225,7 @@ class ProfileScreen extends ConsumerWidget {
             onPressed: () => Navigator.pop(context, true),
             child: Text(
               'Reset',
-              style: TextStyle(color: AppColors.primary),
+              style: AppTextStyles.button.copyWith(color: AppColors.primary),
             ),
           ),
         ],
@@ -414,10 +414,7 @@ class _NotificationTileState extends State<_NotificationTile> {
                     onPressed: _showTimePicker,
                     child: Text(
                       NotificationService.formatTime(_hour, _minute),
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: AppTextStyles.button.copyWith(color: AppColors.primary),
                     ),
                   ),
                 ],

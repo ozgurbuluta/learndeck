@@ -163,6 +163,36 @@ class AppTextStyles {
     color: AppColors.primary,
     height: 1.2,
   );
+
+  // Display numbers (for completion screens, percentages)
+  static const TextStyle displayLarge = TextStyle(
+    fontSize: 64,
+    fontWeight: FontWeight.bold,
+    color: AppColors.textPrimary,
+    height: 1.1,
+  );
+
+  static const TextStyle displayMedium = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.bold,
+    color: AppColors.textPrimary,
+    height: 1.2,
+  );
+
+  static const TextStyle displaySmall = TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.bold,
+    color: AppColors.textPrimary,
+    height: 1.2,
+  );
+
+  // Navigation label
+  static const TextStyle navLabel = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textSecondary,
+    height: 1.2,
+  );
 }
 
 class AppTheme {

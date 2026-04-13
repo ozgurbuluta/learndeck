@@ -337,7 +337,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
             if (isSelected)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: AppSpacing.xs),
                 child: Icon(
                   Icons.check_circle,
                   color: AppColors.primary,
@@ -819,7 +819,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
             if (isSelected)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: AppSpacing.xs),
                 child: Icon(
                   Icons.check_circle,
                   color: AppColors.primary,

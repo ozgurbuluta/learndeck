@@ -515,11 +515,7 @@ class _ShadowingScreenState extends ConsumerState<ShadowingScreen> {
           child: Center(
             child: Text(
               '$percentage%',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: feedbackColor,
-              ),
+              style: AppTextStyles.displaySmall.copyWith(color: feedbackColor),
             ),
           ),
         ),
@@ -612,9 +608,7 @@ class _ShadowingScreenState extends ConsumerState<ShadowingScreen> {
               const SizedBox(height: AppSpacing.xl),
               Text(
                 '$percentage%',
-                style: TextStyle(
-                  fontSize: 64,
-                  fontWeight: FontWeight.bold,
+                style: AppTextStyles.displayLarge.copyWith(
                   color: percentage >= 70 ? AppColors.success : AppColors.warning,
                 ),
               ),
@@ -669,7 +663,7 @@ class _ShadowingScreenState extends ConsumerState<ShadowingScreen> {
         children: [
           Text(
             '$value',
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: color),
+            style: AppTextStyles.displayMedium.copyWith(color: color),
           ),
           Text(
             label,

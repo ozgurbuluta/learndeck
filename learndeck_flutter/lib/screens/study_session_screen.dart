@@ -408,9 +408,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
                 const SizedBox(height: AppSpacing.xl),
                 Text(
                   '$percentage%',
-                  style: TextStyle(
-                    fontSize: 64,
-                    fontWeight: FontWeight.bold,
+                  style: AppTextStyles.displayLarge.copyWith(
                     color: percentage >= 70 ? AppColors.success : AppColors.warning,
                   ),
                 ),
@@ -460,11 +458,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
         children: [
           Text(
             '$value',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+            style: AppTextStyles.displayMedium.copyWith(color: color),
           ),
           Text(
             label,

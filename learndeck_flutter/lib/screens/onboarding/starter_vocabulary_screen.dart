@@ -239,7 +239,7 @@ class _StarterVocabularyScreenState
           onPressed: _isGenerating ? null : _goToHome,
           child: Text(
             'Skip for now',
-            style: TextStyle(color: AppColors.textSecondary),
+            style: AppTextStyles.button.copyWith(color: AppColors.textSecondary),
           ),
         ),
       ],
@@ -282,7 +282,7 @@ class _StarterVocabularyScreenState
                 _selectedIndices.length == _generatedWords.length
                     ? 'Deselect all'
                     : 'Select all',
-                style: TextStyle(color: AppColors.primary),
+                style: AppTextStyles.button.copyWith(color: AppColors.primary),
               ),
             ),
           ],

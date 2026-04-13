@@ -538,7 +538,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.sm,
-                    vertical: 4,
+                    vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.success,
@@ -552,7 +552,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         color: AppColors.textOnPrimary,
                         size: 14,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppSpacing.xs),
                       Text(
                         'Hot!',
                         style: AppTextStyles.labelSmall.copyWith(

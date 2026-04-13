@@ -1,8 +1,45 @@
 # Current Tasks
 
-## Active Task
+## Active Task: UI Quality Improvement Initiative
 
-_No active task_
+### Objective
+Systematically improve mobile app UI quality across all screens and functionality, working in phases with commits after each phase.
+
+### Phase Overview
+1. **Phase 1: Design Token Consistency** ← CURRENT
+2. Phase 2: Typography & Text Overflow Handling
+3. Phase 3: Component Standardization (Dialogs, Forms)
+4. Phase 4: Navigation & Transitions
+5. Phase 5: Micro-interactions & Polish
+
+---
+
+### Phase 1: Design Token Consistency ✅ COMPLETE
+
+**Goal:** Replace all hardcoded spacing, colors, and radius values with AppSpacing/AppColors/AppRadius constants.
+
+- [x] Audit all screens for hardcoded values
+- [x] Add new text styles to AppTheme (displayLarge, displayMedium, displaySmall, navLabel)
+- [x] Fix DashboardScreen - hardcoded padding/spacing (lines 541, 555)
+- [x] Fix HomeScreen - inline TextStyle (line 96 → navLabel)
+- [x] Fix StudySessionScreen - inline TextStyle (lines 411, 463 → displayLarge/Medium)
+- [x] Fix ProfileScreen - inline TextStyle (lines 122, 228, 417 → button.copyWith)
+- [x] Fix OnboardingScreen - hardcoded top:4 padding (lines 340, 822 → AppSpacing.xs)
+- [x] Fix AIChatScreen - hardcoded right:4 (line 344 → AppSpacing.xs)
+- [x] Fix ListeningExerciseScreen - inline TextStyle (lines 441, 504 → displayLarge/Medium)
+- [x] Fix PronunciationScreen - inline TextStyle (lines 469, 541, 598 → displayLarge/Medium/statNumber)
+- [x] Fix ShadowingScreen - inline TextStyle (lines 518, 615, 672 → displaySmall/Large/Medium)
+- [x] Fix SpellExerciseScreen - inline TextStyle (lines 501, 564 → displayLarge/Medium)
+- [x] Fix StarterVocabularyScreen - inline TextStyle (lines 242, 285 → button.copyWith)
+- [x] Fix WordListScreen - inline TextStyle (line 464 → button.copyWith)
+- [x] Commit and push Phase 1
+
+### Verification
+- [x] `flutter analyze` passes with no new issues (3 pre-existing info-level only)
+- [ ] App builds and runs without errors
+- [ ] Visual inspection confirms no regressions
+
+---
 
 ---
 

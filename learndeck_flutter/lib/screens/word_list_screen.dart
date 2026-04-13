@@ -461,7 +461,7 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
               ref.read(wordsProvider.notifier).deleteWord(word.id);
               Navigator.pop(context);
             },
-            child: Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: Text('Delete', style: AppTextStyles.button.copyWith(color: AppColors.error)),
           ),
         ],
       ),

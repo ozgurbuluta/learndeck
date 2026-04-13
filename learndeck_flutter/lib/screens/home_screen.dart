@@ -93,8 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: AppSpacing.xs),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 11,
+              style: AppTextStyles.navLabel.copyWith(
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: isSelected ? AppColors.primary : AppColors.textSecondary,
               ),

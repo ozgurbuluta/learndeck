@@ -341,7 +341,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
                         children: [
                           if (isSelected)
                             Padding(
-                              padding: const EdgeInsets.only(right: 4),
+                              padding: const EdgeInsets.only(right: AppSpacing.xs),
                               child: Icon(
                                 Icons.check_circle,
                                 size: 16,
