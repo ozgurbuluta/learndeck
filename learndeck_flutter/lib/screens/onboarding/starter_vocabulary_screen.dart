@@ -6,6 +6,7 @@ import '../../providers/words_provider.dart';
 import '../../providers/user_activity_provider.dart';
 import '../../services/ai_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/page_transitions.dart';
 import '../home_screen.dart';
 
 class StarterVocabularyScreen extends ConsumerStatefulWidget {
@@ -134,11 +135,7 @@ class _StarterVocabularyScreenState
   }
 
   void _goToHome() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-      (route) => false,
-    );
+    context.pushAndRemoveUntilScreen(const HomeScreen());
   }
 
   void _toggleSelection(int index) {

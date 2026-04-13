@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
 import '../providers/words_provider.dart';
+import '../utils/page_transitions.dart';
 import 'listening_exercise_screen.dart';
 import 'spell_exercise_screen.dart';
 import 'pronunciation_screen.dart';
@@ -54,14 +55,7 @@ class VoicePracticeScreen extends ConsumerWidget {
               description: 'Hear a word and pick the correct translation',
               wordCount: wordCount,
               minWords: 4,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ListeningExerciseScreen(),
-                  ),
-                );
-              },
+              onTap: () => context.pushScreen(const ListeningExerciseScreen()),
             ),
 
             // Listen & Spell
@@ -72,14 +66,7 @@ class VoicePracticeScreen extends ConsumerWidget {
               description: 'Hear a word and type what you heard',
               wordCount: wordCount,
               minWords: 1,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SpellExerciseScreen(),
-                  ),
-                );
-              },
+              onTap: () => context.pushScreen(const SpellExerciseScreen()),
             ),
 
             const SizedBox(height: AppSpacing.xxl),
@@ -99,14 +86,7 @@ class VoicePracticeScreen extends ConsumerWidget {
               description: 'Speak words and get feedback on your pronunciation',
               wordCount: wordCount,
               minWords: 1,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PronunciationScreen(),
-                  ),
-                );
-              },
+              onTap: () => context.pushScreen(const PronunciationScreen()),
             ),
 
             // Shadowing
@@ -117,14 +97,7 @@ class VoicePracticeScreen extends ConsumerWidget {
               description: 'Listen and repeat immediately after',
               wordCount: wordCount,
               minWords: 1,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ShadowingScreen(),
-                  ),
-                );
-              },
+              onTap: () => context.pushScreen(const ShadowingScreen()),
             ),
 
             const SizedBox(height: AppSpacing.xxl),
@@ -144,14 +117,7 @@ class VoicePracticeScreen extends ConsumerWidget {
               description: 'Practice speaking with an AI partner',
               wordCount: wordCount,
               minWords: 0,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ConversationScreen(),
-                  ),
-                );
-              },
+              onTap: () => context.pushScreen(const ConversationScreen()),
             ),
 
             const SizedBox(height: AppSpacing.xxl),

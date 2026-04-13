@@ -8,6 +8,7 @@ import '../providers/user_preferences_provider.dart';
 import '../providers/user_activity_provider.dart';
 import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/page_transitions.dart';
 import '../widgets/widgets.dart';
 import 'study_session_screen.dart';
 import 'import_screen.dart';
@@ -233,10 +234,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         onPressed: words.isEmpty
                             ? null
                             : () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => StudySessionScreen(initialWords: words),
-                                  ),
+                                context.pushScreen(
+                                  StudySessionScreen(initialWords: words),
                                 );
                               },
                       ),
@@ -304,9 +303,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         icon: Icons.auto_awesome_rounded,
                         label: 'AI Assistant',
                         iconColor: AppColors.primary,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const AIChatScreen()),
-                        ),
+                        onTap: () => context.pushScreen(const AIChatScreen()),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
@@ -326,9 +323,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       child: QuickActionCard(
                         icon: Icons.upload_file_rounded,
                         label: 'Import',
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const ImportScreen()),
-                        ),
+                        onTap: () => context.pushScreen(const ImportScreen()),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
@@ -671,11 +666,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       return;
     }
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => StudySessionScreen(initialWords: filteredWords),
-      ),
-    );
+    context.pushScreen(StudySessionScreen(initialWords: filteredWords));
   }
 
   void _showFoldersDialog() {

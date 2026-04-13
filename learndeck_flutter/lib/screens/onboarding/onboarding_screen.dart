@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user_preferences.dart';
 import '../../providers/user_preferences_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/page_transitions.dart';
 import 'quiz_screen.dart';
 import 'starter_vocabulary_screen.dart';
 
@@ -53,13 +54,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     if (_wantsQuiz) {
       // Navigate to quiz
-      final result = await Navigator.push<int>(
-        context,
-        MaterialPageRoute(
-          builder: (context) => QuizScreen(
-            targetLanguage: _selectedTargetLanguage,
-            onComplete: (score) => Navigator.pop(context, score),
-          ),
+      final result = await context.pushScreen<int>(
+        QuizScreen(
+          targetLanguage: _selectedTargetLanguage,
+          onComplete: (score) => Navigator.pop(context, score),
         ),
       );
 
@@ -97,12 +95,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await ref.read(userPreferencesProvider.notifier).savePreferences(prefs);
 
     if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => StarterVocabularyScreen(preferences: prefs),
-        ),
-        (route) => false,
+      context.pushAndRemoveUntilScreen(
+        StarterVocabularyScreen(preferences: prefs),
       );
     }
   }

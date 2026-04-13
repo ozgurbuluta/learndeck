@@ -6,6 +6,7 @@ import '../services/notification_service.dart';
 import '../providers/user_preferences_provider.dart';
 import '../providers/tts_provider.dart';
 import '../models/tts_settings.dart';
+import '../utils/page_transitions.dart';
 import '../widgets/widgets.dart';
 import 'onboarding/onboarding_screen.dart';
 
@@ -213,11 +214,7 @@ class ProfileScreen extends ConsumerWidget {
 
       // Navigate to onboarding
       if (context.mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-          (route) => false,
-        );
+        context.pushAndRemoveUntilScreen(const OnboardingScreen());
       }
     }
   }

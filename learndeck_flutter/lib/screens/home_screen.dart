@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../utils/page_transitions.dart';
 import 'dashboard_screen.dart';
 import 'word_list_screen.dart';
 import 'ai_chat_screen.dart';
@@ -24,12 +25,31 @@ class _HomeScreenState extends State<HomeScreen> {
     ProfileScreen(),
   ];
 
+  void _onTabSelected(int index) {
+    if (index != _currentIndex) {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey<int>(_currentIndex),
+          child: _screens[_currentIndex],
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -68,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final isSelected = _currentIndex == index;
 
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () => _onTabSelected(index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -85,18 +105,20 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
-              size: 24,
+            AnimatedNavIcon(
+              icon: icon,
+              isSelected: isSelected,
+              selectedColor: AppColors.primary,
+              unselectedColor: AppColors.textSecondary,
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              label,
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
               style: AppTextStyles.navLabel.copyWith(
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: isSelected ? AppColors.primary : AppColors.textSecondary,
               ),
+              child: Text(label),
             ),
           ],
         ),
