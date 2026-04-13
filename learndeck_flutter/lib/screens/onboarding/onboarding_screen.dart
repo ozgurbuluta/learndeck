@@ -20,7 +20,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   // User selections
   String _selectedTargetLanguage = '';
-  String _selectedNativeLanguage = '';
+  String _selectedNativeLanguage = 'English'; // Default to English
   List<String> _selectedUseCases = [];
   List<String> _selectedCategories = [];
   int _selectedDailyGoal = 5;
@@ -211,29 +211,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Choose your languages', style: AppTextStyles.h2),
+          Text('I want to learn', style: AppTextStyles.h2),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Select the language you want to learn and your native language',
+            'Select the language you want to learn',
             style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.xxl),
 
-          // Target language section
-          Text(
-            'I want to learn:',
-            style: AppTextStyles.labelLarge.copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            height: 110,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
+          // Target language grid (3x3)
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: AppSpacing.md,
+                mainAxisSpacing: AppSpacing.md,
+                childAspectRatio: 0.85,
+              ),
               itemCount: LanguageOption.targetLanguages.length,
               itemBuilder: (context, index) {
                 final lang = LanguageOption.targetLanguages[index];
                 final isSelected = _selectedTargetLanguage == lang.name;
-                return _buildLanguageCard(
+                return _buildLanguageGridCard(
                   language: lang,
                   isSelected: isSelected,
                   onTap: () {
@@ -246,46 +245,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
           ),
 
-          const SizedBox(height: AppSpacing.xxl),
-
-          // Native language section
-          Text(
-            'My native language is:',
-            style: AppTextStyles.labelLarge.copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            height: 110,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: LanguageOption.nativeLanguages.length,
-              itemBuilder: (context, index) {
-                final lang = LanguageOption.nativeLanguages[index];
-                final isSelected = _selectedNativeLanguage == lang.name;
-                return _buildLanguageCard(
-                  language: lang,
-                  isSelected: isSelected,
-                  onTap: () {
-                    setState(() {
-                      _selectedNativeLanguage = lang.name;
-                    });
-                  },
-                );
-              },
-            ),
-          ),
-
-          const Spacer(),
+          const SizedBox(height: AppSpacing.lg),
           _buildNavigationButtons(
-            canProceed: _selectedTargetLanguage.isNotEmpty &&
-                       _selectedNativeLanguage.isNotEmpty,
+            canProceed: _selectedTargetLanguage.isNotEmpty,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLanguageCard({
+  Widget _buildLanguageGridCard({
     required LanguageOption language,
     required bool isSelected,
     required VoidCallback onTap,
@@ -293,8 +262,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 100,
-        margin: const EdgeInsets.only(right: AppSpacing.md),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.1)
@@ -310,9 +277,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           children: [
             Text(
               language.flag,
-              style: const TextStyle(fontSize: 32),
+              style: const TextStyle(fontSize: 36),
             ),
-            const SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               language.name,
               style: AppTextStyles.labelSmall.copyWith(
