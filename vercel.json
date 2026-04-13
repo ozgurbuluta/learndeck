@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd apps/web && npm install && npm run build",
+  "buildCommand": "pnpm run build",
   "outputDirectory": "apps/web/dist",
-  "installCommand": "echo 'Using buildCommand for install'",
+  "installCommand": "pnpm install",
   "framework": null,
   "functions": {
     "api/*.ts": {
