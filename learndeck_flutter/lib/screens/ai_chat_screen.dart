@@ -348,12 +348,16 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
                                 color: AppColors.primary,
                               ),
                             ),
-                          Text(
-                            word.word,
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.textSecondary,
+                          Flexible(
+                            child: Text(
+                              word.word,
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : AppColors.textSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],

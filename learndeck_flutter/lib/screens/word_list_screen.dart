@@ -201,6 +201,8 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
             title: Text(
               word.displayWord,
               style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,6 +211,8 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
                 Text(
                   word.definition,
                   style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Row(

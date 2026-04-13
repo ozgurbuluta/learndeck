@@ -239,10 +239,14 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
                           ),
                         ),
                       const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        _isFlipped && isTop ? word.definition : word.word,
-                        style: AppTextStyles.h1.copyWith(fontSize: 32),
-                        textAlign: TextAlign.center,
+                      Flexible(
+                        child: Text(
+                          _isFlipped && isTop ? word.definition : word.word,
+                          style: AppTextStyles.displayMedium,
+                          textAlign: TextAlign.center,
+                          maxLines: _isFlipped && isTop ? 4 : 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.xl),
                       // Audio buttons

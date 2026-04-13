@@ -373,6 +373,8 @@ class _ListeningExerciseScreenState
                 child: Text(
                   option,
                   style: AppTextStyles.body.copyWith(color: textColor),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               if (showResult && isCorrect)

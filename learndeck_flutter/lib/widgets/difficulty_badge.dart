@@ -55,10 +55,8 @@ class DifficultyBadge extends StatelessWidget {
       ),
       child: Text(
         _label,
-        style: TextStyle(
-          fontSize: compact ? 10 : 12,
+        style: (compact ? AppTextStyles.badgeSmall : AppTextStyles.badge).copyWith(
           color: _color,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );

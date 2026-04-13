@@ -286,6 +286,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                                 style: AppTextStyles.body.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: AppSpacing.xs),
                               Text(
@@ -293,6 +295,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                                 style: AppTextStyles.bodySmall.copyWith(
                                   color: AppColors.textSecondary,
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),

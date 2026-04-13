@@ -302,14 +302,18 @@ class _ShadowingScreenState extends ConsumerState<ShadowingScreen> {
               children: [
                 Text(
                   currentWord.displayWord,
-                  style: AppTextStyles.h1.copyWith(fontSize: 32),
+                  style: AppTextStyles.displayMedium,
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   currentWord.definition,
                   style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

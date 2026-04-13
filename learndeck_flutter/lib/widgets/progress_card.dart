@@ -74,6 +74,8 @@ class _ProgressItem extends StatelessWidget {
         Text(
           label,
           style: AppTextStyles.labelSmall,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

@@ -131,7 +131,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: AppSpacing.xxxl),
                 Text(
                   'LearnDeck',
-                  style: AppTextStyles.h1.copyWith(fontSize: 36),
+                  style: AppTextStyles.displayMedium,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(

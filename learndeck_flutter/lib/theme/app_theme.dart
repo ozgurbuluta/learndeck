@@ -193,6 +193,21 @@ class AppTextStyles {
     color: AppColors.textSecondary,
     height: 1.2,
   );
+
+  // Badge text (for difficulty badges, status indicators)
+  static const TextStyle badge = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+    height: 1.2,
+  );
+
+  static const TextStyle badgeSmall = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+    height: 1.2,
+  );
 }
 
 class AppTheme {

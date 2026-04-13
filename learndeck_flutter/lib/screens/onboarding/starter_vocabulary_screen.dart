@@ -364,6 +364,8 @@ class _StarterVocabularyScreenState
                     style: AppTextStyles.labelLarge.copyWith(
                       color: isSelected ? AppColors.primary : AppColors.textPrimary,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -371,6 +373,8 @@ class _StarterVocabularyScreenState
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

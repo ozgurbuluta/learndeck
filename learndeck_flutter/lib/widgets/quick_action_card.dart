@@ -40,6 +40,8 @@ class QuickActionCard extends StatelessWidget {
               label,
               style: AppTextStyles.labelSmall,
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

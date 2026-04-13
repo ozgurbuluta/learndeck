@@ -18,8 +18,18 @@ class SectionHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: AppTextStyles.h3),
-          if (trailing != null) trailing!,
+          Flexible(
+            child: Text(
+              title,
+              style: AppTextStyles.h3,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (trailing != null) ...[
+            const SizedBox(width: AppSpacing.sm),
+            trailing!,
+          ],
         ],
       ),
     );

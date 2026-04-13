@@ -293,14 +293,18 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen>
               const SizedBox(height: AppSpacing.lg),
               Text(
                 currentWord.displayWord,
-                style: AppTextStyles.h1.copyWith(fontSize: 36),
+                style: AppTextStyles.displayMedium,
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 currentWord.definition,
                 style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: AppSpacing.lg),
               // Listen button
