@@ -694,19 +694,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         builder: (context, scrollController) => Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Manage Folders', style: AppTextStyles.h3),
-                  IconButton(
-                    icon: Icon(Icons.add_rounded, color: AppColors.primary),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _showCreateFolderDialog();
-                    },
-                  ),
-                ],
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.lg,
+                AppSpacing.xl,
+                0,
+              ),
+              child: BottomSheetHeader(
+                title: 'Manage Folders',
+                trailing: IconButton(
+                  icon: Icon(Icons.add_rounded, color: AppColors.primary),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showCreateFolderDialog();
+                  },
+                ),
               ),
             ),
             Expanded(
@@ -809,17 +811,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             bottom: MediaQuery.of(context).viewInsets.bottom,
             left: AppSpacing.xl,
             right: AppSpacing.xl,
-            top: AppSpacing.xl,
+            top: AppSpacing.lg,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Create Folder', style: AppTextStyles.h3),
-              const SizedBox(height: AppSpacing.xl),
+              const BottomSheetHeader(title: 'Create Folder'),
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(hintText: 'Folder name'),
+                decoration: const InputDecoration(
+                  labelText: 'Folder Name',
+                  hintText: 'Enter folder name',
+                ),
                 autofocus: true,
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -883,32 +887,36 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           bottom: MediaQuery.of(context).viewInsets.bottom,
           left: AppSpacing.xl,
           right: AppSpacing.xl,
-          top: AppSpacing.xl,
+          top: AppSpacing.lg,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Add New Word', style: AppTextStyles.h3),
-            const SizedBox(height: AppSpacing.xl),
+            const BottomSheetHeader(title: 'Add New Word'),
             TextField(
               controller: articleController,
               decoration: const InputDecoration(
-                hintText: 'Article (der/die/das)',
+                labelText: 'Article',
+                hintText: 'der/die/das',
               ),
+              textCapitalization: TextCapitalization.none,
             ),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: wordController,
               decoration: const InputDecoration(
-                hintText: 'Word',
+                labelText: 'Word',
+                hintText: 'Enter the word',
               ),
+              autofocus: true,
             ),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: definitionController,
               decoration: const InputDecoration(
-                hintText: 'Definition',
+                labelText: 'Definition',
+                hintText: 'Enter the definition',
               ),
             ),
             const SizedBox(height: AppSpacing.xl),

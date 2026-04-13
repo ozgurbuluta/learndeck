@@ -6,6 +6,7 @@ import '../services/notification_service.dart';
 import '../providers/user_preferences_provider.dart';
 import '../providers/tts_provider.dart';
 import '../models/tts_settings.dart';
+import '../widgets/widgets.dart';
 import 'onboarding/onboarding_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -104,29 +105,15 @@ class ProfileScreen extends ConsumerWidget {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () async {
-                  final confirm = await showDialog<bool>(
+                  final confirm = await AppConfirmDialog.show(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Sign Out'),
-                      content:
-                          const Text('Are you sure you want to sign out?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text(
-                            'Sign Out',
-                            style: AppTextStyles.button.copyWith(color: AppColors.error),
-                          ),
-                        ),
-                      ],
-                    ),
+                    title: 'Sign Out',
+                    message: 'Are you sure you want to sign out?',
+                    confirmLabel: 'Sign Out',
+                    confirmColor: AppColors.error,
                   );
 
-                  if (confirm == true) {
+                  if (confirm) {
                     try {
                       await FirebaseService.signOut();
                     } catch (e) {
@@ -209,30 +196,14 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Future<void> _resetOnboarding(BuildContext context, WidgetRef ref) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await AppConfirmDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset Onboarding'),
-        content: const Text(
-          'This will restart the onboarding flow. Your saved words will be kept.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              'Reset',
-              style: AppTextStyles.button.copyWith(color: AppColors.primary),
-            ),
-          ),
-        ],
-      ),
+      title: 'Reset Onboarding',
+      message: 'This will restart the onboarding flow. Your saved words will be kept.',
+      confirmLabel: 'Reset',
     );
 
-    if (confirm == true && context.mounted) {
+    if (confirm && context.mounted) {
       // Get current preferences and set onboarding_completed to false
       final currentPrefs = ref.read(userPreferencesProvider).valueOrNull;
       if (currentPrefs != null) {

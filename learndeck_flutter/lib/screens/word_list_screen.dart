@@ -338,27 +338,37 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
           bottom: MediaQuery.of(context).viewInsets.bottom,
           left: AppSpacing.xl,
           right: AppSpacing.xl,
-          top: AppSpacing.xl,
+          top: AppSpacing.lg,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Add New Word', style: AppTextStyles.h3),
-            const SizedBox(height: AppSpacing.xl),
+            const BottomSheetHeader(title: 'Add New Word'),
             TextField(
               controller: articleController,
-              decoration: const InputDecoration(hintText: 'Article (der/die/das)'),
+              decoration: const InputDecoration(
+                labelText: 'Article',
+                hintText: 'der/die/das',
+              ),
+              textCapitalization: TextCapitalization.none,
             ),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: wordController,
-              decoration: const InputDecoration(hintText: 'Word'),
+              decoration: const InputDecoration(
+                labelText: 'Word',
+                hintText: 'Enter the word',
+              ),
+              autofocus: true,
             ),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: definitionController,
-              decoration: const InputDecoration(hintText: 'Definition'),
+              decoration: const InputDecoration(
+                labelText: 'Definition',
+                hintText: 'Enter the definition',
+              ),
             ),
             const SizedBox(height: AppSpacing.xl),
             PrimaryButton(
@@ -401,27 +411,36 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
           bottom: MediaQuery.of(context).viewInsets.bottom,
           left: AppSpacing.xl,
           right: AppSpacing.xl,
-          top: AppSpacing.xl,
+          top: AppSpacing.lg,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Edit Word', style: AppTextStyles.h3),
-            const SizedBox(height: AppSpacing.xl),
+            const BottomSheetHeader(title: 'Edit Word'),
             TextField(
               controller: articleController,
-              decoration: const InputDecoration(hintText: 'Article (der/die/das)'),
+              decoration: const InputDecoration(
+                labelText: 'Article',
+                hintText: 'der/die/das',
+              ),
+              textCapitalization: TextCapitalization.none,
             ),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: wordController,
-              decoration: const InputDecoration(hintText: 'Word'),
+              decoration: const InputDecoration(
+                labelText: 'Word',
+                hintText: 'Enter the word',
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: definitionController,
-              decoration: const InputDecoration(hintText: 'Definition'),
+              decoration: const InputDecoration(
+                labelText: 'Definition',
+                hintText: 'Enter the definition',
+              ),
             ),
             const SizedBox(height: AppSpacing.xl),
             PrimaryButton(
@@ -449,26 +468,17 @@ class _WordListScreenState extends ConsumerState<WordListScreen> {
     );
   }
 
-  void _confirmDelete(Word word) {
-    showDialog(
+  void _confirmDelete(Word word) async {
+    final confirmed = await AppConfirmDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Word'),
-        content: Text('Delete "${word.word}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              ref.read(wordsProvider.notifier).deleteWord(word.id);
-              Navigator.pop(context);
-            },
-            child: Text('Delete', style: AppTextStyles.button.copyWith(color: AppColors.error)),
-          ),
-        ],
-      ),
+      title: 'Delete Word',
+      message: 'Are you sure you want to delete "${word.word}"?',
+      confirmLabel: 'Delete',
+      confirmColor: AppColors.error,
     );
+
+    if (confirmed) {
+      ref.read(wordsProvider.notifier).deleteWord(word.id);
+    }
   }
 }
