@@ -1,7 +1,7 @@
 {
-  "buildCommand": "pnpm run build",
+  "buildCommand": "cd apps/web && npm install && npm run build",
   "outputDirectory": "apps/web/dist",
-  "installCommand": "pnpm install",
+  "installCommand": "echo 'Using buildCommand for install'",
   "framework": null,
   "functions": {
     "api/*.ts": {
@@ -18,5 +18,8 @@
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
       ]
     }
+  ],
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
-} 
+}
