@@ -1,6 +1,7 @@
 // LearnDeck Reusable Widgets
 export 'animated_widgets.dart';
 export 'bottom_sheet_header.dart';
+export 'celebration_widget.dart';
 export 'difficulty_badge.dart';
 export 'filter_chip_row.dart';
 export 'primary_button.dart';

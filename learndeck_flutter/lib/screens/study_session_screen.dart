@@ -1,6 +1,9 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:confetti/confetti.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/word.dart';
 import '../providers/words_provider.dart';
 import '../providers/user_activity_provider.dart';
@@ -20,6 +23,7 @@ class StudySessionScreen extends ConsumerStatefulWidget {
 
 class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
   final CardSwiperController _controller = CardSwiperController();
+  late ConfettiController _confettiController;
   List<Word> _studyWords = [];
   int _currentIndex = 0;
   int _correctCount = 0;
@@ -30,6 +34,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
   @override
   void initState() {
     super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
     _initializeStudySession();
   }
 
@@ -47,6 +52,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    _confettiController.dispose();
     TTSService.stop();
     super.dispose();
   }
@@ -70,6 +76,8 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
 
       if (_currentIndex >= _studyWords.length) {
         _isComplete = true;
+        // Trigger confetti celebration
+        _confettiController.play();
         // Record activity for streak
         ref.read(userActivityProvider.notifier).recordReviewCompleted();
       }
@@ -109,7 +117,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: Icon(Icons.close_rounded, color: AppColors.textPrimary),
+          icon: PhosphorIcon(PhosphorIcons.x(PhosphorIconsStyle.bold), color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -146,9 +154,9 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildScoreChip(Icons.check_circle_rounded, _correctCount, AppColors.success),
+                  _buildScoreChip(PhosphorIcons.checkCircle(PhosphorIconsStyle.fill), _correctCount, AppColors.success),
                   const SizedBox(width: AppSpacing.xl),
-                  _buildScoreChip(Icons.cancel_rounded, _incorrectCount, AppColors.error),
+                  _buildScoreChip(PhosphorIcons.xCircle(PhosphorIconsStyle.fill), _incorrectCount, AppColors.error),
                 ],
               ),
             ),
@@ -186,8 +194,8 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildSwipeHint(Icons.arrow_back_rounded, 'Keep Learning', AppColors.error),
-                  _buildSwipeHint(Icons.arrow_forward_rounded, 'I Know It', AppColors.success),
+                  _buildSwipeHint(PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold), 'Keep Learning', AppColors.error),
+                  _buildSwipeHint(PhosphorIcons.arrowRight(PhosphorIconsStyle.bold), 'I Know It', AppColors.success),
                 ],
               ),
             ),
@@ -345,7 +353,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
     );
   }
 
-  Widget _buildScoreChip(IconData icon, int count, Color color) {
+  Widget _buildScoreChip(PhosphorIconData icon, int count, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
@@ -357,7 +365,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 20),
+          PhosphorIcon(icon, color: color, size: 20),
           const SizedBox(width: AppSpacing.sm),
           Text(
             '$count',
@@ -371,10 +379,10 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
     );
   }
 
-  Widget _buildSwipeHint(IconData icon, String label, Color color) {
+  Widget _buildSwipeHint(PhosphorIconData icon, String label, Color color) {
     return Row(
       children: [
-        Icon(icon, color: color.withValues(alpha: 0.7), size: 20),
+        PhosphorIcon(icon, color: color.withValues(alpha: 0.7), size: 20),
         const SizedBox(width: AppSpacing.sm),
         Text(
           label,
@@ -392,57 +400,105 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xxxl),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.celebration_rounded,
-                  size: 80,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(height: AppSpacing.xxxl),
-                Text(
-                  'Session Complete!',
-                  style: AppTextStyles.h1,
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                Text(
-                  '$percentage%',
-                  style: AppTextStyles.displayLarge.copyWith(
-                    color: percentage >= 70 ? AppColors.success : AppColors.warning,
-                  ),
-                ),
-                Text(
-                  'accuracy',
-                  style: AppTextStyles.label.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xxxl),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildResultCard('Correct', _correctCount, AppColors.success),
-                    const SizedBox(width: AppSpacing.xl),
-                    _buildResultCard('To Review', _incorrectCount, AppColors.error),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xxxl * 2),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Done'),
-                  ),
-                ),
+      body: Stack(
+        children: [
+          // Confetti from top center
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirection: pi / 2, // downward
+              maxBlastForce: 5,
+              minBlastForce: 2,
+              emissionFrequency: 0.05,
+              numberOfParticles: 25,
+              gravity: 0.15,
+              shouldLoop: false,
+              colors: const [
+                AppColors.primary,
+                AppColors.accent,
+                AppColors.coral,
+                AppColors.teal,
+                AppColors.pink,
+                AppColors.cyan,
+                AppColors.lime,
+                AppColors.violet,
               ],
             ),
           ),
-        ),
+          SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xxxl),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Celebration icon with gradient background
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        gradient: AppGradients.primaryGradient,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: PhosphorIcon(
+                          PhosphorIconsStyle.fill == PhosphorIconsStyle.fill
+                              ? PhosphorIconsDuotone.confetti
+                              : PhosphorIconsDuotone.confetti,
+                          size: 50,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxxl),
+                    Text(
+                      'Session Complete!',
+                      style: AppTextStyles.h1,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Text(
+                      '$percentage%',
+                      style: AppTextStyles.displayLarge.copyWith(
+                        color: percentage >= 70 ? AppColors.success : AppColors.warning,
+                      ),
+                    ),
+                    Text(
+                      'accuracy',
+                      style: AppTextStyles.label.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxxl),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildResultCard('Correct', _correctCount, AppColors.success),
+                        const SizedBox(width: AppSpacing.xl),
+                        _buildResultCard('To Review', _incorrectCount, AppColors.error),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxxl * 2),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Done'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -481,7 +537,7 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: Icon(Icons.close_rounded, color: AppColors.textPrimary),
+          icon: PhosphorIcon(PhosphorIcons.x(PhosphorIconsStyle.bold), color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -489,8 +545,8 @@ class _StudySessionScreenState extends ConsumerState<StudySessionScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.library_books_outlined,
+            PhosphorIcon(
+              PhosphorIcons.bookOpenText(PhosphorIconsStyle.duotone),
               size: 80,
               color: AppColors.textTertiary,
             ),

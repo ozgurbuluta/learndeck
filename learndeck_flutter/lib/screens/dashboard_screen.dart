@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/word.dart';
 import '../models/folder.dart';
 import '../providers/words_provider.dart';
@@ -85,7 +86,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () => _showAddWordDialog(),
-        child: Icon(Icons.add, color: AppColors.textOnPrimary),
+        child: PhosphorIcon(PhosphorIcons.plus(PhosphorIconsStyle.bold), color: AppColors.textOnPrimary),
       ),
     );
   }
@@ -97,7 +98,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, color: AppColors.error, size: 60),
+            PhosphorIcon(PhosphorIcons.warning(PhosphorIconsStyle.fill), color: AppColors.error, size: 60),
             const SizedBox(height: AppSpacing.lg),
             Text('Error loading words', style: AppTextStyles.h3),
             const SizedBox(height: AppSpacing.sm),
@@ -138,20 +139,67 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Personalized Header
+          // Personalized Header with gradient accent
           Container(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            color: AppColors.surface,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Stack(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(_getGreeting(), style: AppTextStyles.h1),
+                // Decorative gradient accent
+                Positioned(
+                  right: -30,
+                  top: -30,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.15),
+                          AppColors.coral.withValues(alpha: 0.08),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: -20,
+                  bottom: -40,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.accent.withValues(alpha: 0.1),
+                          AppColors.violet.withValues(alpha: 0.05),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(_getGreeting(), style: AppTextStyles.h1),
                         const SizedBox(height: AppSpacing.xs),
                         if (userPrefs != null)
                           Row(
@@ -193,9 +241,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                // Daily Goal Progress
-                _buildDailyGoalProgress(todayWords, dailyGoal),
+                      const SizedBox(height: AppSpacing.lg),
+                      // Daily Goal Progress
+                      _buildDailyGoalProgress(todayWords, dailyGoal),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -256,28 +307,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   StatCard(
                     label: 'New Words',
                     value: stats['new']!,
-                    icon: Icons.fiber_new_rounded,
+                    phosphorIcon: PhosphorIcons.sparkle(PhosphorIconsStyle.fill),
                     iconColor: AppColors.difficultyNew,
                     onTap: () => _startStudySession(words, 'new'),
                   ),
                   StatCard(
                     label: 'Due for Review',
                     value: dueWords,
-                    icon: Icons.schedule_rounded,
+                    phosphorIcon: PhosphorIcons.clock(PhosphorIconsStyle.fill),
                     iconColor: AppColors.warning,
                     onTap: () => _startStudySession(words, 'due'),
                   ),
                   StatCard(
                     label: 'All Words',
                     value: stats['total']!,
-                    icon: Icons.library_books_rounded,
+                    phosphorIcon: PhosphorIcons.books(PhosphorIconsStyle.fill),
                     iconColor: AppColors.primary,
                     onTap: () => _startStudySession(words, 'all'),
                   ),
                   StatCard(
                     label: 'Mastered',
                     value: stats['mastered']!,
-                    icon: Icons.star_rounded,
+                    phosphorIcon: PhosphorIcons.star(PhosphorIconsStyle.fill),
                     iconColor: AppColors.difficultyMastered,
                   ),
                 ],
@@ -300,7 +351,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   children: [
                     Expanded(
                       child: QuickActionCard(
-                        icon: Icons.auto_awesome_rounded,
+                        phosphorIcon: PhosphorIcons.magicWand(PhosphorIconsStyle.fill),
                         label: 'AI Assistant',
                         iconColor: AppColors.primary,
                         onTap: () => context.pushScreen(const AIChatScreen()),
@@ -309,7 +360,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: QuickActionCard(
-                        icon: Icons.add_circle_outline_rounded,
+                        phosphorIcon: PhosphorIcons.plusCircle(PhosphorIconsStyle.fill),
                         label: 'Add Word',
                         onTap: () => _showAddWordDialog(),
                       ),
@@ -321,7 +372,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   children: [
                     Expanded(
                       child: QuickActionCard(
-                        icon: Icons.upload_file_rounded,
+                        phosphorIcon: PhosphorIcons.uploadSimple(PhosphorIconsStyle.fill),
                         label: 'Import',
                         onTap: () => context.pushScreen(const ImportScreen()),
                       ),
@@ -329,7 +380,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: QuickActionCard(
-                        icon: Icons.folder_rounded,
+                        phosphorIcon: PhosphorIcons.folderOpen(PhosphorIconsStyle.fill),
                         label: 'Folders',
                         iconColor: AppColors.accent,
                         onTap: () => _showFoldersDialog(),
@@ -417,8 +468,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.add_circle_outline_rounded,
+          PhosphorIcon(
+            PhosphorIcons.bookOpen(PhosphorIconsStyle.duotone),
             size: 48,
             color: AppColors.textTertiary,
           ),
@@ -501,8 +552,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   color: AppColors.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
-                child: Icon(
-                  Icons.local_fire_department_rounded,
+                child: PhosphorIcon(
+                  PhosphorIcons.flame(PhosphorIconsStyle.fill),
                   color: currentStreak > 0 ? AppColors.primary : AppColors.textTertiary,
                   size: 32,
                 ),
@@ -542,8 +593,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.emoji_events_rounded,
+                      PhosphorIcon(
+                        PhosphorIcons.trophy(PhosphorIconsStyle.fill),
                         color: AppColors.textOnPrimary,
                         size: 14,
                       ),
@@ -595,8 +646,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    isComplete ? Icons.check_circle : Icons.local_fire_department_rounded,
+                  PhosphorIcon(
+                    isComplete ? PhosphorIcons.checkCircle(PhosphorIconsStyle.fill) : PhosphorIcons.flame(PhosphorIconsStyle.fill),
                     color: isComplete ? AppColors.success : AppColors.primary,
                     size: 20,
                   ),
@@ -694,7 +745,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: BottomSheetHeader(
                 title: 'Manage Folders',
                 trailing: IconButton(
-                  icon: Icon(Icons.add_rounded, color: AppColors.primary),
+                  icon: PhosphorIcon(PhosphorIcons.plus(PhosphorIconsStyle.bold), color: AppColors.primary),
                   onPressed: () {
                     Navigator.pop(context);
                     _showCreateFolderDialog();
@@ -719,8 +770,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
-                                Icons.folder_outlined,
+                              PhosphorIcon(
+                                PhosphorIcons.folderDashed(PhosphorIconsStyle.duotone),
                                 size: 48,
                                 color: AppColors.textTertiary,
                               ),
@@ -757,14 +808,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   color: Color(int.parse(folder.color.replaceFirst('#', '0xFF'))),
                                   borderRadius: BorderRadius.circular(AppRadius.sm),
                                 ),
-                                child: Icon(
-                                  Icons.folder_rounded,
+                                child: PhosphorIcon(
+                                  PhosphorIcons.folder(PhosphorIconsStyle.fill),
                                   color: AppColors.textOnPrimary,
                                 ),
                               ),
                               title: Text(folder.name, style: AppTextStyles.body),
                               trailing: IconButton(
-                                icon: Icon(Icons.delete_outline, color: AppColors.error),
+                                icon: PhosphorIcon(PhosphorIcons.trash(PhosphorIconsStyle.regular), color: AppColors.error),
                                 onPressed: () {
                                   ref.read(foldersProvider.notifier).deleteFolder(folder.id);
                                 },

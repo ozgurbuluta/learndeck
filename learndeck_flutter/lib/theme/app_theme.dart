@@ -13,6 +13,15 @@ class AppColors {
   static const Color accent = Color(0xFF6366F1);
   static const Color accentLight = Color(0xFF818CF8);
 
+  // Playful accent colors
+  static const Color coral = Color(0xFFFF6B6B);
+  static const Color teal = Color(0xFF14B8A6);
+  static const Color pink = Color(0xFFEC4899);
+  static const Color cyan = Color(0xFF06B6D4);
+  static const Color lime = Color(0xFF84CC16);
+  static const Color amber = Color(0xFFF59E0B);
+  static const Color violet = Color(0xFF8B5CF6);
+
   // Backgrounds
   static const Color background = Color(0xFFF5F5F5);
   static const Color surface = Color(0xFFFFFFFF);
@@ -40,6 +49,45 @@ class AppColors {
   static const Color difficultyReview = Color(0xFF8B5CF6);
   static const Color difficultyMastered = Color(0xFF22C55E);
   static const Color difficultyFailed = Color(0xFFEF4444);
+}
+
+/// Predefined gradients for playful UI elements
+class AppGradients {
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [AppColors.primary, AppColors.coral],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient accentGradient = LinearGradient(
+    colors: [AppColors.accent, AppColors.violet],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient successGradient = LinearGradient(
+    colors: [AppColors.teal, AppColors.success],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient warmGradient = LinearGradient(
+    colors: [AppColors.primary, AppColors.amber],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient coolGradient = LinearGradient(
+    colors: [AppColors.cyan, AppColors.accent],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient celebrationGradient = LinearGradient(
+    colors: [AppColors.pink, AppColors.violet, AppColors.accent],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
 
 class AppSpacing {

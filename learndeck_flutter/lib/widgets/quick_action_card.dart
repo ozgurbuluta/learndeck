@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../theme/app_theme.dart';
 import 'animated_widgets.dart';
 
 class QuickActionCard extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final PhosphorIconData? phosphorIcon;
   final String label;
   final VoidCallback? onTap;
   final Color? iconColor;
 
   const QuickActionCard({
     super.key,
-    required this.icon,
+    this.icon,
+    this.phosphorIcon,
     required this.label,
     this.onTap,
     this.iconColor,
-  });
+  }) : assert(icon != null || phosphorIcon != null, 'Either icon or phosphorIcon must be provided');
 
   @override
   Widget build(BuildContext context) {
@@ -30,11 +33,18 @@ class QuickActionCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: iconColor ?? AppColors.primary,
-              size: 28,
-            ),
+            if (phosphorIcon != null)
+              PhosphorIcon(
+                phosphorIcon!,
+                color: iconColor ?? AppColors.primary,
+                size: 28,
+              )
+            else
+              Icon(
+                icon,
+                color: iconColor ?? AppColors.primary,
+                size: 28,
+              ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               label,

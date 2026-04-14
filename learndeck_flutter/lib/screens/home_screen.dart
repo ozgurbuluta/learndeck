@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../theme/app_theme.dart';
-import '../utils/page_transitions.dart';
 import 'dashboard_screen.dart';
 import 'word_list_screen.dart';
 import 'ai_chat_screen.dart';
@@ -71,11 +71,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(0, Icons.home_rounded, 'Home'),
-                _buildNavItem(1, Icons.mic_rounded, 'Practice'),
-                _buildNavItem(2, Icons.library_books_rounded, 'Library'),
-                _buildNavItem(3, Icons.chat_bubble_rounded, 'AI Chat'),
-                _buildNavItem(4, Icons.person_rounded, 'Profile'),
+                _buildNavItem(0, PhosphorIcons.house(PhosphorIconsStyle.fill), PhosphorIcons.house(PhosphorIconsStyle.regular), 'Home'),
+                _buildNavItem(1, PhosphorIcons.microphone(PhosphorIconsStyle.fill), PhosphorIcons.microphone(PhosphorIconsStyle.regular), 'Practice'),
+                _buildNavItem(2, PhosphorIcons.books(PhosphorIconsStyle.fill), PhosphorIcons.books(PhosphorIconsStyle.regular), 'Library'),
+                _buildNavItem(3, PhosphorIcons.sparkle(PhosphorIconsStyle.fill), PhosphorIcons.sparkle(PhosphorIconsStyle.regular), 'AI Chat'),
+                _buildNavItem(4, PhosphorIcons.user(PhosphorIconsStyle.fill), PhosphorIcons.user(PhosphorIconsStyle.regular), 'Profile'),
               ],
             ),
           ),
@@ -84,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label) {
+  Widget _buildNavItem(int index, PhosphorIconData selectedIcon, PhosphorIconData unselectedIcon, String label) {
     final isSelected = _currentIndex == index;
 
     return GestureDetector(
@@ -105,11 +105,14 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedNavIcon(
-              icon: icon,
-              isSelected: isSelected,
-              selectedColor: AppColors.primary,
-              unselectedColor: AppColors.textSecondary,
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: PhosphorIcon(
+                isSelected ? selectedIcon : unselectedIcon,
+                key: ValueKey(isSelected),
+                size: 24,
+                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             AnimatedDefaultTextStyle(
