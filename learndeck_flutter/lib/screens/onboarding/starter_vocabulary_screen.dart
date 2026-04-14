@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../data/default_vocabulary.dart';
 import '../../models/user_preferences.dart';
 import '../../providers/words_provider.dart';
@@ -171,13 +172,22 @@ class _StarterVocabularyScreenState
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
+            gradient: AppGradients.accentGradient,
             shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.accent.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          child: Icon(
-            Icons.auto_awesome_rounded,
-            size: 48,
-            color: AppColors.primary,
+          child: const Center(
+            child: PhosphorIcon(
+              PhosphorIconsDuotone.sparkle,
+              size: 48,
+              color: Colors.white,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.xxl),
@@ -377,7 +387,7 @@ class _StarterVocabularyScreenState
               ),
             ),
             if (isSelected)
-              Icon(Icons.check_circle, color: AppColors.primary, size: 20),
+              PhosphorIcon(PhosphorIcons.checkCircle(PhosphorIconsStyle.fill), color: AppColors.primary, size: 20),
           ],
         ),
       ),

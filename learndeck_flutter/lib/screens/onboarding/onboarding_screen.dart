@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../models/user_preferences.dart';
 import '../../providers/user_preferences_provider.dart';
 import '../../theme/app_theme.dart';
@@ -162,13 +163,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              gradient: AppGradients.primaryGradient,
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            child: Icon(
-              Icons.school_rounded,
-              size: 60,
-              color: AppColors.primary,
+            child: const Center(
+              child: PhosphorIcon(
+                PhosphorIconsDuotone.graduationCap,
+                size: 60,
+                color: Colors.white,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.xxl),
@@ -299,7 +309,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: AppSpacing.xs),
                 child: Icon(
-                  Icons.check_circle,
+                  PhosphorIcons.checkCircle(PhosphorIconsStyle.fill),
                   color: AppColors.primary,
                   size: 16,
                 ),
@@ -337,8 +347,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 final isSelected = _selectedCategories.contains(option.id);
                 return _buildCategoryChip(
                   title: option.title,
-                  icon: _getIcon(option.icon),
+                  icon: _getPhosphorIcon(option.icon),
                   isSelected: isSelected,
+                  accentColor: _getCategoryColor(index),
                   onTap: () {
                     setState(() {
                       if (isSelected) {
@@ -404,20 +415,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    final accentColor = _getGoalColor(option.words);
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: AppSpacing.md),
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.1)
+              ? accentColor.withValues(alpha: 0.1)
               : AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? accentColor : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           children: [
@@ -425,13 +447,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.2)
+                    ? accentColor.withValues(alpha: 0.2)
                     : AppColors.surfaceVariant,
                 borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              child: Icon(
+              child: PhosphorIcon(
                 _getGoalIcon(option.icon),
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                color: isSelected ? accentColor : AppColors.textSecondary,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -449,25 +471,44 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ],
               ),
             ),
-            if (isSelected) Icon(Icons.check_circle, color: AppColors.primary),
+            if (isSelected)
+              PhosphorIcon(
+                PhosphorIcons.checkCircle(PhosphorIconsStyle.fill),
+                color: accentColor,
+              ),
           ],
         ),
       ),
     );
   }
 
-  IconData _getGoalIcon(String iconName) {
+  PhosphorIconData _getGoalIcon(String iconName) {
     switch (iconName) {
       case 'walk':
-        return Icons.directions_walk_rounded;
+        return PhosphorIcons.personSimpleWalk(PhosphorIconsStyle.duotone);
       case 'directions_run':
-        return Icons.directions_run_rounded;
+        return PhosphorIcons.personSimpleRun(PhosphorIconsStyle.duotone);
       case 'fitness_center':
-        return Icons.fitness_center_rounded;
+        return PhosphorIcons.barbell(PhosphorIconsStyle.duotone);
       case 'local_fire_department':
-        return Icons.local_fire_department_rounded;
+        return PhosphorIcons.flame(PhosphorIconsStyle.duotone);
       default:
-        return Icons.star_rounded;
+        return PhosphorIcons.star(PhosphorIconsStyle.duotone);
+    }
+  }
+
+  Color _getGoalColor(int words) {
+    switch (words) {
+      case 3:
+        return AppColors.teal;
+      case 5:
+        return AppColors.accent;
+      case 10:
+        return AppColors.primary;
+      case 15:
+        return AppColors.coral;
+      default:
+        return AppColors.primary;
     }
   }
 
@@ -551,8 +592,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
-                    child: Icon(
-                      Icons.quiz_rounded,
+                    child: PhosphorIcon(
+                      PhosphorIcons.exam(PhosphorIconsStyle.duotone),
                       color: AppColors.primary,
                     ),
                   ),
@@ -575,7 +616,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
                   ),
                   if (_wantsQuiz)
-                    Icon(Icons.check_circle, color: AppColors.primary),
+                    Icon(PhosphorIcons.checkCircle(PhosphorIconsStyle.fill), color: AppColors.primary),
                 ],
               ),
             ),
@@ -633,7 +674,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ],
               ),
             ),
-            if (isSelected) Icon(Icons.check_circle, color: AppColors.primary),
+            if (isSelected) Icon(PhosphorIcons.checkCircle(PhosphorIconsStyle.fill), color: AppColors.primary),
           ],
         ),
       ),
@@ -642,36 +683,48 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Widget _buildCategoryChip({
     required String title,
-    required IconData icon,
+    required PhosphorIconData icon,
     required bool isSelected,
     required VoidCallback onTap,
+    required Color accentColor,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.1)
+              ? accentColor.withValues(alpha: 0.15)
               : AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? accentColor : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            PhosphorIcon(
               icon,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              color: isSelected ? accentColor : AppColors.textSecondary,
               size: 28,
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               title,
               style: AppTextStyles.labelSmall.copyWith(
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                color: isSelected ? accentColor : AppColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -680,9 +733,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             if (isSelected)
               Padding(
                 padding: const EdgeInsets.only(top: AppSpacing.xs),
-                child: Icon(
-                  Icons.check_circle,
-                  color: AppColors.primary,
+                child: PhosphorIcon(
+                  PhosphorIcons.checkCircle(PhosphorIconsStyle.fill),
+                  color: accentColor,
                   size: 16,
                 ),
               ),
@@ -737,42 +790,58 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  IconData _getIcon(String iconName) {
+  PhosphorIconData _getPhosphorIcon(String iconName) {
     switch (iconName) {
       case 'work':
-        return Icons.work_rounded;
+        return PhosphorIcons.briefcase(PhosphorIconsStyle.duotone);
       case 'home':
-        return Icons.home_rounded;
+        return PhosphorIcons.house(PhosphorIconsStyle.duotone);
       case 'flight':
-        return Icons.flight_rounded;
+        return PhosphorIcons.airplane(PhosphorIconsStyle.duotone);
       case 'school':
-        return Icons.school_rounded;
+        return PhosphorIcons.graduationCap(PhosphorIconsStyle.duotone);
       case 'restaurant':
-        return Icons.restaurant_rounded;
+        return PhosphorIcons.forkKnife(PhosphorIconsStyle.duotone);
       case 'business':
-        return Icons.business_center_rounded;
+        return PhosphorIcons.buildings(PhosphorIconsStyle.duotone);
       case 'explore':
-        return Icons.explore_rounded;
+        return PhosphorIcons.compass(PhosphorIconsStyle.duotone);
       case 'medical_services':
-        return Icons.medical_services_rounded;
+        return PhosphorIcons.firstAidKit(PhosphorIconsStyle.duotone);
       case 'computer':
-        return Icons.computer_rounded;
+        return PhosphorIcons.laptop(PhosphorIconsStyle.duotone);
       case 'palette':
-        return Icons.palette_rounded;
+        return PhosphorIcons.palette(PhosphorIconsStyle.duotone);
       case 'sports_soccer':
-        return Icons.sports_soccer_rounded;
+        return PhosphorIcons.soccerBall(PhosphorIconsStyle.duotone);
       case 'park':
-        return Icons.park_rounded;
+        return PhosphorIcons.tree(PhosphorIconsStyle.duotone);
       case 'family_restroom':
-        return Icons.family_restroom_rounded;
+        return PhosphorIcons.users(PhosphorIconsStyle.duotone);
       case 'shopping_bag':
-        return Icons.shopping_bag_rounded;
+        return PhosphorIcons.shoppingBag(PhosphorIconsStyle.duotone);
       case 'mood':
-        return Icons.mood_rounded;
+        return PhosphorIcons.smiley(PhosphorIconsStyle.duotone);
       case 'schedule':
-        return Icons.schedule_rounded;
+        return PhosphorIcons.clock(PhosphorIconsStyle.duotone);
       default:
-        return Icons.circle;
+        return PhosphorIcons.star(PhosphorIconsStyle.duotone);
     }
+  }
+
+  // Category colors for playful UI
+  Color _getCategoryColor(int index) {
+    final colors = [
+      AppColors.primary,
+      AppColors.accent,
+      AppColors.coral,
+      AppColors.teal,
+      AppColors.pink,
+      AppColors.cyan,
+      AppColors.lime,
+      AppColors.amber,
+      AppColors.violet,
+    ];
+    return colors[index % colors.length];
   }
 }

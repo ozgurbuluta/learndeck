@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../models/user_preferences.dart';
 import '../../theme/app_theme.dart';
 
@@ -159,7 +160,7 @@ class _QuizScreenState extends State<QuizScreen> {
         backgroundColor: AppColors.surface,
         title: Text('Question ${_currentQuestion + 1}/${_questions.length}'),
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: PhosphorIcon(PhosphorIcons.x(PhosphorIconsStyle.bold)),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -253,9 +254,9 @@ class _QuizScreenState extends State<QuizScreen> {
                           ),
                         ),
                         if (showResult && isCorrect)
-                          const Icon(Icons.check_circle, color: Colors.green),
+                          PhosphorIcon(PhosphorIcons.checkCircle(PhosphorIconsStyle.fill), color: AppColors.success),
                         if (showResult && isSelected && !isCorrect)
-                          const Icon(Icons.cancel, color: Colors.red),
+                          PhosphorIcon(PhosphorIcons.xCircle(PhosphorIconsStyle.fill), color: AppColors.error),
                       ],
                     ),
                   ),
