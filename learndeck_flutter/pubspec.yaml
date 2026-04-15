@@ -32,19 +32,19 @@ dependencies:
     sdk: flutter
 
   # UI & Icons
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^1.0.9
 
   # Swipe Cards - smooth 60fps swiping
   flutter_card_swiper: ^7.0.1
 
   # Backend - Firebase (FREE tier only!)
-  firebase_core: ^3.8.1
-  firebase_auth: ^5.3.4
-  cloud_firestore: ^5.6.0
+  firebase_core: ^4.7.0
+  firebase_auth: ^6.4.0
+  cloud_firestore: ^6.3.0
 
   # Social Sign-In
   google_sign_in: ^6.2.2
-  sign_in_with_apple: ^6.1.4
+  sign_in_with_apple: ^7.0.1
   crypto: ^3.0.6
 
   # State Management
@@ -54,16 +54,16 @@ dependencies:
   go_router: ^14.6.2
 
   # Audio/Voice
-  just_audio: ^0.9.42
+  just_audio: ^0.9.46
   flutter_tts: ^4.2.0
   speech_to_text: ^7.0.0
 
   # Utils
   uuid: ^4.5.1
   intl: ^0.20.1
-  shared_preferences: ^2.3.4
+  shared_preferences: ^2.5.5
   http: ^1.2.0
-  file_picker: ^8.0.0
+  file_picker: ^11.0.2
   flutter_secure_storage: ^9.2.4
 
   # Notifications

@@ -25,7 +25,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
   Future<void> _pickAndProcessFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'txt', 'csv'],
         withData: true,

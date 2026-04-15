@@ -78,9 +78,11 @@ class SpeechService {
       localeId: localeId,
       listenFor: listenFor ?? const Duration(seconds: 30),
       pauseFor: pauseFor ?? const Duration(seconds: 3),
-      partialResults: true,
-      cancelOnError: false,
-      listenMode: ListenMode.confirmation,
+      listenOptions: SpeechListenOptions(
+        partialResults: true,
+        cancelOnError: false,
+        listenMode: ListenMode.confirmation,
+      ),
     );
 
     _isListening = true;
